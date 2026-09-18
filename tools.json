@@ -1,0 +1,355 @@
+{
+    "tools": [
+        {
+            "name": "get_schema",
+            "description": "Get the full schema for an entity: field names, types, options, relationships, children, behaviors, and flow states. Call this before creating or querying to know what fields exist.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    }
+                },
+                "required": [
+                    "entity"
+                ]
+            }
+        },
+        {
+            "name": "list",
+            "description": "Query/list records from any entity with filters, sorting, and pagination. Filter syntax: simple value match, 'ne:value' for not-equal, 'gt:N' for greater-than, 'lt:N' for less-than.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    },
+                    "filters": {
+                        "type": "object",
+                        "description": "Field filters, e.g. {\"status\": \"active\", \"amount\": \"gt:1000\"}"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Max records (default 20, max 100)"
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "description": "Skip N records for pagination"
+                    },
+                    "sort_by": {
+                        "type": "string",
+                        "description": "Field to sort by (default: created_at)"
+                    },
+                    "sort_order": {
+                        "type": "string",
+                        "description": "'asc' or 'desc' (default: desc)"
+                    },
+                    "search": {
+                        "type": "string",
+                        "description": "Text search within this entity"
+                    }
+                },
+                "required": [
+                    "entity"
+                ]
+            }
+        },
+        {
+            "name": "get",
+            "description": "Get a single record by ID. Returns all fields, computed fields, children, and available transitions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Record UUID"
+                    }
+                },
+                "required": [
+                    "entity",
+                    "id"
+                ]
+            }
+        },
+        {
+            "name": "create",
+            "description": "Create a new record. Call get_schema first to know required fields and valid options.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "Field values for the new record"
+                    }
+                },
+                "required": [
+                    "entity",
+                    "data"
+                ]
+            }
+        },
+        {
+            "name": "update",
+            "description": "Update an existing record. Only send the fields you want to change.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Record UUID"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "Fields to update"
+                    }
+                },
+                "required": [
+                    "entity",
+                    "id",
+                    "data"
+                ]
+            }
+        },
+        {
+            "name": "delete",
+            "description": "Delete a record by ID.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Record UUID"
+                    }
+                },
+                "required": [
+                    "entity",
+                    "id"
+                ]
+            }
+        },
+        {
+            "name": "transition",
+            "description": "Transition a record's state in its workflow. Follow the workflow states returned by the record schema. Use get to see available _transitions on a record.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    },
+                    "id": {
+                        "type": "string",
+                        "description": "Record UUID"
+                    },
+                    "action": {
+                        "type": "string",
+                        "description": "Transition action name exactly as the flow spells it. Read it from the record's _transitions rather than guessing."
+                    },
+                    "target_state": {
+                        "type": "string",
+                        "description": "The state that action moves the record INTO, e.g. 'open', 'sent', 'completed'. Send both — either one resolves the transition."
+                    }
+                },
+                "required": [
+                    "entity",
+                    "id",
+                    "action",
+                    "target_state"
+                ]
+            }
+        },
+        {
+            "name": "search",
+            "description": "Full-text search across all entities or a specific entity.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Search text"
+                    },
+                    "entity": {
+                        "type": "string",
+                        "description": "Optional: limit to this entity"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Max results (default 20)"
+                    }
+                },
+                "required": [
+                    "query"
+                ]
+            }
+        },
+        {
+            "name": "count",
+            "description": "Count records in an entity with optional filters. Faster than list when you only need the total.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    },
+                    "filters": {
+                        "type": "object",
+                        "description": "Optional filters"
+                    }
+                },
+                "required": [
+                    "entity"
+                ]
+            }
+        },
+        {
+            "name": "make_from",
+            "description": "Create a new record from an existing one using document chains. Use the document chain defined by the source and target schemas. Automatically maps fields from source to target.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "source_entity": {
+                        "type": "string",
+                        "description": "Source entity name"
+                    },
+                    "source_id": {
+                        "type": "string",
+                        "description": "Source record UUID"
+                    },
+                    "target_entity": {
+                        "type": "string",
+                        "description": "Target entity name"
+                    }
+                },
+                "required": [
+                    "source_entity",
+                    "source_id",
+                    "target_entity"
+                ]
+            }
+        },
+        {
+            "name": "bulk_update",
+            "description": "Update multiple records at once.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    },
+                    "ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "List of record UUIDs"
+                    },
+                    "data": {
+                        "type": "object",
+                        "description": "Fields to update on all records"
+                    }
+                },
+                "required": [
+                    "entity",
+                    "ids",
+                    "data"
+                ]
+            }
+        },
+        {
+            "name": "report",
+            "description": "Run an aggregate report query on an entity. Supports count, sum, avg, min, max, optionally grouped by a field. Aggregates the whole matching set, not one page — always prefer this over listing records and adding them up yourself. For accounts receivable/payable or any financial statement, use financial_report instead: it returns the same figures as the UI.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entity": {
+                        "type": "string",
+                        "description": "Entity name"
+                    },
+                    "aggregate": {
+                        "type": "string",
+                        "description": "Operation: count, sum, avg, min, max"
+                    },
+                    "field": {
+                        "type": "string",
+                        "description": "Field to aggregate (required for sum/avg/min/max)"
+                    },
+                    "group_by": {
+                        "type": "string",
+                        "description": "Optional: group results by this field"
+                    },
+                    "filters": {
+                        "type": "object",
+                        "description": "Optional filters"
+                    }
+                },
+                "required": [
+                    "entity",
+                    "aggregate"
+                ]
+            }
+        },
+        {
+            "name": "financial_report",
+            "description": "Run a canonical accounting report — the same figures the dashboard and report screens show. Use this for receivables, payables, and the financial statements rather than summing invoices or bills yourself. Reports: ar_aging (accounts receivable / total outstanding by customer), ap_aging (accounts payable by vendor, incl. MSME 45-day exposure), balance_sheet, profit_and_loss, trial_balance, cash_flow, dashboard_summary (headline totals). The 'headline' field carries the top-line figure; do not re-add the buckets yourself.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "report": {
+                        "type": "string",
+                        "description": "Which report to run",
+                        "enum": [
+                            "ar_aging",
+                            "ap_aging",
+                            "balance_sheet",
+                            "profit_and_loss",
+                            "trial_balance",
+                            "cash_flow",
+                            "dashboard_summary"
+                        ]
+                    },
+                    "as_of": {
+                        "type": "string",
+                        "description": "YYYY-MM-DD; aging and balance sheet. Defaults to today."
+                    },
+                    "from_date": {
+                        "type": "string",
+                        "description": "YYYY-MM-DD; P&L, trial balance, cash flow. Defaults to the fiscal year."
+                    },
+                    "to_date": {
+                        "type": "string",
+                        "description": "YYYY-MM-DD; P&L, trial balance, cash flow."
+                    },
+                    "compare": {
+                        "type": "string",
+                        "description": "Optional: previous_period or previous_year."
+                    }
+                },
+                "required": [
+                    "report"
+                ]
+            }
+        }
+    ],
+    "total": 13,
+    "tool_policy_id": null
+}

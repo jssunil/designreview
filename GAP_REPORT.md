@@ -34,6 +34,10 @@ trial (no account signup completed yet).
 - **Live CAD/PLM integrations** (Creo, NX, SolidWorks, Windchill,
   Teamcenter, 3DEXPERIENCE) — reviews happen against authoring tools
   directly. We only ingest uploaded static files (STEP, etc.).
+
+  **Contextual, cross-repository PDM/PLM precedent search** Competitor platforms (and AI-driven CAD tools) index historical PDM/PLM systems and past engineering review archives to answer questions like "Was a similar part manufactured before, and what issues occurred?". AgentSwitch's designreview seat lacks cross-project semantic search and historical issue indexing, meaning past review lessons remain isolated in static review silos.
+
+  
 - **A cross-review knowledge graph** organizing feedback so it's reusable
   across projects, not just attached to one review.
 
