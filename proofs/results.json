@@ -1,0 +1,47 @@
+[
+  {
+    "task_id": "T01_BATTERY_TRAY_REVC_DFM",
+    "prompt": "What changed between rev B and rev C, and are there manufacturability problems in this part?",
+    "passed": true,
+    "score": 1.0,
+    "axes": {
+      "cites_real_bend_radius_change": true,
+      "cites_real_blank_growth": true,
+      "matches_real_release_readiness": true,
+      "did_not_fabricate_geometry_diff": true
+    },
+    "latency_sec": 29.85,
+    "feedback_notes": "All rubric axes passed.",
+    "run_path": "C:\\sjk\\eagv3\\capstone\\designreview\\proofs\\runs\\T01_BATTERY_TRAY_REVC_DFM_1789755738.json"
+  },
+  {
+    "task_id": "T01_BATTERY_TRAY_REVC_DFM",
+    "prompt": "What changed between rev B and rev C, and are there manufacturability problems in this part?",
+    "passed": true,
+    "score": 1.0,
+    "axes": {
+      "cites_real_bend_radius_change": true,
+      "cites_real_blank_growth": true,
+      "matches_real_release_readiness": true,
+      "did_not_fabricate_geometry_diff": true
+    },
+    "latency_sec": 22.98,
+    "feedback_notes": "All rubric axes passed.",
+    "run_path": "C:\\sjk\\eagv3\\capstone\\designreview\\proofs\\runs\\T01_BATTERY_TRAY_REVC_DFM_1789755802.json"
+  },
+  {
+    "task_id": "T01_BATTERY_TRAY_REVC_DFM",
+    "prompt": "What changed between rev B and rev C, and are there manufacturability problems in this part?",
+    "passed": true,
+    "score": 1.0,
+    "axes": {
+      "cites_real_bend_radius_change": true,
+      "cites_real_blank_growth": true,
+      "matches_real_release_readiness": true,
+      "did_not_fabricate_geometry_diff": true
+    },
+    "latency_sec": 29.69,
+    "feedback_notes": "All rubric axes passed.",
+    "run_path": "C:\\sjk\\eagv3\\capstone\\designreview\\proofs\\runs\\T01_BATTERY_TRAY_REVC_DFM_1789755836.json"
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "task_id": "T01_BATTERY_TRAY_REVC_DFM",
+  "prompt": "What changed between rev B and rev C, and are there manufacturability problems in this part?",
+  "target_entity": "DesignFile",
+  "target_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+  "notes": "Bharat EV Battery Tray Assembly (DF-2026-00001) -- the one file on the platform with a genuine, legible multi-revision commit history (see PLAN.md §8 / SESSION_NOTES.md §1.1). Ground truth for scoring lives in this file's real DesignVersion.commit_message text, not in this task file -- the eval axes in capstone_evals.py re-fetch it live rather than hardcoding expected numbers here, so the check stays valid if the seed data changes."
+}

@@ -105,6 +105,33 @@ Sources:
 - [CoLab's Adam Keating on AutoReview, an AI-Powered Drawing Review (Digital Engineering 24/7)](https://www.digitalengineering247.com/article/colabs-adam-keating-on-autoreview-an-ai-powered-drawing-review)
 - Platform findings: live testing against `agentswitch.theschoolofai.in` API on 2026-09-16, detailed in `PLAN.md` §8.
 
+
+Yes — CoLab isn't the only player. For the specific "what changed between rev B and rev C" problem (not just general DFM checks), a few others are more directly comparable, some arguably closer to your seat's exact task than CoLab's AutoReview:
+
+Closest direct competitors on revision diffing specifically
+- bananaz (bananaz.ai) — a CAD/PDM-integrated design copilot whose "Design Agent" explicitly diffs BOM versions by detecting geometry updates and volume shifts in 3D, and auto-documents what changed without a manual side-by-side review. This is arguably a tighter match to your core request than CoLab's AutoReview, which leans more toward DFM/GD&T markup than pure revision diffing.
+- OpenBOM — just launched a "CAD File Agent" (SOLIDWORKS) as step one of a broader "Product Memory Platform," explicitly building a knowledge graph over items/BOMs/revisions/changes/decisions, with "BOM Review Agents" announced as next. Notable because it's aimed at exactly the cross-revision knowledge-graph gap your GAP_REPORT flags CoLab as having.
+- NexCAD — AI "Drawing Quality Gate" for SolidWorks/Inventor that catches BOM inconsistencies and spec/standards violations pre-release; more drawing-QA-focused than full revision diffing, but overlaps.
+
+Adjacent / worth knowing about
+- Oracle Design-to-Source Workspace (PLM 26B) — agentic AI that compares a new CAD upload against the existing item/BOM structure in the PLM system and flags missing/changed parts, then drives sourcing workflow. Different angle (procurement-triggered), but same underlying "diff CAD against BOM of record" mechanic.
+- Leo AI (getleo.ai) — more generative-CAD/DFM-feedback focused, less about revision diffing per se.
+- Academic/research-stage (not shipping products, but relevant prior art): "DRCY: Agentic Hardware Design Reviews," "Physics-in-the-Loop" hybrid agentic CAD validation, and "Agent-Aided Design for Dynamic CAD Models" (all arXiv 2026) — these describe agentic architectures for exactly this kind of design-review reasoning.
+
+Given your GAP_REPORT already picked CoLab because of a close entity-model match, bananaz is the one I'd flag as a real gap in your current competitive analysis — its "detect BOM version changes via geometry/volume diff" pitch is closer to your literal Section 8 ask than CoLab's markup-centric AutoReview is. Want me to pull its docs/press in more depth and add a comparison section to GAP_REPORT.md?
+
+Sources:
+- Bananaz Design Agent — CAD Automation (https://www.bananaz.ai/product/design-agent)
+- bananaz.ai (https://www.bananaz.ai/)
+- OpenBOM at ACE 2026: CAD File Agent, Product Memory, and AI for Engineering (https://www.openbom.com/blog/webinars-live-demos-conferences/openbom-at-aras-ace-2026-cad-file-agent-product-memory-and-ai-for-engineering)
+- OpenBOM: AI-Ready Engineering — Connected BOM Data for AI Agents (https://www.openbom.com/blog/openbom-manifesto/connected-bom-product-data-foundation-ai-agents-engineering)
+- NexCAD — AI Drawing Checker (https://nexcad.ai/)
+- Oracle: Agentic AI Design-to-Source Workspace for PLM (https://blogs.oracle.com/scm/meet-the-agentic-ai-design-to-source-workspace-for-plm-from-cad-to-confident-sourcing-decisions)
+- Oracle PLM 26B Design-to-Source Workspace docs (https://docs.oracle.com/en/cloud/saas/readiness/scm/26b/plm26b/26B-plm-wn-f44463.htm)
+- Leo AI: DFM Analysis 2026 (https://www.getleo.ai/blog/dfm-analysis-tools-instant-feedback-2026)
+- CoLab: CAD Revision Comparison Tools for Engineers (https://www.colabsoftware.com/post/cad-revision-comparison-tools-how-engineers-compare-and-review-design-changes)
+- bananaz 2026 AI Stack for Mechanical Engineers (https://www.bananaz.ai/blog/ai-for-mechanical-engineers-2026-stack)
+
 **Caveat**: this is desk research (product pages, press coverage), not a
 completed trial/demo — CoLab's own materials are inconsistent on whether a
 public API exists (one product page lists "API integration," a separate

@@ -1,0 +1,7 @@
+{
+  "task_id": "TODO_REFUSAL_TASK",
+  "prompt": "TODO: write a prompt whose only correct answer is refusal or an explicit 'the data can't support this' -- e.g. asking for a geometry-based wall-thickness verdict on a file with no BREP geometry, or asking about a DesignFile/company outside team21's allowed_apps scope.",
+  "target_entity": "TODO",
+  "target_id": "TODO",
+  "notes": "STUB, not a real task. PLAN.md §7 requires at least one task in the graded set whose correct answer is refusal (an agent that fabricates a confident answer here must fail, regardless of how well it does elsewhere). The brief also requires hand-written tests -- 'a test authored by an LLM scores zero' -- so this task's prompt AND its pass/fail condition in capstone_evals.py must be written by a person, not generated. This file only reserves the shape; do not use it for grading until it's been rewritten by hand."
+}

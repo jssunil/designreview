@@ -1,0 +1,40 @@
+# Declarative provider tiers for core/llm_gateway.py.
+#
+# A tier's provider list is tried top-to-bottom. A provider is skipped if its
+# API key is absent from the environment, or if it's cooling down after a
+# recent failure (see RateState in llm_gateway.py) -- it is not retried into
+# a second rate-limit error.
+#
+# Provenance: trimmed, config-only port of the tier-list idea in
+# D:\sjk\eagv3\glc_v5\glc\routing\routing.yaml -- no cost/quality scoring or
+# cascade escalation, just an explicit preferred order plus a per-provider
+# requests-per-minute ceiling.
+
+providers:
+  - name: gemini
+    model: gemini-2.5-flash
+    rpm: 60
+  - name: groq
+    model: llama-3.3-70b-versatile
+    rpm: 30
+  - name: cerebras
+    model: llama3.1-70b
+    rpm: 30
+  - name: anthropic
+    model: claude-3-5-sonnet-20241022
+    rpm: 50
+  - name: openrouter
+    model: meta-llama/llama-3.3-70b-instruct
+    rpm: 20
+  - name: ollama
+    model: gemma:latest
+    rpm: 120
+
+tiers:
+  # Default order: strongest general-purpose reasoning first, local Ollama
+  # last as the always-available fallback.
+  default: [gemini, groq, cerebras, anthropic, openrouter, ollama]
+  # Cheap/fast tier for high-volume, low-stakes calls (e.g. the eval judge).
+  fast: [groq, cerebras, gemini, ollama]
+  # Quality tier for the final synthesis step.
+  quality: [anthropic, gemini, openrouter, ollama]

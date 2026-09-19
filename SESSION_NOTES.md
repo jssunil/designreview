@@ -40,20 +40,42 @@ Retrieved via `GET /api/bug-report/mine`:
 
 ## 🏛️ 3. Architecture & Modular Codebase Structure
 
-The project has been cleanly refactored without external agent frameworks (zero LangChain, LangGraph, or CrewAI). It uses pure Python foundation libraries (`networkx`, `httpx`, `pydantic`):
+The project uses pure Python foundation libraries (`networkx`, `httpx`, `pyyaml`) --
+zero LangChain, LangGraph, or CrewAI. `core/` was upgraded from a first-draft
+version (static task list, prose-keyword scoring, fixed-order gateway fallback)
+to patterns ported from the user's own prior EAGv3 coursework under
+`D:\sjk\eagv3` -- each module's docstring names its source. See the plan at
+`C:\Users\ANT-PC\.claude\plans\look-at-d-sjk-eagv3-projects-whimsical-zephyr.md`
+for the full survey and scope decisions (what was ported, what was deliberately
+cut, and why).
 
 ```text
 c:\sjk\eagv3\capstone\designreview\
 │
 ├── core/                                 # 🧩 REUSABLE CORE FRAMEWORK
 │   ├── __init__.py                       # Package exports
-│   ├── llm_gateway.py                    # Multi-provider LLM transport & failover
-│   ├── dag_engine.py                     # NetworkX topological DAG task orchestrator
-│   └── eval_framework.py                 # Multi-axis evaluation & scoring harness (BaseEvaluator)
+│   ├── llm_gateway.py                    # Rate-aware routing + retry + cache + cost ledger (from glc_v5)
+│   ├── routing.yaml                      # Declarative provider tiers/order (from glc_v5's routing.yaml)
+│   ├── economics.py                      # Cost/token ledger (trimmed from glc_v5's economics/)
+│   ├── dag_engine.py                     # Event-sourced live graph + ready-set scheduler (from S17Code)
+│   ├── harness.py                        # Harness protocol + Step/TaskRun raw-run record (from S18Code)
+│   ├── eval_framework.py                 # Ground-truth-separated axes engine (from S18Code)
+│   └── judge.py                          # Single-pass LLM-as-judge for qualitative axes (from S17Code)
 │
-├── capstone_agent.py                     # 🎯 TEAM 21 CAPSTONE AGENT (Design Review DAG & LLM synthesis)
-├── capstone_evals.py                     # 📊 TEAM 21 EVALUATION SUITE (5-Axes benchmark scorer)
+├── tasks/                                # Task definitions as data (prompt + target entity)
+│   ├── t01_battery_tray_revc_dfm.json    # The real, working benchmark task
+│   └── t02_refusal_stub.json             # STUB -- must be hand-authored, see PLAN.md \u00a77
+│
+├── proofs/
+│   ├── runs/                             # Raw TaskRun JSON, written BEFORE scoring
+│   ├── checkpoints/                      # Live-graph JSON checkpoint per run
+│   └── results.json                      # rescore.py's output
+│
+├── capstone_agent.py                     # 🎯 TEAM 21 CAPSTONE AGENT (live-graph DAG + LLM synthesis)
+├── capstone_evals.py                     # 📊 GROUND-TRUTH EVAL SUITE (re-fetches platform state, doesn't trust agent prose)
+├── rescore.py                            # Re-score saved runs with zero LLM calls (from S18Code)
 ├── as_client.py                          # 🔌 PLATFORM MCP & REST TRANSPORT
+├── requirements.txt                      # httpx, networkx, python-dotenv, pyyaml
 │
 ├── ENTITY_SCHEMAS.md                     # 📜 Complete 24-entity schema & state machine definitions
 ├── GAP_REPORT.md                         # 📝 Week 1 Deliverable (Competitor Gap Analysis vs CoLab)
@@ -64,47 +86,58 @@ c:\sjk\eagv3\capstone\designreview\
 
 ---
 
-## 🧪 4. The 5-Axes Evaluation Suite
+## 🧪 4. The Ground-Truth Evaluation Suite
 
-The benchmark evaluator (`capstone_evals.py`) runs the Section 8 prompt and scores against 5 concrete rubric validators:
+`capstone_evals.py` runs the Section 8 prompt and scores the result with axes
+that **re-fetch real platform state live** and check the agent's claim
+against it -- not axes that grep the agent's own prose in isolation (that was
+the first draft's weakness, and PLAN.md \u00a77's grading bar rules it out
+explicitly: "verifiers that read the database directly... not ones that trust
+the agent's own prose output"). Confirmed live 2026-09-18: a fabricated claim
+("bend radius changed 5.0mm\u21929.0mm, ready for release") is correctly
+rejected by `cites_real_bend_radius_change` and `matches_real_release_readiness`
+even though nothing about the prose itself looks wrong.
 
-| Axis | Criteria | Result |
+| Axis | Ground truth re-fetched | Real result (2026-09-18) |
 | :--- | :--- | :--- |
-| **Axis 1: Geometric Delta** | Detects corner bend radius increase (`2.0mm` ➔ `3.0mm`). | **PASS** |
-| **Axis 2: Dimensional Impact** | Detects resulting blank growth (`+4.2mm`). | **PASS** |
-| **Axis 3: DFM Root Cause** | Identifies micro-cracking at the flange as the formability issue. | **PASS** |
-| **Axis 4: Downstream Tooling** | Identifies weld fixture locator repositioning (`DF-2026-00005`). | **PASS** |
-| **Axis 5: Governance / Gating** | Prevents premature release approval (recommends tooling validation first). | **PASS** |
+| `cites_real_bend_radius_change` | `DesignVersion.list` commit messages | **PASS** |
+| `cites_real_blank_growth` | `DesignVersion.list` commit messages | **PASS** |
+| `matches_real_release_readiness` | `endpoint.designreview.release_readiness` | **PASS** |
+| `did_not_fabricate_geometry_diff` | n/a (static guard: `diff_from_parent_json` is null in this build) | **PASS** |
+| `judged_reasoning_quality` | LLM-judge rubric (`core/judge.py`) -- the one qualitative axis | **PASS** |
 
-### Benchmark Evaluation Output:
-```json
-{
-  "task_id": "T01_BATTERY_TRAY_REVC_DFM",
-  "prompt": "What changed between rev B and rev C, and are there manufacturability problems in this part?",
-  "passed": true,
-  "score": 1.0,
-  "latency_sec": 31.9,
-  "feedback_notes": "All benchmark axes passed successfully."
-}
-```
+Real ground truth on the Bharat EV Battery Tray Assembly
+(`39b69109-b56a-4bf4-af48-1ecf2b18f8a6`): `endpoint.designreview.release_readiness`
+currently returns `ready: false` with a critical open blocker on the same
+bend-radius finding the Rev C commit message addresses.
+
+`rescore.py` re-runs just the scoring (re-fetching ground truth, but zero LLM
+calls unless `--with-judge` is passed) against saved `proofs/runs/*.json` --
+a scoring bug is a free fix, not a re-run of the paid agent.
 
 ---
 
 ## ⚡ 5. Quick Reference Commands
 
-### Test LLM Gateway:
+### Test LLM Gateway (rate-aware routing + retry + cache + cost ledger):
 ```powershell
 python core/llm_gateway.py
 ```
 
-### Run Full Benchmark Evaluation Suite:
+### Run the Autonomous Agent (writes a TaskRun to proofs/runs/):
+```powershell
+python capstone_agent.py
+```
+
+### Run the Ground-Truth Evaluation Suite:
 ```powershell
 python capstone_evals.py
 ```
 
-### Run Autonomous Agent Directly:
+### Re-score Saved Runs Without Re-running the Agent:
 ```powershell
-python capstone_agent.py
+python rescore.py
+python rescore.py --with-judge   # also runs the LLM-judge axis
 ```
 
 ### Test Platform Authentication & MCP Tool Discovery:

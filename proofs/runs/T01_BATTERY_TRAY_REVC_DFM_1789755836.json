@@ -1,0 +1,810 @@
+{
+  "task_id": "T01_BATTERY_TRAY_REVC_DFM",
+  "prompt": "What changed between rev B and rev C, and are there manufacturability problems in this part?",
+  "steps": [
+    {
+      "kind": "tool_call",
+      "target": "get_file",
+      "ok": true,
+      "detail": {
+        "id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+        "number": "DF-2026-00001",
+        "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+        "name": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+        "project_id": "bf586214-c114-4a2c-86ca-8ed1e4fa9ee5",
+        "file_type": "cad_assembly",
+        "format": "step",
+        "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
+        "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
+        "drawing_file": null,
+        "representation": "wireframe",
+        "thumbnail": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/thumb.png",
+        "metadata_json": {
+          "schema": "AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }",
+          "protocol": "AP214",
+          "file_name": "Open CASCADE Shape Model",
+          "timestamp": "2008-07-24T15:00:20",
+          "originating_system": "Open CASCADE Model",
+          "distinct_products": 9,
+          "occurrence_links": 13,
+          "is_assembly": true,
+          "part_count": 18
+        },
+        "assembly_tree_json": {
+          "root": {
+            "part_number": "as1",
+            "name": "as1",
+            "quantity": 1,
+            "children": [
+              {
+                "part_number": "rod-assembly",
+                "name": "rod-assembly",
+                "quantity": 1,
+                "children": [
+                  {
+                    "part_number": "nut",
+                    "name": "nut",
+                    "quantity": 2,
+                    "children": []
+                  },
+                  {
+                    "part_number": "rod",
+                    "name": "rod",
+                    "quantity": 1,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "part_number": "l-bracket-assembly",
+                "name": "l-bracket-assembly",
+                "quantity": 2,
+                "children": [
+                  {
+                    "part_number": "nut-bolt-assembly",
+                    "name": "nut-bolt-assembly",
+                    "quantity": 3,
+                    "children": [
+                      {
+                        "part_number": "bolt",
+                        "name": "bolt",
+                        "quantity": 1,
+                        "children": []
+                      },
+                      {
+                        "part_number": "nut",
+                        "name": "nut",
+                        "quantity": 1,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "part_number": "l-bracket",
+                    "name": "l-bracket",
+                    "quantity": 1,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "part_number": "plate",
+                "name": "plate",
+                "quantity": 1,
+                "children": []
+              }
+            ]
+          }
+        },
+        "conversion_status": "completed",
+        "conversion_error": null,
+        "file_size_bytes": 433606,
+        "part_count": 18,
+        "current_version": 3,
+        "has_pmi": 1,
+        "has_brep": 0,
+        "status": "ready",
+        "released_version_id": null,
+        "released_at": null,
+        "item_id": null,
+        "created_at": "2026-09-12T17:17:51.141229",
+        "updated_at": "2026-09-12T22:47:52.359062",
+        "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+        "updated_by": null,
+        "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+        "_project_id_display": "Bharat EV \u2014 Battery Tray Assembly 2400",
+        "_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+        "_transitions": [
+          {
+            "action": "Approve Release",
+            "to": "approved",
+            "from": "ready"
+          }
+        ],
+        "_permissions": {
+          "write": true,
+          "delete": false
+        }
+      }
+    },
+    {
+      "kind": "tool_call",
+      "target": "get_versions",
+      "ok": true,
+      "detail": {
+        "data": [
+          {
+            "id": "082f4aec-4e74-4972-a998-a57049b36d8f",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_number": 1,
+            "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
+            "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Initial release against Bharat EV drawing BEV-BT-2400 rev A.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": null,
+            "file_hash": null,
+            "diff_from_parent_json": null,
+            "conversion_status": "completed",
+            "created_at": "2026-09-12T17:17:52.091595",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_display": "1",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            }
+          },
+          {
+            "id": "fbb7886f-fde4-49ef-a4c9-d4c83f9d90ab",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_number": 2,
+            "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
+            "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Rev B \u2014 cell layout updated, 2.0 mm corner bend radius, mounting hole pattern moved 6 mm inboard.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": null,
+            "file_hash": null,
+            "diff_from_parent_json": null,
+            "conversion_status": "completed",
+            "created_at": "2026-09-12T17:17:52.092217",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_display": "2",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            }
+          },
+          {
+            "id": "85696cb0-8662-44da-8021-2a56453234ed",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_number": 3,
+            "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
+            "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Rev C \u2014 corner bend radius opened from 2.0 mm to 3.0 mm to stop micro-cracking at the flange. Blank length grows 4.2 mm.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": null,
+            "file_hash": null,
+            "diff_from_parent_json": null,
+            "conversion_status": "completed",
+            "created_at": "2026-09-12T17:17:52.092663",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_display": "3",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            }
+          }
+        ],
+        "total": 3,
+        "limit": 20,
+        "offset": 0
+      }
+    },
+    {
+      "kind": "tool_call",
+      "target": "get_readiness",
+      "ok": true,
+      "detail": {
+        "status": "ok",
+        "result": {
+          "ok": true,
+          "available": true,
+          "ready": false,
+          "reason_codes": [
+            "no_assembly_tree",
+            "critical_findings_open",
+            "no_review_binding"
+          ],
+          "reasons": [
+            "The selected version has no recorded component assembly tree.",
+            "Open critical findings remain on the release scope.",
+            "No review is bound to this exact file version."
+          ],
+          "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+          "version_id": "85696cb0-8662-44da-8021-2a56453234ed",
+          "version_number": 3,
+          "critical_open": 1,
+          "blockers": [
+            {
+              "id": "13c4bc94-65da-4348-a37d-b7420beb7d30",
+              "title": "2.0 mm inside bend radius on 2.0 mm HR \u2014 cracking risk",
+              "status": "in_progress",
+              "priority": "critical",
+              "redacted": false
+            }
+          ],
+          "blockers_truncated": false
+        }
+      }
+    },
+    {
+      "kind": "tool_call",
+      "target": "get_feedback",
+      "ok": true,
+      "detail": {
+        "data": [
+          {
+            "id": "b537627b-caa3-4c9e-a678-26b9d853cf00",
+            "number": "FB-2026-00096",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "title": "Order \u2014 Shreeji Metal Works Pvt Ltd",
+            "description": "<p>Surface Plate: lot 160 at Nagpur. Accepted on concession.</p><p>Aluminium extrusion \u2014 scheduled by Shalini Gaikwad on 2025-11-28</p>",
+            "resolution": null,
+            "feedback_type": "comment",
+            "priority": "critical",
+            "status": "accepted",
+            "review_id": "4568ad10-4cfe-4b1f-a4af-61ad723e7790",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_id": "082f4aec-4e74-4972-a998-a57049b36d8f",
+            "assembly_id": "9d429bf4-9553-4d28-a693-02ef282a4663",
+            "assembly_version_id": null,
+            "assigned_to": "8cd130e2-b55e-49b1-aa03-9f07c8967008",
+            "author_id": "cecf13cf-401b-43b4-a8e3-bc1a3981344c",
+            "due_date": "2026-05-04",
+            "tags": [
+              "audit",
+              "rework"
+            ],
+            "part_id": "Machinist Square 2346",
+            "pin_position_json": {
+              "generated": true,
+              "n": 2346
+            },
+            "view_state_json": {
+              "generated": true,
+              "n": 2346
+            },
+            "markup_data_json": {
+              "generated": true,
+              "n": 2346
+            },
+            "is_external": 0,
+            "ai_generated": 1,
+            "ai_confidence": 0.0,
+            "standard_reference": "Hex Key Set 2346",
+            "impact_estimate": 77922.33,
+            "effort_estimate": "xlarge",
+            "unit_savings": null,
+            "units_per_year": 56,
+            "discussion": [
+              {
+                "author_id": "169be34f-a833-4ecd-a025-7d93bc0ab1bc",
+                "is_external": false,
+                "posted_at": "2026-04-04"
+              },
+              {
+                "author_id": "485369e9-62f8-46b5-8d9e-ab879560b1ff",
+                "is_external": false,
+                "posted_at": "2026-04-04"
+              },
+              {
+                "author_id": "017e4609-47ad-455a-8a61-ad1440b0dfff",
+                "is_external": false,
+                "posted_at": "2026-04-04"
+              }
+            ],
+            "attachments": [
+              {}
+            ],
+            "created_at": "2026-09-12T17:19:22.143500",
+            "updated_at": "2026-09-12T22:49:22.151137",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "updated_by": null,
+            "total_annual_savings": 0.0,
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_review_id_display": "Pump bracket rev B \u2014 tapping change review",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_version_id_display": 1,
+            "_assembly_id_display": "Tillage Toolbar \u2014 Full Weldment Assembly",
+            "_assigned_to_display": "Vardhman Aerospace SEZ Unit",
+            "_author_id_display": "Popat Sable",
+            "_display": "Order \u2014 Shreeji Metal Works Pvt Ltd",
+            "_permissions": {
+              "write": true,
+              "delete": false
+            }
+          },
+          {
+            "id": "b09894d1-3978-4a97-a5a5-0c269214fb75",
+            "number": "FB-2026-00069",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "title": "Satara despatch, week 24",
+            "description": "<p>Punch Set: order 469 at Coimbatore. Within tolerance.</p><p>Hardened dowel pin \u2014 signed off by Kavita Sawant on 2026-06-06</p>",
+            "resolution": null,
+            "feedback_type": "ai_finding",
+            "priority": "medium",
+            "status": "informational",
+            "review_id": "bea8add4-3ba8-46ff-b16f-5eee80b7dd8e",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_id": "85696cb0-8662-44da-8021-2a56453234ed",
+            "assembly_id": "9d429bf4-9553-4d28-a693-02ef282a4663",
+            "assembly_version_id": null,
+            "assigned_to": "baa1ab0d-19d1-435f-b750-6daf36f6d66c",
+            "author_id": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "due_date": "2026-02-07",
+            "tags": [
+              "rework",
+              "export"
+            ],
+            "part_id": "Vernier Caliper 2319",
+            "pin_position_json": {
+              "generated": true,
+              "n": 2319
+            },
+            "view_state_json": {
+              "generated": true,
+              "n": 2319
+            },
+            "markup_data_json": {
+              "generated": true,
+              "n": 2319
+            },
+            "is_external": 1,
+            "ai_generated": 1,
+            "ai_confidence": 5.0,
+            "standard_reference": "Tap Wrench 2319",
+            "impact_estimate": 52369.96,
+            "effort_estimate": "medium",
+            "unit_savings": 144844.83,
+            "units_per_year": 56,
+            "discussion": [
+              {
+                "author_id": "6d9285c9-71f0-43a6-b728-71177b792a52",
+                "is_external": false,
+                "posted_at": "2026-01-08"
+              },
+              {
+                "author_id": "55df0b62-806a-4963-bb12-d4dc05725c15",
+                "is_external": true,
+                "posted_at": "2026-01-08"
+              },
+              {
+                "author_id": "63de4d74-1942-4a95-be0c-ed2154bf810b",
+                "is_external": false,
+                "posted_at": "2026-01-08"
+              }
+            ],
+            "attachments": [
+              {}
+            ],
+            "created_at": "2026-09-12T17:19:21.853286",
+            "updated_at": "2026-09-12T22:49:21.855924",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "updated_by": null,
+            "total_annual_savings": 8111310.48,
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_review_id_display": "SuryaTools vice rev 3 \u2014 cost and manufacturability",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_version_id_display": 3,
+            "_assembly_id_display": "Tillage Toolbar \u2014 Full Weldment Assembly",
+            "_assigned_to_display": "Vitthal Kale",
+            "_author_id_display": "Bharat EV Motors Ltd",
+            "_display": "Satara despatch, week 24",
+            "_permissions": {
+              "write": true,
+              "delete": false
+            }
+          },
+          {
+            "id": "331f0768-43db-42a6-ad73-fd8ab4eca6a7",
+            "number": "FB-2026-00034",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "title": "Feeler Gauge Set \u2014 despatch hold",
+            "description": "<p>Depth Gauge: line 123 at Thane. Reworked and re-checked.</p><p>Hardened dowel pin \u2014 raised by Vikram Gaikwad on 2025-08-20</p>",
+            "resolution": "<p>Toolmaker's Vice: order 132 at Solapur. Reworked and re-checked.</p><p>Aluminium extrusion \u2014 escalated by Kavita Gaikwad on 2026-03-16</p>",
+            "feedback_type": "ai_finding",
+            "priority": "medium",
+            "status": "open",
+            "review_id": "2c78dde4-7965-4e29-a851-233761c55e9b",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_id": "082f4aec-4e74-4972-a998-a57049b36d8f",
+            "assembly_id": "9d429bf4-9553-4d28-a693-02ef282a4663",
+            "assembly_version_id": null,
+            "assigned_to": "19011061-335c-4f33-9a38-1a90f89603e2",
+            "author_id": "865f4869-4a20-4762-9747-fe4931ffa2e2",
+            "due_date": "2026-10-29",
+            "tags": [
+              "export"
+            ],
+            "part_id": "C-Clamp 2284",
+            "pin_position_json": {
+              "generated": true,
+              "n": 2284
+            },
+            "view_state_json": {
+              "generated": true,
+              "n": 2284
+            },
+            "markup_data_json": {
+              "generated": true,
+              "n": 2284
+            },
+            "is_external": 0,
+            "ai_generated": 0,
+            "ai_confidence": 0.0,
+            "standard_reference": "V-Block Pair 2284",
+            "impact_estimate": 643826.79,
+            "effort_estimate": "trivial",
+            "unit_savings": 456149.24,
+            "units_per_year": 22,
+            "discussion": [
+              {
+                "author_id": "76754707-c352-4126-b0bc-22a904b89778",
+                "is_external": true,
+                "posted_at": "2026-07-31"
+              }
+            ],
+            "attachments": [
+              {},
+              {
+                "caption": "V-Block Pair 2284"
+              }
+            ],
+            "created_at": "2026-09-12T17:19:21.492196",
+            "updated_at": "2026-09-12T17:19:21.492196",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "updated_by": null,
+            "total_annual_savings": 10035283.28,
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_review_id_display": "Battery tray rev C \u2014 DFM and formability review",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_version_id_display": 1,
+            "_assembly_id_display": "Tillage Toolbar \u2014 Full Weldment Assembly",
+            "_assigned_to_display": "Hanumant Shah",
+            "_author_id_display": "Sneha Rao",
+            "_display": "Feeler Gauge Set \u2014 despatch hold",
+            "_permissions": {
+              "write": true,
+              "delete": false
+            }
+          },
+          {
+            "id": "56358aa1-fb36-4c10-9981-1a6dec99e7a0",
+            "number": "FB-2026-00022",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "title": "Punch Set \u2014 despatch hold",
+            "description": "<p>Depth Gauge: line 226 at Ludhiana. Within tolerance.</p><p>Mild steel plate \u2014 raised by Meera Chavan on 2026-02-28</p>",
+            "resolution": "<p>Tap Wrench: order 309 at Ahmednagad. Within tolerance.</p><p>SG iron casting \u2014 reviewed by Amit Deshpande on 2026-01-13</p>",
+            "feedback_type": "markup",
+            "priority": "low",
+            "status": "accepted",
+            "review_id": "4568ad10-4cfe-4b1f-a4af-61ad723e7790",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_id": "85696cb0-8662-44da-8021-2a56453234ed",
+            "assembly_id": "9d429bf4-9553-4d28-a693-02ef282a4663",
+            "assembly_version_id": null,
+            "assigned_to": "04232c96-315a-47db-8f5d-41e7c8e58832",
+            "author_id": "f53226f0-f60e-4ddc-ac4a-bc3b34635b5d",
+            "due_date": "2026-01-20",
+            "tags": [
+              "rework",
+              "urgent"
+            ],
+            "part_id": "Machinist Square 2272",
+            "pin_position_json": {
+              "generated": true,
+              "n": 2272
+            },
+            "view_state_json": {
+              "generated": true,
+              "n": 2272
+            },
+            "markup_data_json": {
+              "generated": true,
+              "n": 2272
+            },
+            "is_external": 0,
+            "ai_generated": 1,
+            "ai_confidence": 0.0,
+            "standard_reference": "Tap Wrench 2272",
+            "impact_estimate": 107459.27,
+            "effort_estimate": "medium",
+            "unit_savings": 84148.04,
+            "units_per_year": 17,
+            "discussion": [
+              {
+                "author_id": "f06b6f98-3481-4fcb-9356-297003eb17a9",
+                "is_external": false,
+                "posted_at": "2025-11-21"
+              },
+              {
+                "author_id": "0dac0418-daef-4ce3-b8b3-242f14a1e8a6",
+                "is_external": false,
+                "posted_at": "2025-11-21"
+              }
+            ],
+            "attachments": [
+              {
+                "caption": "V-Block Pair 2272"
+              },
+              {}
+            ],
+            "created_at": "2026-09-12T17:19:21.368943",
+            "updated_at": "2026-09-12T22:49:21.373413",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "updated_by": null,
+            "total_annual_savings": 1430516.68,
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_review_id_display": "Pump bracket rev B \u2014 tapping change review",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_version_id_display": 3,
+            "_assembly_id_display": "Tillage Toolbar \u2014 Full Weldment Assembly",
+            "_assigned_to_display": "Supriya Rathi",
+            "_author_id_display": "Kiran Landge",
+            "_display": "Punch Set \u2014 despatch hold",
+            "_permissions": {
+              "write": true,
+              "delete": false
+            }
+          },
+          {
+            "id": "b4446fef-859f-49b6-9af1-1302801a3ab8",
+            "number": "FB-2026-00005",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "title": "PPAP level 3 required for this change",
+            "description": "The supply agreement requires PPAP level 3 on every engineering change. Confirm the customer wants a full resubmission rather than a delta.",
+            "resolution": null,
+            "feedback_type": "comment",
+            "priority": "high",
+            "status": "in_progress",
+            "review_id": "2c78dde4-7965-4e29-a851-233761c55e9b",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_id": null,
+            "assembly_id": null,
+            "assembly_version_id": null,
+            "assigned_to": "8ba32418-74db-455a-b4df-9fb77f977df7",
+            "author_id": null,
+            "due_date": null,
+            "tags": "ppap,contract",
+            "part_id": null,
+            "pin_position_json": null,
+            "view_state_json": null,
+            "markup_data_json": null,
+            "is_external": 0,
+            "ai_generated": 0,
+            "ai_confidence": null,
+            "standard_reference": null,
+            "impact_estimate": null,
+            "effort_estimate": null,
+            "unit_savings": null,
+            "units_per_year": null,
+            "discussion": [],
+            "attachments": [],
+            "created_at": "2026-09-12T17:17:52.375214",
+            "updated_at": "2026-09-12T22:47:52.375783",
+            "created_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "updated_by": null,
+            "total_annual_savings": 0.0,
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_review_id_display": "Battery tray rev C \u2014 DFM and formability review",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_assigned_to_display": "Kirloskar Pumps Ltd",
+            "_display": "PPAP level 3 required for this change",
+            "_permissions": {
+              "write": true,
+              "delete": false
+            }
+          },
+          {
+            "id": "ebc8a57d-1c92-4697-9bdc-da2cd9f07828",
+            "number": "FB-2026-00004",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "title": "Drain hole missing on the rev C base pan",
+            "description": "Rev B had a 6 mm drain at the lowest corner and it is absent on rev C. Without it the pan holds wash water through powder coating and flash-rusts.",
+            "resolution": null,
+            "feedback_type": "idea",
+            "priority": "medium",
+            "status": "accepted",
+            "review_id": "2c78dde4-7965-4e29-a851-233761c55e9b",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_id": null,
+            "assembly_id": null,
+            "assembly_version_id": null,
+            "assigned_to": "8ba32418-74db-455a-b4df-9fb77f977df7",
+            "author_id": null,
+            "due_date": null,
+            "tags": "rev-c,drainage",
+            "part_id": null,
+            "pin_position_json": null,
+            "view_state_json": null,
+            "markup_data_json": null,
+            "is_external": 0,
+            "ai_generated": 0,
+            "ai_confidence": null,
+            "standard_reference": null,
+            "impact_estimate": null,
+            "effort_estimate": null,
+            "unit_savings": null,
+            "units_per_year": null,
+            "discussion": [],
+            "attachments": [],
+            "created_at": "2026-09-12T17:17:52.373871",
+            "updated_at": "2026-09-12T22:47:52.374929",
+            "created_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "updated_by": null,
+            "total_annual_savings": 0.0,
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_review_id_display": "Battery tray rev C \u2014 DFM and formability review",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_assigned_to_display": "Kirloskar Pumps Ltd",
+            "_display": "Drain hole missing on the rev C base pan",
+            "_permissions": {
+              "write": true,
+              "delete": false
+            }
+          },
+          {
+            "id": "7187d3c6-132e-4cd8-9d81-5183cd0a75e6",
+            "number": "FB-2026-00003",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "title": "Weld access at the inboard bracket is under 12 mm",
+            "description": "Torch access to the inboard mounting bracket measures 11.4 mm with the standard nozzle. Either move the bracket 3 mm outboard or specify the slim nozzle for that station.",
+            "resolution": null,
+            "feedback_type": "issue",
+            "priority": "high",
+            "status": "accepted",
+            "review_id": "2c78dde4-7965-4e29-a851-233761c55e9b",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_id": null,
+            "assembly_id": null,
+            "assembly_version_id": null,
+            "assigned_to": "8ba32418-74db-455a-b4df-9fb77f977df7",
+            "author_id": null,
+            "due_date": null,
+            "tags": "weldability,access",
+            "part_id": null,
+            "pin_position_json": null,
+            "view_state_json": null,
+            "markup_data_json": null,
+            "is_external": 0,
+            "ai_generated": 0,
+            "ai_confidence": null,
+            "standard_reference": null,
+            "impact_estimate": null,
+            "effort_estimate": null,
+            "unit_savings": null,
+            "units_per_year": null,
+            "discussion": [],
+            "attachments": [],
+            "created_at": "2026-09-12T17:17:52.372537",
+            "updated_at": "2026-09-12T22:47:52.373577",
+            "created_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "updated_by": null,
+            "total_annual_savings": 0.0,
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_review_id_display": "Battery tray rev C \u2014 DFM and formability review",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_assigned_to_display": "Kirloskar Pumps Ltd",
+            "_display": "Weld access at the inboard bracket is under 12 mm",
+            "_permissions": {
+              "write": true,
+              "delete": false
+            }
+          },
+          {
+            "id": "13c4bc94-65da-4348-a37d-b7420beb7d30",
+            "number": "FB-2026-00001",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "title": "2.0 mm inside bend radius on 2.0 mm HR \u2014 cracking risk",
+            "description": "The rev B corner uses a 2.0 mm inside radius on 2.0 mm IS2062 E250. At 1.0x thickness the outer fibre strain is beyond what this grade tolerates transverse to the rolling direction, which is what produced the field cracking. Rev C opens the radius to 3.0 mm (1.5x thickness). Confirm the brake vee changes from 12 mm to 16 mm.",
+            "resolution": null,
+            "feedback_type": "issue",
+            "priority": "critical",
+            "status": "in_progress",
+            "review_id": "2c78dde4-7965-4e29-a851-233761c55e9b",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_id": null,
+            "assembly_id": null,
+            "assembly_version_id": null,
+            "assigned_to": "8ba32418-74db-455a-b4df-9fb77f977df7",
+            "author_id": null,
+            "due_date": null,
+            "tags": "formability,bend-radius,rev-c",
+            "part_id": null,
+            "pin_position_json": null,
+            "view_state_json": null,
+            "markup_data_json": null,
+            "is_external": 0,
+            "ai_generated": 0,
+            "ai_confidence": null,
+            "standard_reference": "IS 2062:2011 / internal DS-BEND-002",
+            "impact_estimate": null,
+            "effort_estimate": null,
+            "unit_savings": null,
+            "units_per_year": null,
+            "discussion": [],
+            "attachments": [],
+            "created_at": "2026-09-12T17:17:52.370637",
+            "updated_at": "2026-09-12T22:47:52.371343",
+            "created_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "updated_by": null,
+            "total_annual_savings": 0.0,
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_review_id_display": "Battery tray rev C \u2014 DFM and formability review",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_assigned_to_display": "Kirloskar Pumps Ltd",
+            "_display": "2.0 mm inside bend radius on 2.0 mm HR \u2014 cracking risk",
+            "_permissions": {
+              "write": true,
+              "delete": false
+            }
+          }
+        ],
+        "total": 8,
+        "limit": 20,
+        "offset": 0
+      }
+    },
+    {
+      "kind": "tool_call",
+      "target": "get_blocking_checklists",
+      "ok": true,
+      "detail": {
+        "data": [],
+        "total": 0,
+        "limit": 10,
+        "offset": 0
+      }
+    },
+    {
+      "kind": "llm_call",
+      "target": "synthesis",
+      "ok": true,
+      "detail": null
+    }
+  ],
+  "claimed_answer": "## Design Review: BEV-BT-2400 Battery Tray Assembly (Rev C)\n\n### 1. Executive Summary\n\nBetween Revision B and Revision C of the BEV-BT-2400 Battery Tray Assembly, the primary geometric change is an increase in the corner bend radius from 2.0 mm to 3.0 mm. This change was implemented specifically to mitigate a critical manufacturability problem: micro-cracking at the flange due to excessive outer fiber strain in the 2.0 mm radius on 2.0 mm thick IS2062 E250 material.\n\nDespite this positive change, several significant manufacturability problems persist or have been introduced in Rev C:\n1.  **Formability (Bend Radius):** While the radius was increased, the critical finding regarding the bend radius (FB-2026-00001) is still \"in_progress\" and requires confirmation of the corresponding brake vee tooling change.\n2.  **Drainage:** A 6 mm drain hole present in Rev B is missing in Rev C, which will lead to wash water retention, potential flash-rust, and issues during powder coating (FB-2026-00004).\n3.  **Weld Access:** Weld access at the inboard mounting bracket remains below the standard 12 mm (measuring 11.4 mm), requiring either a design modification or a specialized slim nozzle (FB-2026-00003).\n\nThe part is currently **not ready for release** due to an open critical finding, missing assembly tree data, and no bound review for this specific version.\n\n### 2. Revision Delta\n\nBased on the commit logs:\n\n*   **Revision B (Version 2) introduced the following changes from Revision A:**\n    *   Cell layout updated.\n    *   Corner bend radius set to 2.0 mm.\n    *   Mounting hole pattern moved 6 mm inboard.\n\n*   **Revision C (Version 3) introduced the following changes from Revision B:**\n    *   **Corner bend radius opened from 2.0 mm to 3.0 mm.** This was done \"to stop micro-cracking at the flange.\"\n    *   **Blank length grows 4.2 mm.** This is a direct consequence of the bend radius change.\n\n*(Note: The `diff_from_parent_json` field is not populated in the provided evidence, so a detailed geometric comparison beyond commit messages is not available.)*\n\n### 3. Manufacturability (DFM/DFA) Assessment\n\nThe following manufacturability problems are identified for Revision C:\n\n*   **Formability / Cracking Risk (Critical, In Progress):** The change from a 2.0 mm to a 3.0 mm inside bend radius (1.0x to 1.5x material thickness for 2.0 mm HR IS2062 E250) directly addresses a critical cracking risk identified in Rev B (FB-2026-00001). This is a positive DFM improvement. However, the finding is still \"in_progress,\" indicating that the resolution is not yet confirmed. Specifically, the feedback requests confirmation that the brake press tooling (brake vee) will change from 12 mm to 16 mm to accommodate the new radius. Until this is confirmed and verified, the cracking risk, though mitigated by design, remains an open process concern.\n\n*   **Drainage / Corrosion Risk (Medium, Accepted):** Revision C is missing a 6 mm drain hole that was present in Revision B (FB-2026-00004). This is a significant DFM oversight. Without this drain, wash water will be retained in the base pan during manufacturing processes (e.g., pre-treatment for powder coating), leading to flash-rust and potential quality issues with the final coating. This will likely require rework or lead to field failures.\n\n*   **Weld Access (High, Accepted):** The inboard mounting bracket has a weld access of 11.4 mm, which is below the standard 12 mm requirement (FB-2026-00003). This issue likely stems from the Rev B change where the mounting hole pattern was moved 6 mm inboard. This tight access will either necessitate a design change (moving the bracket 3 mm outboard) or a process change (specifying a slim nozzle for that welding station), both of which have cost and schedule implications.\n\n*   **No Failed DFM Checklist Results:** The `Failed DFM Checklist Results` output indicates no automated DFM checks have failed, which suggests either the checks are not comprehensive enough to catch these issues or they have not been run for this specific version. The manual feedback clearly highlights DFM issues.\n\n### 4. Downstream Impact\n\nThe changes and identified issues have several downstream impacts:\n\n*   **Tooling Changes:**\n    *   The increased bend radius from 2.0 mm to 3.0 mm necessitates a change in the brake press tooling, specifically the brake vee, from 12 mm to 16 mm. This must be confirmed and implemented.\n    *   The 4.2 mm increase in blank length will impact blanking dies and material utilization.\n*   **Manufacturing Process Adjustments:**\n    *   The missing drain hole will directly impact the washing and powder coating processes, potentially requiring manual draining, rework, or leading to quality defects (flash-rust).\n    *   The tight weld access may require specialized welding nozzles or adjustments to the welding sequence/fixture.\n*   **Quality and Reliability:**\n    *   Failure to confirm the brake vee change could reintroduce the micro-cracking issue, leading to field failures.\n    *   The missing drain hole will lead to corrosion issues and reduced product lifespan.\n*   **Documentation and Compliance:**\n    *   A high-priority feedback item (FB-2026-00005) indicates that PPAP Level 3 is required for this engineering change. This is a significant documentation and validation effort that needs to be addressed before release.\n\n### 5. Recommended Action & State Transition\n\nBased on the `Release Readiness` evidence and the identified issues, this design is **NOT READY for release gating**.\n\n**Current Release Readiness Status:**\n*   `ready`: false\n*   `reason_codes`:\n    *   `no_assembly_tree`: The selected version has no recorded component assembly tree.\n    *   `critical_findings_open`: Open critical findings remain on the release scope.\n    *   `no_review_binding`: No review is bound to this exact file version.\n*   `critical_open`: 1 (Specifically, \"2.0 mm inside bend radius on 2.0 mm HR \u2014 cracking risk\" (FB-2026-00001) is still \"in_progress\").\n\n**Recommended Actions:**\n\n1.  **Address Critical Finding (FB-2026-00001):** Immediately confirm the brake vee tooling change from 12 mm to 16 mm for the new 3.0 mm bend radius. This finding must be resolved and its status updated from \"in_progress\" to \"resolved\" or \"closed.\"\n2.  **Reintroduce Drain Hole (FB-2026-00004):** The 6 mm drain hole must be added back to the base pan in a new revision (Rev D) to prevent wash water retention and flash-rust.\n3.  **Resolve Weld Access Issue (FB-2026-00003):** The design team must address the tight weld access at the inboard bracket. This could involve moving the bracket 3 mm outboard or formally specifying the use of a slim nozzle and updating manufacturing instructions.\n4.  **Complete Assembly Tree:** Ensure the assembly tree for the current version (Rev C) is properly recorded and linked.\n5.  **Bind Review:** A formal review must be bound to this exact file version (Rev C) to track and approve all changes and resolutions.\n6.  **Address PPAP Requirement (FB-2026-00005):** Confirm with the customer whether a full PPAP Level 3 resubmission or a delta submission is required for this engineering change. This is a high-priority process blocker.\n\n**State Transition:** The design should remain in an **\"In Progress\"** or **\"Design Review\"** state. It cannot transition to \"Approved\" or \"Released\" until all critical findings are closed, the assembly tree is recorded, a review is bound, and the other identified manufacturability issues are addressed in a subsequent revision or formally accepted with a mitigation plan.",
+  "ended": "done",
+  "error": null,
+  "seconds": 29.69,
+  "started_at": 1789755836.0232623
+}
