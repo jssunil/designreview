@@ -48,3 +48,27 @@ https://agentswitch.theschoolofai.in/v/DesignReview:Home/design_checklists
 
 https://agentswitch.theschoolofai.in/v/DesignReview:Home/packages
 
+
+CAD Software for DFM analysis links
+
+
+https://www.colabsoftware.com/product/overview
+
+https://www.colabsoftware.com/research/importance-of-design-standards
+
+https://www.opencascade.com/occt3d-technology/
+
+https://www.colabsoftware.com/research/who-really-participates-in-engineering-design-reviews
+
+https://www.colabsoftware.com/ai-transformation
+
+https://www.colabsoftware.com/guides/ai-powered-simulation-tools-smarter-faster-design-validation
+
+https://www.openbom.com/blog/webinars-live-demos-conferences/openbom-at-aras-ace-2026-cad-file-agent-product-memory-and-ai-for-engineering
+
+
+https://www.openbom.com/blog/openbom-manifesto/connected-bom-product-data-foundation-ai-agents-engineering
+
+
+https://nexcad.ai/
+
