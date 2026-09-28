@@ -1,0 +1,18 @@
+# A request that needs a capability this seat may not have (e.g. "run an AI
+# design review", "run a wall-thickness analysis"). The tool check runs first;
+# if the tool is absent from this seat's tools/list, every other node is
+# BYPASSED and the run ends as one clean refusal -- nothing is guessed.
+
+name = "tool_refusal"
+params = ["file_id", "tool"]
+
+[[nodes]]
+id = "tool_check"
+action = "probe_tool_offered"
+args = { tool = "{tool}" }
+
+[[nodes]]
+id = "design_file"
+action = "load_design_file"
+after = ["tool_check"]
+args = { file_id = "{file_id}" }

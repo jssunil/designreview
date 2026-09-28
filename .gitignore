@@ -13,3 +13,10 @@ __pycache__/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# AI-written reference tests -- do not submit (tests/ holds the hand-written suite)
+tests_local/
+
+# Local-only notes: where designs came from, and the merge plan that names reference projects
+PROVENANCE.local.md
+REFCODE_MERGE_PLAN.md

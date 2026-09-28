@@ -1,64 +1,36 @@
 """
-Reload saved TaskRun proofs and recompute their eval score without
-re-running the (live, paid) agent -- only the cheap, deterministic
-ground-truth axes are recomputed by default; the LLM-judge axis is skipped
-unless --with-judge is passed, since it's the one axis that costs money and
-can vary between calls.
+Re-grade saved harness runs without re-running the agent (no network, no LLM).
 
-Provenance: the raw-run-then-rescore split is ported from
-D:\\sjk\\eagv3\\S18Code\\rescore.py -- built there after a scoring-code bug
-shipped wrong and could only be fixed by burning more GPU-hours re-running
-the agent; rescoring a saved run makes a scoring bug a free fix instead.
+    python rescore.py                           # the newest batch under runs/batches/
+    python rescore.py runs/batches/<batch_id>   # a specific batch
+    python rescore.py runs/<run_id> ...         # specific run folders
+
+A thin wrapper over `python -m agentkit.harness.grade`. Grading reads only
+what the run saved (taskrun.json, tool_journal.jsonl, ground_truth_before/
+after.json), so fixing a check and re-grading never costs an agent run.
+The first draft's flat proofs/runs/*.json files carry no ground truth and
+can't be graded by these checks.
 """
 
 from __future__ import annotations
 
-import argparse
-import json
-from dataclasses import asdict
+import sys
 from pathlib import Path
 
-from as_client import AgentSwitchClient
-from capstone_evals import AXES
-from core.eval_framework import evaluate_run
-from core.harness import TaskRun
-
-PROOFS_DIR = Path(__file__).parent / "proofs" / "runs"
-RESULTS_PATH = Path(__file__).parent / "proofs" / "results.json"
+from agentkit.harness.batch import RUNS_DIR
+from agentkit.harness.grade import main as grade_main
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Rescore saved TaskRun proofs without re-running the agent.")
-    parser.add_argument("--tenant", default="suryodaya")
-    parser.add_argument(
-        "--with-judge", action="store_true", help="Also run the LLM-judge axis (costs one LLM call per run)."
-    )
-    args = parser.parse_args()
-
-    client = AgentSwitchClient(args.tenant)
-    client.login()
-    client.init_mcp()
-
-    axes = dict(AXES)
-    if not args.with_judge:
-        axes.pop("judged_reasoning_quality", None)
-
-    run_paths = sorted(PROOFS_DIR.glob("*.json"))
-    if not run_paths:
-        print(f"No saved runs found under {PROOFS_DIR}")
-        return
-
-    results = []
-    for path in run_paths:
-        run = TaskRun.load(path)
-        result = evaluate_run(run, axes, ground_truth_context=client, run_path=path)
-        results.append(asdict(result))
-        print(f"{path.name}: score={result.score} passed={result.passed}")
-
-    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    RESULTS_PATH.write_text(json.dumps(results, indent=2), encoding="utf-8")
-    print(f"\nWrote {len(results)} rescored result(s) to {RESULTS_PATH}")
+def main(argv=None) -> int:
+    paths = list(sys.argv[1:] if argv is None else argv)
+    if not paths:
+        batches = sorted((RUNS_DIR / "batches").glob("*")) if (RUNS_DIR / "batches").exists() else []
+        if not batches:
+            print("No batches under runs/batches -- run `python capstone_evals.py` first.")
+            return 1
+        paths = [str(batches[-1])]
+    return grade_main([str(Path(p)) for p in paths])
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

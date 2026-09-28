@@ -2,14 +2,6 @@
 Single-pass LLM-as-judge for the one eval axis that can't be checked
 mechanically against ground truth: whether the agent's written DFM reasoning
 is specific and evidence-grounded, or generic boilerplate.
-
-Provenance: a simplified single-judge version of the rubric idea in
-D:\\sjk\\eagv3\\S17Code\\s17code\\evals\\judge.py -- no multi-model judge
-panel, no disagreement tracking; one call, one short rubric, one score. Every
-other eval axis in core/eval_framework.py is deterministic and ground-truth
-based; this is the deliberate exception for the one criterion ("does this
-read like it was written for this exact part") that has no ground-truth
-record to check against.
 """
 
 from __future__ import annotations

@@ -1,0 +1,62 @@
+"""
+Ground-truth probes for design review. Each reads the platform with the
+HARNESS's own login (GroundTruthReader: `rest` = REST, `mcp` = a separate
+MCP session), never the agent's client, and returns only the fields the
+checks need.
+
+  versions:<file_id>      REST  DesignVersion rows (number, commit message, diff keys)
+  design_file:<file_id>   REST  DesignFile (404 -> recorded as error_kind "missing")
+  feedback:<file_id>      REST  DesignFeedback titles/priority/status for a file
+  release_gate:<file_id>  MCP   release readiness (a POST-only computed endpoint; REST can't GET it)
+  seat_tools              MCP   this seat's tools/list names
+  standards               REST  DesignStandard ids, names, body/number
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from agentkit.registry import Registry
+
+
+def _versions(reader: Any, file_id: str) -> List[Dict[str, Any]]:
+    rows = reader.rest.list_all("DesignVersion", file_id=file_id)
+    return sorted(({"id": r.get("id"), "version_number": r.get("version_number"),
+                    "commit_message": r.get("commit_message") or "",
+                    "diff_keys": sorted((r.get("diff_from_parent_json") or {}).keys()),
+                    "updated_at": r.get("updated_at")}
+                   for r in rows if r.get("file_id") in (None, file_id)),
+                  key=lambda r: r["version_number"] or 0)
+
+
+def _design_file(reader: Any, file_id: str) -> Dict[str, Any]:
+    r = reader.rest.get("DesignFile", file_id)
+    return {k: r.get(k) for k in ("id", "number", "name", "status", "current_version", "updated_at")}
+
+
+def _release_gate(reader: Any, file_id: str) -> Dict[str, Any]:
+    payload = reader.mcp.invoke_tool("endpoint.designreview.release_readiness", {"file_id": file_id})
+    g = payload.get("result", payload) if isinstance(payload, dict) else {}
+    return {"ready": bool(g.get("ready")), "version_number": g.get("version_number"),
+            "critical_open": g.get("critical_open"), "reason_codes": list(g.get("reason_codes") or []),
+            "blocker_titles": [b.get("title") for b in g.get("blockers") or [] if isinstance(b, dict)]}
+
+
+def _feedback(reader: Any, file_id: str) -> List[Dict[str, Any]]:
+    return [{k: r.get(k) for k in ("id", "number", "title", "priority", "status")}
+            for r in reader.rest.list_all("DesignFeedback", file_id=file_id) if r.get("file_id") in (None, file_id)]
+
+
+def _seat_tools(reader: Any, _arg: str) -> List[str]:
+    return sorted(reader.mcp.seat_catalog(refresh=True))
+
+
+def _standards(reader: Any, _arg: str) -> List[Dict[str, Any]]:
+    return [{k: r.get(k) for k in ("id", "name", "standard_body", "standard_number")}
+            for r in reader.rest.list_all("DesignStandard")]
+
+
+def register_probes(reg: Registry) -> None:
+    reg.probes.update({"versions": _versions, "design_file": _design_file, "release_gate": _release_gate,
+                       "feedback": _feedback,
+                       "seat_tools": _seat_tools, "standards": _standards})

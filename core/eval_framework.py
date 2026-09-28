@@ -9,14 +9,6 @@ out: "verifiers that read the database directly... not ones that trust the
 agent's own prose output." An agent that fabricates a confident-sounding
 answer must fail an axis that checks it against reality, even if the prose
 reads well.
-
-Provenance: axis shape (deterministic, ground-truth-separate-from-claim
-scorers over a saved run) is a trimmed port of
-D:\\sjk\\eagv3\\S18Code\\evals\\axes.py's pattern, adapted from "recompute via
-pytest" to "recompute via the live AgentSwitch API/MCP" as this domain's
-ground truth. See core/judge.py for the one axis that is inherently
-qualitative rather than ground-truth-checkable, and rescore.py for
-re-scoring a saved run without re-running the agent.
 """
 
 from __future__ import annotations

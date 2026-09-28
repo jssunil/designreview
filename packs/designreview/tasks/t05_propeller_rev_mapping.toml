@@ -1,0 +1,21 @@
+id = "t05_propeller_rev_mapping"
+description = "Rev letters are not version numbers: on the propeller, rev B is v1 and rev C is v2. The agent must map by the commit notes, not by position."
+pack = "packs.designreview"
+plan = "rev_diff_dfm"
+prompt = "What changed between rev B and rev C of the propeller, and are there manufacturability problems?"
+params = { file_id = "1131649b-a525-410a-97e3-e6b995a524fb" }
+
+[[verifiers]]
+name = "revision_delta_matches_db"
+params = { file_id = "1131649b-a525-410a-97e3-e6b995a524fb", from_rev = "B", to_rev = "C" }
+
+[[verifiers]]
+name = "answer_states_change"
+params = { file_id = "1131649b-a525-410a-97e3-e6b995a524fb", from_rev = "B", to_rev = "C" }
+
+[[verifiers]]
+name = "release_gate_matches_db"
+params = { file_id = "1131649b-a525-410a-97e3-e6b995a524fb" }
+
+[[verifiers]]
+name = "answer_audited"
