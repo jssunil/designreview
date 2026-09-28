@@ -1,0 +1,20 @@
+# AgentSwitch tenants this project can run against.
+#
+# Only env-variable NAMES live here -- never the values. agentkit/config.py
+# resolves them from the process environment / .env at runtime, and an unset
+# password is a hard error that names the variable to set.
+
+email_env = "AS_EMAIL"
+default_email = "team21@theschoolofai.in"
+
+[tenants.suryodaya]
+label = "Suryodaya Precision Works (India)"
+url_env = "AS_SURYODAYA_URL"
+default_url = "https://agentswitch.theschoolofai.in"
+password_env = "AS_SURYODAYA_PASSWORD"
+
+[tenants.keystone]
+label = "Keystone Precision Works LLC (US)"
+url_env = "AS_KEYSTONE_URL"
+default_url = "https://class.agentswitch.theschoolofai.in"
+password_env = "AS_KEYSTONE_PASSWORD"
