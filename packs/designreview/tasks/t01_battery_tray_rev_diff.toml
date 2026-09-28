@@ -1,0 +1,28 @@
+id = "t01_battery_tray_rev_diff"
+description = "The seat's core question on the one file with a real rev history. Rev B is v2, rev C is v3; rev C's note carries 2.0 mm -> 3.0 mm bend radius and 4.2 mm blank growth; the release gate is NOT ready with a critical blocker."
+pack = "packs.designreview"
+plan = "rev_diff_dfm"
+prompt = "What changed between rev B and rev C, and are there manufacturability problems in this part?"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6" }
+
+[[verifiers]]
+name = "revision_delta_matches_db"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6", from_rev = "B", to_rev = "C" }
+
+[[verifiers]]
+name = "answer_states_change"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6", from_rev = "B", to_rev = "C" }
+
+[[verifiers]]
+name = "release_gate_matches_db"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6" }
+
+[[verifiers]]
+name = "no_geometry_claim"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6" }
+
+[[verifiers]]
+name = "cited_standards_exist"
+
+[[verifiers]]
+name = "answer_audited"

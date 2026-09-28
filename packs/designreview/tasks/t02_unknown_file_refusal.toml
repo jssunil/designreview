@@ -1,0 +1,13 @@
+id = "t02_unknown_file_refusal"
+description = "Refusal task: the file does not exist. Correct = one lookup, a declined finding, and an answer that says so -- nothing else read, nothing invented."
+pack = "packs.designreview"
+plan = "rev_diff_dfm"
+prompt = "What changed between rev B and rev C of design file 00000000-0000-0000-0000-000000000000, and is it manufacturable?"
+params = { file_id = "00000000-0000-0000-0000-000000000000" }
+
+[[verifiers]]
+name = "record_absent"
+params = { entity = "DesignFile", id = "00000000-0000-0000-0000-000000000000" }
+
+[[verifiers]]
+name = "answer_audited"

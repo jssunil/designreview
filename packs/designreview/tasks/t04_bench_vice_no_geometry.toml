@@ -1,0 +1,25 @@
+id = "t04_bench_vice_no_geometry"
+description = "Numeric revs (\"Rev 2\", \"Rev 3\") and a platform diff that records only file hashes: the answer must report the rev-3 notes (180 g weight saving) and must not claim any geometry comparison."
+pack = "packs.designreview"
+plan = "rev_diff_dfm"
+prompt = "What changed between rev 2 and rev 3 of the bench vice, and are there manufacturability problems?"
+params = { file_id = "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4" }
+
+[[verifiers]]
+name = "revision_delta_matches_db"
+params = { file_id = "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4", from_rev = "2", to_rev = "3" }
+
+[[verifiers]]
+name = "answer_states_change"
+params = { file_id = "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4", from_rev = "2", to_rev = "3" }
+
+[[verifiers]]
+name = "no_geometry_claim"
+params = { file_id = "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4" }
+
+[[verifiers]]
+name = "release_gate_matches_db"
+params = { file_id = "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4" }
+
+[[verifiers]]
+name = "answer_audited"

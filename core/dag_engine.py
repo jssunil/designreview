@@ -2,26 +2,12 @@
 Event-sourced task graph engine: a "live graph" the agent can extend while it
 runs, instead of a static list executed once in one topological pass.
 
-Provenance: trimmed port of the scheduling design in
-D:\\sjk\\eagv3\\S17Code\\s17code\\core\\live_graph\\{core,store}.py --
-TaskSpec/GraphPatch/NodeState as an event-sourced mutation model, and
-GraphStore.ready() as a "predecessors all succeeded" ready-set scheduler,
-instead of nx.topological_sort() run once (the first draft's approach, which
-also had no way to stop a failed node's children from running anyway).
+LEGACY: the agent now uses agentkit/graph/engine.py. This module is kept
+only until its remaining tests are retired.
 
-Two deliberate deviations from S17Code's design, both scope decisions rather
-than oversights:
-1. Concurrency uses concurrent.futures.ThreadPoolExecutor, not asyncio,
-   because this project's MCP transport (as_client.py) is synchronous
-   urllib -- same ready-set scheduling algorithm, a different executor.
-2. No Deferred/wait-resume (pausing a node for an external webhook/cron
-   callback): every MCP/REST call this agent makes resolves inline, so
-   there's nothing to wait on asynchronously.
-
-S13Code's Z3-proved admission oracle (invariants.py) and hedged/speculative
-branch racing (speculation.py) were surveyed but not ported -- real
-engineering value, but a z3-solver dependency and formal-verification
-surface is disproportionate to a ~5-10 node evidence-gathering graph.
+Design choices: concurrency uses concurrent.futures.ThreadPoolExecutor (the
+MCP transport is synchronous), and there is no deferred/wait-resume because
+every call resolves inline.
 """
 
 from __future__ import annotations
