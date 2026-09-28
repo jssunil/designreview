@@ -1,0 +1,55 @@
+# "What changed between rev B and rev C, and are there manufacturability
+# problems in this part?" -- evidence-gathering plan.
+#
+# The file is read first: if it doesn't exist (or isn't visible), every other
+# read is BYPASSED and the run ends as one clean refusal instead of half-empty
+# evidence. The other reads then run in parallel. If the release gate reports
+# any blocker or reason code, the planner adds one follow-up read of the
+# failed DFM checklist results.
+
+name = "rev_diff_dfm"
+params = ["file_id"]
+
+[[nodes]]
+id = "design_file"
+action = "load_design_file"
+args = { file_id = "{file_id}" }
+
+[[nodes]]
+id = "revisions"
+action = "list_revisions"
+after = ["design_file"]
+args = { file_id = "{file_id}" }
+
+[[nodes]]
+id = "release_gate"
+action = "read_release_gate"
+after = ["design_file"]
+args = { file_id = "{file_id}" }
+
+[[nodes]]
+id = "feedback"
+action = "list_feedback"
+after = ["design_file"]
+args = { file_id = "{file_id}" }
+
+# Recall the company's DesignStandard records relevant to the change notes
+# (and the release blockers, if the gate has answered by then).
+[[nodes]]
+id = "dfm_standards"
+action = "gather_dfm_standards"
+after = ["revisions"]
+
+[[rules]]
+name = "failed_checklists_when_gate_blocked"
+
+[rules.when]
+node = "release_gate"
+verdict = "resolved"
+nonempty = ["result.blockers", "result.reason_codes"]
+
+[[rules.add]]
+id = "failed_checklists"
+action = "list_failed_checklists"
+args = { file_id = "{file_id}" }
+after = ["release_gate"]
