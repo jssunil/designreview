@@ -1,0 +1,8 @@
+# Project-level settings for agentkit (the framework itself names no domain).
+
+# The pack CLIs use when --pack is not given, and graders use when a run's
+# task.json doesn't name one.
+default_pack = "packs.designreview"
+
+# The tenant used when a task file or CLI doesn't name one (see config/tenants.toml).
+default_tenant = "suryodaya"
