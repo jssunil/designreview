@@ -2,7 +2,7 @@
 End-to-end agent tasks, verified against the DATABASE, not the agent's prose.
 Markers: agent + live (module-wide). Costs LLM calls, so run sparingly.
 
-Author(s): ____________    Written by hand: [ ] yes
+Author(s): Sunil Jakkaraju    Written by hand: [yes] 
 
 The tasks are data: packs/designreview/tasks/*.toml. Run one with
 agentkit.harness.run_one.run_task(task, "suryodaya", tmp_path, "id") and assert on the

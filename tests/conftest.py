@@ -74,9 +74,9 @@ class Platform:
         cfg = get_environment_config(tenant)
         self.tenant = tenant
         self.base_url = cfg["url"]
-        # Verify TLS against the OS trust store (on Windows this includes any
-        # locally installed corporate / network-filter CA), not certifi's bundle.
-        self._http = httpx.Client(base_url=cfg["url"], timeout=60, verify=ssl.create_default_context())
+        # Verify TLS against the OS trust store (or disable with AS_INSECURE_TLS=1).
+        verify_tls: Any = False if os.getenv("AS_INSECURE_TLS") == "1" else ssl.create_default_context()
+        self._http = httpx.Client(base_url=cfg["url"], timeout=60, verify=verify_tls)
         resp = self._http.post("/api/auth/login", json={"email": cfg["email"], "password": cfg["password"]})
         resp.raise_for_status()
         self._http.headers["Authorization"] = f"Bearer {resp.json()['token']}"

@@ -421,3 +421,6 @@ likely ours alone, unlike Ledger). Still open:
   reading existing `DesignAICheck`/`DesignChecklistResult`) or also call
   REST directly for `analysis/thickness`/`analysis/interference`/`ai-review`
   when no prior check exists — a build decision, not just a research one.
+
+
+  
