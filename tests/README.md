@@ -37,6 +37,7 @@ Anything without a marker must run offline: no network, no LLM, no `.env`.
 | `test_verifiers.py` | `packs/designreview/checks.py` (the graded verifiers) | yes |
 | `test_sim_platform.py` | `agentkit/sim/*` + the whole batch offline on the captured fixture | yes |
 | `test_calibration.py` | verifier self-test (`agentkit/harness/mutants.py`) | yes |
+| `test_viewer.py` | `agentkit/viewer/*` (read-only run viewer: API, path safety, escaping) | yes |
 | `test_modularity.py` | architecture guards (domain-free framework, no agent frameworks) | yes |
 | `test_platform_live.py` | platform facts the tasks rely on | live |
 | `test_platform_workflows.py` | review / feedback workflows | live + writes |

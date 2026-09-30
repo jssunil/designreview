@@ -121,6 +121,7 @@ the standard library's `tomllib`.
 | [`rescore.py`](rescore.py) | Re-grade saved runs (files only; no network, no LLM) |
 | [`as_client.py`](as_client.py) | Compatibility client (`AgentSwitchClient`); `.seat()` returns the new MCP client |
 | [`agentkit/`](agentkit/) · [`packs/designreview/`](packs/designreview/) · [`config/`](config/) | Framework · domain pack · configuration |
+| [`agentkit/viewer/`](agentkit/viewer/) | Read-only run viewer: `python -m agentkit.viewer` |
 | [`core/`](core/) | Legacy import paths (`core.harness`, `core.llm_gateway`, `core.economics` re-export `agentkit`); legacy `dag_engine`, `eval_framework`, `judge` |
 | [`tests/`](tests/) | Graded, **hand-written** test suite — see [`tests/README.md`](tests/README.md) |
 | [`docs/EXPLAINERS.md`](docs/EXPLAINERS.md) | Per-module explainers |
@@ -171,7 +172,15 @@ python -m agentkit.sim.capture --tenant suryodaya
 python -m agentkit.sim.capture --tenant keystone
 python -m agentkit.harness.batch --sim packs/designreview/fixtures --skip-llm --grade \
        --fault "edit_text:Blank length grows 4.2 mm=>Blank length grows 5.5 mm"
+
+# Browse batches and runs in a browser (read-only, this machine only)
+python -m agentkit.viewer                   # http://127.0.0.1:8765/   [--runs-dir runs] [--port 8765]
 ```
+
+The **run viewer** shows each batch (task × tenant, failing checks, calibration) and each run in tabs:
+the answer with its claim audit, the finding, every check, the evidence graph as a timeline, the tool
+journal, ground truth before/after (what changed during the run), and LLM cost. It only reads the run
+folders; it can't start runs or change anything.
 
 ### 4. Tests
 

@@ -1,5 +1,39 @@
 # Changes
 
+## 2026-09-30 — Run viewer (read-only); claim-audit timestamp fix
+
+### Why
+
+Every run already leaves a full audit trail on disk: answer, finding, graph, tool journal, ground truth
+before and after, score and cost. But reading it meant opening nine JSON files per run. The viewer puts
+that trail on one local page. It's useful for explaining a graded run and for finding out quickly why a
+check failed or drifted.
+
+### Added
+
+| What | Where |
+|---|---|
+| Run viewer: standard-library HTTP server, JSON API (`/api/batches`, `/api/runs`, `/api/batches/<id>`, `/api/runs/<id>`), plain HTML/JS/CSS page with no framework and no build step | `agentkit/viewer/` (`python -m agentkit.viewer`) |
+| Pages: batches; all runs; batch (task × tenant, failing checks, calibration per mutant, `report.md`); run tabs Answer · Finding · Checks · Evidence (graph timeline) · Tool calls · Ground truth (drift diff) · Cost | `agentkit/viewer/static/` |
+| Safety: GET/HEAD only (405 otherwise), strict id pattern and folder confinement, static whitelist, text-only rendering, `\u`-escaped JSON, CSP and nosniff headers, binds to 127.0.0.1 | `agentkit/viewer/server.py` |
+| Explainer; `tests/test_viewer.py` to-do template; README section | `docs/explainers/agentkit_viewer.md`, `tests/`, `README.md` |
+| Reference tests (38 new): API over hand-built and offline-batch run folders, traversal cases, read-only HTTP, headers, hostile-text escaping | `tests_local/test_viewer.py` |
+
+### Fixed
+
+| What | Where |
+|---|---|
+| The claim audit treated every number in the finding as supported, **including the digits of timestamps and UUIDs**. With a snapshot taken at 12:05, an invented "12 mm" passed the audit. Dates, clock times and UUIDs are now removed before numbers are collected. A regression test pins the clock | `agentkit/answer/claim_audit.py` (`known_numbers`) |
+
+### Results
+
+| Run | Result |
+|---|---|
+| `tests_local` offline | 406 passed (includes the viewer tests; the previously time-dependent audit test is now stable) |
+| `tests/` (your suite) | 4 passed |
+| Offline batch, per-tenant fixtures | 7/7 pass |
+| Viewer on the live `runs/` folder in Chrome | batches, batch, run tabs render; no console errors; POST → 405; `..%2F.env` → 404 |
+
 ## 2026-09-30 — Keystone tasks; generic version selection; per-tenant fixtures
 
 ### Why
