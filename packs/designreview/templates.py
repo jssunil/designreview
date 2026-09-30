@@ -23,7 +23,61 @@ def plain_rendering(finding: Dict[str, Any]) -> str:
     out.append(f"Design file {f.get('number') or f.get('id')} -- {f.get('name')} (status {f.get('status')}, "
                f"current version {f.get('current_version')}).")
 
-    delta = finding.get("revision_delta") or {}
+    delta = finding.get("revision_delta")
+    if delta is not None:
+        _what_changed(delta, out)
+    _release(finding, out)
+    if finding.get("schedule") is not None:
+        _schedule(finding["schedule"], out)
+    if finding.get("handoffs") is not None:
+        _handoffs(finding["handoffs"], out)
+    for d in finding.get("declines") or []:
+        out.append(f"- Not available to this seat: {d.get('node')} -- {d.get('reason')}.")
+    return "\n".join(out)
+
+
+def _schedule(sched: Dict[str, Any], out: List[str]) -> None:
+    out.append("")
+    out.append("Schedule")
+    if sched.get("outcome") != "answered":
+        out.append(f"- Project milestones unavailable: {sched.get('reason') or sched.get('outcome')}.")
+        return
+    if not sched.get("milestones"):
+        out.append("- The project has no milestones.")
+        return
+    late = [m for m in sched["milestones"] if m.get("past_due")]
+    if late:
+        out.append(f"- {len(late)} milestone(s) are past due as of {sched.get('as_of')}:")
+        for m in late:
+            out.append(f"  - {m.get('name')} -- due {m.get('due_date')}, still {m.get('status')}"
+                       + (" (critical path)" if m.get("is_critical_path") in (1, True) else ""))
+    else:
+        out.append(f"- No milestone is past due as of {sched.get('as_of')}.")
+    if sched.get("next_open"):
+        nxt = next(m for m in sched["milestones"] if m.get("name") == sched["next_open"])
+        out.append(f"- Next open milestone: {nxt.get('name')} -- due {nxt.get('due_date')} ({nxt.get('status')}).")
+
+
+def _handoffs(h: Dict[str, Any], out: List[str]) -> None:
+    out.append("")
+    out.append("Who needs to act")
+    if h.get("outcome") != "answered":
+        out.append(f"- Could not check for cross-team dependencies: {h.get('reason') or h.get('outcome')}.")
+        return
+    proposed = h.get("proposed") or []
+    if not proposed:
+        out.append("- No other team needs to act: none of the open serious items is for manufacturing, quality "
+                   "or purchasing -- they are design review's own work.")
+    for p in proposed:
+        items = "; ".join(f"[{c.get('priority')}] {c.get('title')}" for c in p.get("cites") or [])
+        out.append(f"- {p['owner']}: {items}. Ask: {p.get('ask')}")
+    if proposed and not h.get("filed"):
+        out.append("- These hand-offs are proposed only; nothing has been filed on the platform (dry run).")
+    for src in h.get("sources_unavailable") or []:
+        out.append(f"- Not checked for hand-offs ({src} unavailable).")
+
+
+def _what_changed(delta: Dict[str, Any], out: List[str]) -> None:
     out.append("")
     out.append("What changed")
     if delta.get("outcome") == "answered":
@@ -42,6 +96,8 @@ def plain_rendering(finding: Dict[str, Any]) -> str:
     else:
         out.append(f"- Could not compare revisions: {delta.get('reason') or delta.get('outcome')}.")
 
+
+def _release(finding: Dict[str, Any], out: List[str]) -> None:
     gate = finding.get("release_gate") or {}
     out.append("")
     out.append("Manufacturability and release")
@@ -76,7 +132,3 @@ def plain_rendering(finding: Dict[str, Any]) -> str:
             ref = " ".join(x for x in (m.get("standard_body"), m.get("standard_number")) if x)
             out.append(f"  - {m.get('name')} [{m.get('category')}]" + (f" ({ref})" if ref else "")
                        + ("" if m.get("is_active") in (1, True, None) else " -- inactive"))
-
-    for d in finding.get("declines") or []:
-        out.append(f"- Not available to this seat: {d.get('node')} -- {d.get('reason')}.")
-    return "\n".join(out)

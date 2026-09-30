@@ -3,7 +3,7 @@ Design-review pack (Team 21 seat on AgentSwitch).
 
 Everything domain-specific lives here: actions (the allowlist), read-only
 endpoint declarations, plans, the finding builder, claim rules, the
-template answer, prompts, ground-truth probes, verifiers, verifier
+template answer, prompts, hand-off topics (handoffs.toml), ground-truth probes, verifiers, verifier
 self-test mutants, tasks and platform fixtures.
 
     from agentkit.registry import load_pack
@@ -19,6 +19,7 @@ from packs.designreview.actions import READ_ONLY_ENDPOINTS, register_actions, re
 from packs.designreview.checks import register_checks
 from packs.designreview.claims import CLAIM_RULES
 from packs.designreview.finding import build_finding
+from packs.designreview.handoffs import register_handoffs
 from packs.designreview.mutants import register_mutants
 from packs.designreview.probes import register_probes
 from packs.designreview.templates import plain_rendering
@@ -38,6 +39,7 @@ def register(reg: Registry) -> None:
     reg.name = "designreview"
     register_actions(reg)
     register_retrieval(reg)
+    register_handoffs(reg)
     register_probes(reg)
     register_checks(reg)
     register_mutants(reg)

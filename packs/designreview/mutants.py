@@ -128,3 +128,92 @@ def register_mutants(reg: Registry) -> None:
             return None
         step.setdefault("detail", {})["audit"] = {"ok": False, "missing": ["the release verdict"]}
         return b
+
+    # ---- hand-offs and schedule
+
+    def _handoffs(b: RunBundle) -> Optional[dict]:
+        h = b.finding.get("handoffs")
+        return h if isinstance(h, dict) and h.get("outcome") == "answered" else None
+
+    @reg.mutant("handoff_invented", target="handoffs_match_platform")
+    def handoff_invented(b: RunBundle) -> Optional[RunBundle]:
+        h = _handoffs(b)
+        if h is None:
+            return None
+        fake = {"id": "00000000-0000-0000-0000-00000000f00d", "title": "Coating adhesion failure", "priority": "high"}
+        h.setdefault("proposed", []).append({"owner": "paint shop", "cites": [fake], "ask": "fix it"})
+        h.setdefault("would_file", []).append({"owner": "paint shop", "tool": "AgentEscalation.create",
+                                               "args": {"reason": "Coating adhesion failure"}})
+        return b
+
+    @reg.mutant("handoff_dropped", target="handoffs_match_platform")
+    def handoff_dropped(b: RunBundle) -> Optional[RunBundle]:
+        h = _handoffs(b)
+        if h is None or not h.get("proposed"):
+            return None
+        h["proposed"].pop()
+        h["would_file"] = (h.get("would_file") or [])[:-1]
+        return b
+
+    @reg.mutant("handoff_cites_closed_item", target="handoffs_match_platform")
+    def handoff_cites_closed_item(b: RunBundle) -> Optional[RunBundle]:
+        h = _handoffs(b)
+        if h is None or not h.get("proposed"):
+            return None
+        h["proposed"][0]["cites"].append({"id": "11111111-2222-3333-4444-555555555555",
+                                          "title": "Weld spatter on the old bracket", "priority": "low"})
+        return b
+
+    @reg.mutant("handoff_marked_filed", target="handoffs_match_platform")
+    def handoff_marked_filed(b: RunBundle) -> Optional[RunBundle]:
+        h = _handoffs(b)
+        if h is None or not h.get("proposed") or not b.dry_run:
+            return None
+        h["filed"] = True
+        return b
+
+    @reg.mutant("filing_claimed_in_answer", target="answer_states_handoffs")
+    def filing_claimed_in_answer(b: RunBundle) -> Optional[RunBundle]:
+        if _handoffs(b) is None or not b.dry_run:
+            return None
+        return _answer(b, b.answer + "\nI have escalated this to the owning team.")
+
+    @reg.mutant("handoff_owner_unnamed", target="answer_states_handoffs")
+    def handoff_owner_unnamed(b: RunBundle) -> Optional[RunBundle]:
+        h = _handoffs(b)
+        if h is None or not h.get("proposed"):
+            return None
+        owner = h["proposed"][0]["owner"]
+        return _answer(b, re.sub(rf"(?i)\b{re.escape(owner)}\b", "another team", b.answer))
+
+    @reg.mutant("no_handoff_unstated", target="answer_states_handoffs")
+    def no_handoff_unstated(b: RunBundle) -> Optional[RunBundle]:
+        h = _handoffs(b)
+        if h is None or h.get("proposed"):
+            return None
+        text = "\n".join(line for line in b.answer.splitlines()
+                         if not re.search(r"(?i)no other team|no\s+(?:\w+\s+){0,3}hand-?off|design review'?s? own|"
+                                          r"need\w*\s+(?:another|other)", line))
+        return _answer(b, text)
+
+    @reg.mutant("late_milestone_hidden", target="schedule_matches_db")
+    def late_milestone_hidden(b: RunBundle) -> Optional[RunBundle]:
+        s = b.finding.get("schedule") or {}
+        if not s.get("past_due"):
+            return None
+        s["past_due"] = s["past_due"][1:]
+        return b
+
+    @reg.mutant("milestone_date_shifted", target="schedule_matches_db")
+    def milestone_date_shifted(b: RunBundle) -> Optional[RunBundle]:
+        ms = (b.finding.get("schedule") or {}).get("milestones") or []
+        if not ms:
+            return None
+        ms[0]["due_date"] = "2099-01-01"
+        return b
+
+    @reg.mutant("on_track_claimed", target="answer_states_handoffs")
+    def on_track_claimed(b: RunBundle) -> Optional[RunBundle]:
+        if not (b.finding.get("schedule") or {}).get("past_due"):
+            return None
+        return _answer(b, b.answer + "\nThe project is on track for its release.")

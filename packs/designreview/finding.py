@@ -11,7 +11,17 @@ The LLM never decides a fact. Everything a verifier grades lives here:
   release_gate     ready, reason codes/reasons, critical_open, blockers
   dfm_signals      failed checklist results + open high/critical feedback +
                    DesignStandard records recalled for the change (keyword match)
+  schedule         the project's milestones with due dates; past_due is
+                   computed from the snapshot date (the platform leaves a
+                   late milestone's status at in_progress)
+  handoffs         proposed hand-offs to the teams that own problems this
+                   seat can't fix (handoffs.toml), each citing the open
+                   items behind it, plus what would be filed -- in a dry
+                   run nothing is filed (filed = false)
   declines         every node the platform refused, with its reason
+
+Sections whose nodes are not in the plan are left out, and the outcome
+only counts the sections that are present.
 
 Why commit messages: in this build diff_from_parent_json only carries file
 hashes and no CAD kernel exists (PLAN.md §8), so the revision delta can
@@ -25,6 +35,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from agentkit.graph import DECLINED, FAILED, RESOLVED, NodeResult
+from packs.designreview.handoffs import milestone_view
 
 FINDING_SCHEMA = "designreview-finding-v1"
 REV_RE = re.compile(r"\brev(?:ision)?\.?\s+([A-Z]|\d{1,2})\b", re.I)  # "rev B", "Rev 2"
@@ -170,6 +181,40 @@ def _dfm_signals(results: Dict[str, NodeResult]) -> Dict[str, Any]:
     return section
 
 
+def _schedule(results: Dict[str, NodeResult], today: str) -> Dict[str, Any]:
+    section = _section_state(results, "milestones")
+    if section["outcome"] != "answered":
+        return section
+    rows = sorted(_rows(_data(results, "milestones")), key=lambda r: (r.get("due_date") or "", r.get("order") or 0))
+    milestones = [milestone_view(r, today) for r in rows]
+    open_ms = [m for m in milestones if str(m.get("status") or "").lower() not in ("completed", "skipped")]
+    section.update(as_of=today, milestones=milestones,
+                   past_due=[m["name"] for m in milestones if m["past_due"]],
+                   next_open=next((m["name"] for m in open_ms if not m["past_due"]), None),
+                   note="past_due = due date before as_of and not completed/skipped (computed; the platform "
+                        "does not set 'overdue' itself)")
+    return section
+
+
+def _handoffs(results: Dict[str, NodeResult], dry_run: bool) -> Dict[str, Any]:
+    section = _section_state(results, "cross_seat")
+    if section["outcome"] != "answered":
+        return section
+    data = _data(results, "cross_seat") or {}
+    proposed = data.get("handoffs") or []
+    section.update(proposed=proposed, items_considered=data.get("items_considered"),
+                   sources_unavailable=data.get("sources_unavailable") or [], filed=False, would_file=[])
+    filing = results.get("file_handoffs")
+    if filing is not None:
+        payload = filing.data if isinstance(filing.data, dict) else {}
+        section["would_file"] = payload.get("would_file") or []
+        section["filed"] = bool(payload.get("filed")) and filing.verdict == RESOLVED and not dry_run
+        section["filing"] = {"verdict": filing.verdict, "reason": filing.reason}
+    section["note"] = ("dry run: hand-offs are proposed, nothing was filed" if dry_run and proposed
+                       else "no open serious item needs another team" if not proposed else "")
+    return section
+
+
 def build_finding(results: Dict[str, NodeResult], params: Dict[str, Any], *, run_id: str = "",
                   dry_run: bool = True) -> Dict[str, Any]:
     prompt = params.get("prompt", "")
@@ -192,9 +237,19 @@ def build_finding(results: Dict[str, NodeResult], params: Dict[str, Any], *, run
 
     raw = _data(results, "design_file") or {}
     finding["file"] = {k: raw.get(k) for k in FILE_KEYS}
-    finding["revision_delta"] = _revision_delta(results, prompt)
+    finding["file"]["project_id"] = raw.get("project_id")
+    sections = []
+    if "revisions" in results:
+        finding["revision_delta"] = _revision_delta(results, prompt)
+        sections.append(finding["revision_delta"])
     finding["release_gate"] = _release_gate(results)
     finding["dfm_signals"] = _dfm_signals(results)
-    sections = [finding["revision_delta"], finding["release_gate"], finding["dfm_signals"]]
+    sections += [finding["release_gate"], finding["dfm_signals"]]
+    if "milestones" in results:
+        finding["schedule"] = _schedule(results, finding["snapshot_at"][:10])
+        sections.append(finding["schedule"])
+    if "cross_seat" in results:
+        finding["handoffs"] = _handoffs(results, dry_run)
+        sections.append(finding["handoffs"])
     finding["outcome"] = "answered" if all(s["outcome"] == "answered" for s in sections) else "partial"
     return finding

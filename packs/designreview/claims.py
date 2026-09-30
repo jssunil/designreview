@@ -9,6 +9,11 @@ Design-review claim rules for agentkit's audit_narrative().
 - contradictions (sentence-level, negation-aware): claiming "ready for
   release" when the gate says not ready (and vice versa), and claiming a
   geometry comparison was run when none was.
+- hand-offs and schedule (when the finding has them): every proposed owner
+  is named, a dry run says the hand-offs are proposed (and never claims
+  one was filed/escalated/notified), "no other team" is said when none is
+  needed, every past-due milestone is named, and the project is never
+  called on track/on schedule while a milestone is past due.
 
 Sentence-level negation fixes the first draft's substring weaknesses
 (tests_local/test_verifiers.py XFAILs): "12.0 mm" no longer matches "2.0",
@@ -95,7 +100,76 @@ def required_facts(finding: Dict[str, Any]) -> List[RequiredFact]:
                                       [r"commit\s+message", r"version\s+notes?", r"revision\s+notes?", r"commit\s+notes?"]))
     elif delta.get("outcome") == "declined":
         facts.append(RequiredFact("why the revision comparison could not be made", [r"not\s+found|no\s+versions?|cannot|can'?t|unable"]))
+    facts += handoff_facts(finding)
     return facts
+
+
+# Said about the hand-off itself (the ask text may contain "propose" on its own).
+PROPOSED_RE = (r"\b(?:hand-?offs?|escalations?)\b[^.\n]{0,60}\b(?:propos\w*|recommend\w*|suggest\w*|would\b)"
+               r"|\b(?:propos\w*|recommend\w*|suggest\w*)\b[^.\n]{0,40}\b(?:hand-?offs?|escalations?)\b"
+               r"|\bnothing\s+(?:has\s+been|was|is)\s+(?:yet\s+)?(?:filed|raised|escalated|sent|submitted)"
+               r"|\bnot\s+(?:yet\s+)?(?:been\s+)?(?:filed|raised|sent|escalated|submitted)\b")
+NO_HANDOFF_RE = (r"\bno\s+(?:\w+\s+){0,3}(?:hand-?offs?|escalations?)\b|\bno\s+other\s+(?:team|seat|app)"
+                 r"|\b(?:doesn'?t|does\s+not|don'?t|do\s+not)\s+need\s+(?:another|other|a\s+different)\s+(?:team|seat|app)"
+                 r"|\bdesign\s+review(?:'s)?\s+own\b|\bwithin\s+design\s+review\b")
+LATE_RE = r"\boverdue\b|\bpast[\s-]+due\b|\blate\b|\bbehind\b|\bmissed\b|\bslipp\w*"
+# "I have escalated ...", "an escalation has been raised", "manufacturing was notified" -- but not
+# "would be escalated" / "has not been filed".
+_DONE = r"(?:now\s+|already\s+|also\s+)?"
+FILED_CLAIM_RE = re.compile(
+    # first person: "I have escalated", "we filed", "I've notified"
+    r"\b(?:I|we)(?:'ve|\s+have)?\s+" + _DONE + r"(?:escalated|filed|raised|notified|informed|alerted|"
+    r"handed\s+(?:it\s+|this\s+)?(?:off|over)|assigned|sent|submitted|opened|created)\b"
+    # passive about the hand-off itself: "an escalation has been raised", "a ticket was opened"
+    r"|\b(?:escalations?|hand-?offs?|tickets?)\b[^.]{0,40}\b(?:has|have|was|were|is|are)\s+(?:been\s+)?" + _DONE
+    + r"(?:filed|raised|sent|created|opened|submitted|logged)\b(?!\s+by\b)"
+    # "... has been escalated", "manufacturing was notified"
+    r"|\b(?:has|have|was|were)\s+(?:been\s+)?" + _DONE + r"escalated\b"
+    r"|\b(?:has|have|was|were)\s+(?:been\s+)?" + _DONE + r"(?:notified|informed|alerted)\b(?!\s+by\b)", re.I)
+FILED_NEGATION_RE = re.compile(r"\b(?:not|never|nothing|none|no\s+one|would|will|could|should|if|once|when|"
+                               r"proposed?)\b|n't", re.I)
+ON_TRACK_RE = re.compile(r"\bon\s+(?:track|schedule|time)\b|\bno\s+(?:schedule\s+)?(?:delays?|slippage)\b", re.I)
+
+
+def name_pattern(name: str) -> str:
+    """A milestone name, tolerant of case, spacing and dash style."""
+    words = re.findall(r"[A-Za-z0-9]+", name or "")
+    return r"\b" + r"[\W_]+".join(re.escape(w) for w in words) + r"\b" if words else r"(?!x)x"
+
+
+def handoff_facts(finding: Dict[str, Any]) -> List[RequiredFact]:
+    facts: List[RequiredFact] = []
+    h = finding.get("handoffs") or {}
+    if h.get("outcome") == "answered":
+        proposed = h.get("proposed") or []
+        for item in proposed:
+            facts.append(RequiredFact(f"that {item['owner']} needs to act (proposed hand-off)",
+                                      [rf"\b{re.escape(item['owner'])}\b"]))
+        if proposed and not h.get("filed"):
+            facts.append(RequiredFact("that the hand-offs are proposed only -- nothing was filed", [PROPOSED_RE]))
+        if not proposed:
+            facts.append(RequiredFact("that no other team needs to act on the open items", [NO_HANDOFF_RE]))
+    sched = finding.get("schedule") or {}
+    if sched.get("outcome") == "answered" and sched.get("past_due"):
+        facts.append(RequiredFact("that milestones are past due", [LATE_RE]))
+        for name in sched["past_due"]:
+            facts.append(RequiredFact(f"the past-due milestone '{name}'", [name_pattern(name)]))
+    return facts
+
+
+def handoff_contradictions(text: str, finding: Dict[str, Any]) -> List[str]:
+    out: List[str] = []
+    h = finding.get("handoffs")
+    if h is not None and not h.get("filed"):
+        for s in sentences(text):
+            if FILED_CLAIM_RE.search(s) and not FILED_NEGATION_RE.search(s):
+                out.append(f"says something was filed/escalated, but nothing was filed: {s[:160]!r}")
+    sched = finding.get("schedule") or {}
+    if sched.get("past_due"):
+        for s in sentences(text):
+            if ON_TRACK_RE.search(s) and not re.search(r"\b(?:not|no\s+longer)\b|n't", s, re.I):
+                out.append(f"says the project is on track, but milestones are past due: {s[:160]!r}")
+    return out
 
 
 # "ISO 2768-m", "ASME Y14.5", "DIN 6935", "EN 10130", "IS 2062" ... -- a standard
@@ -151,6 +225,7 @@ def contradictions(text: str, finding: Dict[str, Any]) -> List[str]:
         for s in sentences(text):
             if GEOMETRY_CLAIM_RE.search(s) and not GEOMETRY_NEGATION_RE.search(s):
                 out.append(f"claims a geometry comparison, but none was run in this build: {s[:160]!r}")
+    out += handoff_contradictions(text, finding)
     return out
 
 

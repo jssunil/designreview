@@ -91,6 +91,8 @@ readiness wording with their own parsers, so an agent bug can't pass its own che
 | `t05_propeller_rev_mapping` | rev B is v1 — mapped by commit note, not by position |
 | `t06_keystone_boilerplate_notes` | **Keystone.** Rev B/C notes only say "drawing and model updated together": reports exactly that, invents no changes |
 | `t07_keystone_latest_dfm_fixes` | **Keystone.** Notes carry no rev labels: compares the latest two versions ("DFM fixes: increased draft angles, added rib reinforcement") and recalls the company's DFM guidelines |
+| `t08_battery_tray_handoff` | NOT ready; proposes one hand-off each to **manufacturing** (cracking bend radius, weld access) and **quality** (PPAP level 3), cites exactly those items, shows the escalation each would file and files nothing; names the past-due "DFM review closed" milestone |
+| `t09_keystone_no_handoff_late_schedule` | **Keystone.** Every open issue is design review's own, so it proposes **no** hand-off (inventing one fails); names three past-due critical-path milestones and never says "on track" |
 
 **Verifier self-test.** `agentkit.harness.mutants` takes passing runs, breaks one thing in a copy
 (a wrong rev mapping, an invented quantity, a false "ready" claim, a sneaky write, a crashed run …) and
@@ -99,7 +101,7 @@ fails calibration.
 
 **Offline.** `python -m agentkit.sim.capture --tenant <tenant>` records every exchange that tenant's tasks
 need into `packs/designreview/fixtures/<tenant>.json`; `--sim packs/designreview/fixtures` replays each
-task against its own tenant's fixture (all seven tasks in about a second),
+task against its own tenant's fixture (all nine tasks in about a second),
 with faults such as `drop_tool:…`, `fail_once:…:flaky`, or `edit_text:old=>new` (another team edits a
 record during the run → graded `drift`).
 

@@ -8,6 +8,7 @@ checks need.
   design_file:<file_id>   REST  DesignFile (404 -> recorded as error_kind "missing")
   feedback:<file_id>      REST  DesignFeedback titles/priority/status for a file
   release_gate:<file_id>  MCP   release readiness (a POST-only computed endpoint; REST can't GET it)
+  milestones:<project_id> REST  DesignMilestone rows of a project (name, due date, status)
   seat_tools              MCP   this seat's tools/list names
   standards               REST  DesignStandard ids, names, body/number
 """
@@ -39,12 +40,22 @@ def _release_gate(reader: Any, file_id: str) -> Dict[str, Any]:
     g = payload.get("result", payload) if isinstance(payload, dict) else {}
     return {"ready": bool(g.get("ready")), "version_number": g.get("version_number"),
             "critical_open": g.get("critical_open"), "reason_codes": list(g.get("reason_codes") or []),
-            "blocker_titles": [b.get("title") for b in g.get("blockers") or [] if isinstance(b, dict)]}
+            "blocker_titles": [b.get("title") for b in g.get("blockers") or [] if isinstance(b, dict)],
+            "blockers": [{k: b.get(k) for k in ("id", "title", "priority", "status")}
+                         for b in g.get("blockers") or [] if isinstance(b, dict)]}
 
 
 def _feedback(reader: Any, file_id: str) -> List[Dict[str, Any]]:
     return [{k: r.get(k) for k in ("id", "number", "title", "priority", "status")}
             for r in reader.rest.list_all("DesignFeedback", file_id=file_id) if r.get("file_id") in (None, file_id)]
+
+
+def _milestones(reader: Any, project_id: str) -> List[Dict[str, Any]]:
+    return sorted(({k: r.get(k) for k in ("id", "name", "milestone_type", "status", "due_date", "completed_date",
+                                          "is_critical_path", "updated_at")}
+                   for r in reader.rest.list_all("DesignMilestone", project_id=project_id)
+                   if r.get("project_id") in (None, project_id)),
+                  key=lambda r: (r["due_date"] or "", r["name"] or ""))
 
 
 def _seat_tools(reader: Any, _arg: str) -> List[str]:
@@ -58,5 +69,5 @@ def _standards(reader: Any, _arg: str) -> List[Dict[str, Any]]:
 
 def register_probes(reg: Registry) -> None:
     reg.probes.update({"versions": _versions, "design_file": _design_file, "release_gate": _release_gate,
-                       "feedback": _feedback,
+                       "feedback": _feedback, "milestones": _milestones,
                        "seat_tools": _seat_tools, "standards": _standards})
