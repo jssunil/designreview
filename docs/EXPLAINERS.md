@@ -23,6 +23,7 @@ how to test it (the matching hand-written test template in `tests/` has the deta
             │  harness/  ground truth (own login) before/after ─► run folder ─► checks ─► score / report
             │            mutants ─► prove every check can fail    │
             │  sim/      captured platform, offline, with faults  │
+            │  viewer/   read-only browser page over run folders  │
             └─────────────────────────────────────────────────────┘
    packs/designreview/: actions · plans · finding · claims · template · prompts · probes · checks · mutants · tasks · fixtures
 ```
@@ -41,11 +42,12 @@ and grading compares the result with the platform — read separately, saved to 
 6. [`agentkit_record.md`](explainers/agentkit_record.md) — crash-safe run record
 7. [`agentkit_harness.md`](explainers/agentkit_harness.md) — tasks, ground truth, grading, calibration
 8. [`agentkit_sim.md`](explainers/agentkit_sim.md) — fixtures, offline platform, faults
-9. [`packs_designreview.md`](explainers/packs_designreview.md) — the domain: finding, verifiers, tasks
-10. [`capstone_agent.md`](explainers/capstone_agent.md) — the agent entry point
-11. [`capstone_evals.md`](explainers/capstone_evals.md) — run and re-grade the benchmark
-12. [`as_client.md`](explainers/as_client.md) — the compatibility client
-13. [`core_legacy.md`](explainers/core_legacy.md) — what's left in `core/` and why
+9. [`agentkit_viewer.md`](explainers/agentkit_viewer.md) — read-only browser page over batches and runs
+10. [`packs_designreview.md`](explainers/packs_designreview.md) — the domain: finding, verifiers, tasks
+11. [`capstone_agent.md`](explainers/capstone_agent.md) — the agent entry point
+12. [`capstone_evals.md`](explainers/capstone_evals.md) — run and re-grade the benchmark
+13. [`as_client.md`](explainers/as_client.md) — the compatibility client
+14. [`core_legacy.md`](explainers/core_legacy.md) — what's left in `core/` and why
 
 ## Cross-cutting decisions
 

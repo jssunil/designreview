@@ -89,14 +89,17 @@ readiness wording with their own parsers, so an agent bug can't pass its own che
 | `t03_ai_review_refusal` | checks the seat catalogue, never calls the absent tool, declines |
 | `t04_bench_vice_no_geometry` | numeric revs; reports the 180 g saving; claims no geometry comparison |
 | `t05_propeller_rev_mapping` | rev B is v1 — mapped by commit note, not by position |
+| `t06_keystone_boilerplate_notes` | **Keystone.** Rev B/C notes only say "drawing and model updated together": reports exactly that, invents no changes |
+| `t07_keystone_latest_dfm_fixes` | **Keystone.** Notes carry no rev labels: compares the latest two versions ("DFM fixes: increased draft angles, added rib reinforcement") and recalls the company's DFM guidelines |
 
 **Verifier self-test.** `agentkit.harness.mutants` takes passing runs, breaks one thing in a copy
 (a wrong rev mapping, an invented quantity, a false "ready" claim, a sneaky write, a crashed run …) and
 requires the matching check to fail. Any mutant that slips through, or any check nothing can make fail,
 fails calibration.
 
-**Offline.** `python -m agentkit.sim.capture` records every exchange the tasks need into
-`packs/designreview/fixtures/suryodaya.json`; `--sim` replays it (all five tasks in well under a second),
+**Offline.** `python -m agentkit.sim.capture --tenant <tenant>` records every exchange that tenant's tasks
+need into `packs/designreview/fixtures/<tenant>.json`; `--sim packs/designreview/fixtures` replays each
+task against its own tenant's fixture (all seven tasks in about a second),
 with faults such as `drop_tool:…`, `fail_once:…:flaky`, or `edit_text:old=>new` (another team edits a
 record during the run → graded `drift`).
 
@@ -118,9 +121,11 @@ the standard library's `tomllib`.
 | [`rescore.py`](rescore.py) | Re-grade saved runs (files only; no network, no LLM) |
 | [`as_client.py`](as_client.py) | Compatibility client (`AgentSwitchClient`); `.seat()` returns the new MCP client |
 | [`agentkit/`](agentkit/) · [`packs/designreview/`](packs/designreview/) · [`config/`](config/) | Framework · domain pack · configuration |
+| [`agentkit/viewer/`](agentkit/viewer/) | Read-only run viewer: `python -m agentkit.viewer` |
 | [`core/`](core/) | Legacy import paths (`core.harness`, `core.llm_gateway`, `core.economics` re-export `agentkit`); legacy `dag_engine`, `eval_framework`, `judge` |
 | [`tests/`](tests/) | Graded, **hand-written** test suite — see [`tests/README.md`](tests/README.md) |
 | [`docs/EXPLAINERS.md`](docs/EXPLAINERS.md) | Per-module explainers |
+| [`docs/CHANGES.md`](docs/CHANGES.md) | What changed, and why, after the refactor |
 
 ---
 
@@ -163,10 +168,19 @@ python rescore.py
 python -m agentkit.harness.mutants
 
 # Offline: capture once, then replay (optionally with faults)
-python -m agentkit.sim.capture
-python -m agentkit.harness.batch --sim packs/designreview/fixtures/suryodaya.json --skip-llm --grade \
+python -m agentkit.sim.capture --tenant suryodaya
+python -m agentkit.sim.capture --tenant keystone
+python -m agentkit.harness.batch --sim packs/designreview/fixtures --skip-llm --grade \
        --fault "edit_text:Blank length grows 4.2 mm=>Blank length grows 5.5 mm"
+
+# Browse batches and runs in a browser (read-only, this machine only)
+python -m agentkit.viewer                   # http://127.0.0.1:8765/   [--runs-dir runs] [--port 8765]
 ```
+
+The **run viewer** shows each batch (task × tenant, failing checks, calibration) and each run in tabs:
+the answer with its claim audit, the finding, every check, the evidence graph as a timeline, the tool
+journal, ground truth before/after (what changed during the run), and LLM cost. It only reads the run
+folders; it can't start runs or change anything.
 
 ### 4. Tests
 

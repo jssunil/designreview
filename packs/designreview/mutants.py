@@ -108,6 +108,19 @@ def register_mutants(reg: Registry) -> None:
         b.taskrun.setdefault("finding", {})["outcome"] = "answered"
         return _answer(b, "The AI review found two minor issues with the flange.")
 
+    @reg.mutant("change_notes_ignored", target="answer_reflects_change_notes")
+    def change_notes_ignored(b: RunBundle) -> Optional[RunBundle]:
+        from packs.designreview.checks import note_words
+
+        notes = (b.finding.get("revision_delta") or {}).get("change_notes") or []
+        words = note_words(notes[-1] if notes else "")
+        if not words:
+            return None
+        text = b.answer
+        for w in words:  # a generic answer that never says what the note says
+            text = re.sub(rf"(?i){re.escape(w[:-1] if w.endswith('s') else w)}\w*", "[...]", text)
+        return _answer(b, text)
+
     @reg.mutant("audit_failed", target="answer_audited")
     def audit_failed(b: RunBundle) -> Optional[RunBundle]:
         step = next((s for s in b.steps() if s.get("kind") == "narrate"), None)

@@ -26,6 +26,11 @@ UUID_RE = re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 # Every number found in the finding (including inside strings) widens what the
 # text may cite, so a simple, permissive pattern is the safe choice here.
 NUMBER_RE = re.compile(r"\d+(?:\.\d+)?")
+# ...except dates, clock times and UUIDs: "12" in a 12:05 snapshot time is not
+# evidence for "12 mm", so these are removed before numbers are collected.
+NOT_A_QUANTITY_RE = re.compile(
+    UUID_RE.pattern + r"|\b\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?"
+    r"|\b\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?\b", re.I)
 TOLERANCE = 1e-6
 
 
@@ -53,7 +58,7 @@ def known_numbers(obj: Any, out: Optional[Set[float]] = None) -> Set[float]:
     if isinstance(obj, (int, float)):
         out.add(float(obj))
     elif isinstance(obj, str):
-        for m in NUMBER_RE.findall(obj):
+        for m in NUMBER_RE.findall(NOT_A_QUANTITY_RE.sub(" ", obj)):
             try:
                 out.add(float(m))
             except ValueError:

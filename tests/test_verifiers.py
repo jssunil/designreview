@@ -14,6 +14,11 @@ Use cases to cover:
   [ ] no_geometry_claim: "the geometric diff confirms ..." fails; "no geometry comparison was run" passes
   [ ] record_absent / tool_absent: a refusal passes; carrying on after the refusal fails
   [ ] Ground truth that couldn't be read gives "error" -- never "pass"
+  [ ] select_versions: {from_rev: "B", to_rev: "C"} maps by commit note ("Revision B" too);
+      {latest: true} picks the two newest versions; a missing rev gives (None, None, [])
+  [ ] answer_reflects_change_notes: an answer carrying the note's words passes; a generic answer
+      ("Rev C changed the part") fails; a note with no content words is "skip"; a note rewritten
+      during the run is "drift"
 Hint: build a RunBundle by hand (agentkit.harness.checks.RunBundle) with `after` / `before` as
 {"observations": {"versions:<file_id>": {"value": [...]}}} -- no network, no files needed.
 """
