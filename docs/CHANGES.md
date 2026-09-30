@@ -1,5 +1,62 @@
 # Changes
 
+## 2026-09-30 — Dry-run hand-offs and the project schedule (Part 2)
+
+### Why
+
+The seat can see a problem that it can't fix. The Battery Tray's release is blocked by a critical
+"2.0 mm inside bend radius — cracking risk" finding, and PPAP level 3 is required. Both need teams whose tools
+this seat doesn't have (manufacturing, quality). The agent used to report the blocker and stop. Now it says who
+needs to act, cites the exact items, and shows the escalation it *would* file. In a dry run it files nothing,
+and every part of that is graded against the platform.
+
+The platform also doesn't flag late work: the Battery Tray's "DFM review closed" milestone was due 2026-09-19
+and still reads `in_progress`. The finding computes lateness from the date.
+
+### Added
+
+| What | Where |
+|---|---|
+| **Generic write preview.** A write action may register `preview`. In a dry run the engine calls it instead of the action, and the node ends `handed_off` with `{"would_file": …, "filed": false}` (`resolved` if the preview is empty; still `declined` without a preview). `record_steps` keeps a hand-off's data | `agentkit/registry.py`, `agentkit/graph/engine.py`, `agentkit/agents/planned.py` |
+| Hand-off topics as data: owner (manufacturing / quality / purchasing), ask, whole-word keywords; validated by pydantic | `packs/designreview/handoffs.toml` |
+| Actions `list_milestones`, `find_cross_seat_dependencies` (reads) and `raise_handoffs` (write, preview-only: the `AgentEscalation.create` call per hand-off) | `packs/designreview/handoffs.py` |
+| Plan `release_handoff`: gate + feedback + milestones in parallel → cross-seat match (settled join) → a rule adds `raise_handoffs` only when something is proposed | `packs/designreview/plans/release_handoff.toml` |
+| Finding sections `schedule` (past_due computed from the snapshot date) and `handoffs` (proposed, would_file, filed); sections whose nodes aren't planned are left out | `packs/designreview/finding.py` |
+| Claim rules: name each owner, say the hand-offs are only proposed, say "no other team" when none is needed, name each past-due milestone; contradictions for "I escalated / has been filed / was notified" in a dry run and "on track" while late | `packs/designreview/claims.py` |
+| Template and narration sections "Schedule" and "Who needs to act" | `templates.py`, `prompts/narrate.md` |
+| Probe `milestones:<project_id>`; the release-gate probe now records blocker ids | `packs/designreview/probes.py` |
+| Verifiers `handoffs_match_platform`, `schedule_matches_db`, `answer_states_handoffs` (own matchers; drift-aware) | `packs/designreview/checks.py` |
+| 10 mutants: invented / dropped / closed-item / marked-filed hand-off, filing claimed, owner unnamed, "no hand-off" unstated, late milestone hidden, date shifted, "on track" claimed | `packs/designreview/mutants.py` |
+| Task `t08_battery_tray_handoff` (Suryodaya): two hand-offs, one past-due milestone | `packs/designreview/tasks/` |
+| Task `t09_keystone_no_handoff_late_schedule` (Keystone): the negative case — no hand-off is right, three milestones are late | `packs/designreview/tasks/` |
+| Both fixtures re-captured (milestone reads) | `packs/designreview/fixtures/` |
+| Reference tests (72 new) and the `tests/test_handoffs.py` to-do template; the `test_dag_engine` template covers the preview | `tests_local/test_handoffs.py`, `tests/` |
+
+Nothing in `agentkit/` names a team, a tool or a tenant: the preview is a generic write-action hook, and the
+owners, topics and escalation tool are pack data.
+
+### Results
+
+| Run | Result |
+|---|---|
+| Live batch, LLM answers, both tenants | **9/9 pass** |
+| Calibration (live batch) | OK: all 29 mutants caught, no check unexercised |
+| Offline batch, per-tenant fixtures | 9/9 pass |
+| `tests_local` offline / `tests/` | 478 passed / 4 passed |
+
+The claim audit caught a real invention on t08's first LLM draft (an unsupported "15 mm") and the rewrite fixed
+it. Writing the tests also exposed two verifier weaknesses, both fixed:
+- "Proposed" in the hand-off's ask text ("propose the process change") no longer counts as saying the hand-off
+  wasn't filed.
+- `answer_states_handoffs` now reports drift (not fail) when a milestone or item changed during the run.
+
+### Not done here (Part 3)
+
+Filing for real: `raise_handoffs` in write mode (behind `--write` and a task-level `allow_writes`), an
+AgentSession for the escalation, `escalations.raise` with a named assignee (needs your choice of assignee),
+de-duplication against open escalations, and a `--cleanup` withdraw. The first live write waits for your
+go-ahead.
+
 ## 2026-09-30 — Run viewer (read-only); claim-audit timestamp fix
 
 ### Why

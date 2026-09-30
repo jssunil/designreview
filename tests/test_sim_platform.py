@@ -12,7 +12,7 @@ Use cases to cover:
   [ ] fail_once fails the next call only; fail_always fails every call; faults only fire while armed
   [ ] edit_text rewrites recorded results (MCP and REST) after apply_edits()
   [ ] Bad fault specs ("nope:x", "fail_once:A.get") raise ValueError
-  [ ] Offline batch on the fixtures folder (packs/designreview/fixtures): all 7 tasks grade "pass",
+  [ ] Offline batch on the fixtures folder (packs/designreview/fixtures): all 9 tasks grade "pass",
       each replaying its own tenant's fixture (suryodaya.json / keystone.json)
   [ ] SimSession with a folder raises a clear error for a tenant that has no fixture
   [ ] `python -m agentkit.sim.capture --tenant keystone` only runs tasks whose tenants include keystone

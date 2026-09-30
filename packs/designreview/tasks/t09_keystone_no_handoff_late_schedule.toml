@@ -1,0 +1,26 @@
+id = "t09_keystone_no_handoff_late_schedule"
+description = "Keystone negative case. The Auger Drive housing cover's open serious items (missing GD&T on the bearing bore, wall thickness below minimum, sharp inside corner) are all design review's own work, so the right answer proposes NO hand-off -- inventing one fails. The programme is late: 'DFM Review Complete', 'Tooling Kickoff' and 'First Article Inspection' are past due on the critical path, and the answer must say so rather than call it on track."
+pack = "packs.designreview"
+plan = "release_handoff"
+prompt = "Is the auger drive housing cover on schedule, and does anything on it need another team?"
+params = { file_id = "d3156003-4c06-49b4-b299-08478874cebb" }
+tenants = ["keystone"]
+
+[[verifiers]]
+name = "release_gate_matches_db"
+params = { file_id = "d3156003-4c06-49b4-b299-08478874cebb" }
+
+[[verifiers]]
+name = "handoffs_match_platform"
+params = { file_id = "d3156003-4c06-49b4-b299-08478874cebb" }
+
+[[verifiers]]
+name = "schedule_matches_db"
+params = { project_id = "7e04ca05-1b78-4c34-85c3-2462100d91cc" }
+
+[[verifiers]]
+name = "answer_states_handoffs"
+params = { file_id = "d3156003-4c06-49b4-b299-08478874cebb", project_id = "7e04ca05-1b78-4c34-85c3-2462100d91cc" }
+
+[[verifiers]]
+name = "answer_audited"

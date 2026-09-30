@@ -30,6 +30,11 @@ class ActionSpec:
     description: str = ""
     writes: bool = False
     retries: int = 0  # extra attempts on a FLAKY transport error (never for writes)
+    # For a write action: preview(env, args, results) -> what it WOULD send.
+    # In a dry run the engine calls this instead of fn and ends the node
+    # HANDED_OFF with {"would_file": preview, "filed": False}; with no preview
+    # a dry-run write is simply DECLINED. A preview must not write.
+    preview: Optional[Callable[..., Any]] = None
 
 
 @dataclass(frozen=True)
@@ -64,13 +69,15 @@ class Registry:
 
     # ---- decorators -----------------------------------------------------
 
-    def action(self, name: str, *, description: str = "", writes: bool = False,
-               retries: int = 0) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    def action(self, name: str, *, description: str = "", writes: bool = False, retries: int = 0,
+               preview: Optional[Callable[..., Any]] = None) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         def deco(fn: Callable[..., Any]) -> Callable[..., Any]:
             if name in self.actions:
                 raise ValueError(f"action {name!r} registered twice")
+            if preview is not None and not writes:
+                raise ValueError(f"action {name!r}: preview is only for write actions")
             self.actions[name] = ActionSpec(name, fn, description or (fn.__doc__ or "").strip().split("\n")[0],
-                                            writes=writes, retries=0 if writes else retries)
+                                            writes=writes, retries=0 if writes else retries, preview=preview)
             return fn
         return deco
 

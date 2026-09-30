@@ -41,7 +41,8 @@ Anything without a marker must run offline: no network, no LLM, no `.env`.
 | `test_modularity.py` | architecture guards (domain-free framework, no agent frameworks) | yes |
 | `test_platform_live.py` | platform facts the tasks rely on | live |
 | `test_platform_workflows.py` | review / feedback workflows | live + writes |
-| `test_agent_tasks.py` | the seven tasks (t01–t05 Suryodaya, t06–t07 Keystone), end to end | live + agent |
+| `test_handoffs.py` | dry-run hand-offs: engine preview, `packs/designreview/handoffs.py`, schedule, the three hand-off verifiers | yes |
+| `test_agent_tasks.py` | the nine tasks (t01–t05, t08 Suryodaya; t06, t07, t09 Keystone), end to end | live + agent |
 
 ## Tools you can use (all product code, not test code)
 

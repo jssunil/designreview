@@ -1,0 +1,67 @@
+# "Is this part ready for release, is it on schedule, and who needs to act?"
+#
+# The file is read first (a missing file bypasses everything else, one clean
+# refusal). Then, in parallel: the release gate, the feedback and the
+# project's milestones. Once the gate and the feedback have settled, the
+# open serious items are matched against handoffs.toml. If any hand-off is
+# proposed, the planner adds the write node that would file them -- in a dry
+# run the engine records what it would file (HANDED_OFF) and files nothing.
+
+name = "release_handoff"
+params = ["file_id"]
+
+[[nodes]]
+id = "design_file"
+action = "load_design_file"
+args = { file_id = "{file_id}" }
+
+[[nodes]]
+id = "release_gate"
+action = "read_release_gate"
+after = ["design_file"]
+args = { file_id = "{file_id}" }
+
+[[nodes]]
+id = "feedback"
+action = "list_feedback"
+after = ["design_file"]
+args = { file_id = "{file_id}" }
+
+[[nodes]]
+id = "milestones"
+action = "list_milestones"
+after = ["design_file"]
+
+# Partial join: a failed gate read must not hide what the feedback shows.
+[[nodes]]
+id = "cross_seat"
+action = "find_cross_seat_dependencies"
+after = ["release_gate", "feedback"]
+requires = "settled"
+
+[[rules]]
+name = "failed_checklists_when_gate_blocked"
+
+[rules.when]
+node = "release_gate"
+verdict = "resolved"
+nonempty = ["result.blockers", "result.reason_codes"]
+
+[[rules.add]]
+id = "failed_checklists"
+action = "list_failed_checklists"
+args = { file_id = "{file_id}" }
+after = ["release_gate"]
+
+[[rules]]
+name = "file_handoffs_when_proposed"
+
+[rules.when]
+node = "cross_seat"
+verdict = "resolved"
+nonempty = ["handoffs"]
+
+[[rules.add]]
+id = "file_handoffs"
+action = "raise_handoffs"
+after = ["cross_seat"]

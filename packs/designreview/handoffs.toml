@@ -1,0 +1,34 @@
+# Who owns the problems this seat cannot fix itself.
+#
+# The design-review seat has no manufacturing, quality or purchasing tools
+# (they are 403 / absent from tools/list), so when an OPEN, SERIOUS item on
+# the file -- a release-gate blocker or a high/critical feedback item --
+# is about one of these topics, the agent proposes a hand-off to its owner.
+# Everything else (GD&T, wall thickness, drawing fixes ...) is design
+# review's own work and gets no hand-off.
+#
+# Keywords match whole words/phrases, case-insensitive, in the item's title.
+# One hand-off per owner; it cites every item that matched.
+
+subject_prefix = "T21-DR"
+reason_code = "needs_another_app"   # AgentEscalation.reason_code
+sla_minutes = 1440                  # used by Part 3's escalations.raise
+
+[[topics]]
+name = "manufacturing_process"
+owner = "manufacturing"
+ask = "Confirm the forming/joining process can make this design as drawn, or propose the process change."
+keywords = ["crack", "cracks", "cracking", "bend radius", "forming", "springback", "weld", "welds", "welding",
+            "draw die", "tooling", "press", "second op", "fixture"]
+
+[[topics]]
+name = "quality_approval"
+owner = "quality"
+ask = "Plan the PPAP / first-article evidence this change needs before release."
+keywords = ["ppap", "first article", "fai", "control plan", "capability study"]
+
+[[topics]]
+name = "supply"
+owner = "purchasing"
+ask = "Confirm material and supplier availability for this change."
+keywords = ["shortage", "supplier capacity", "lead time", "despatch hold"]

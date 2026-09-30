@@ -31,3 +31,14 @@ from packs.designreview.finding import build_finding
 from packs.designreview.templates import plain_rendering
 
 # Write your tests below.
+
+"""  [ ] Rev letters come from commit messages: Battery Tray B -> v2, C -> v3; Propeller B -> v1, C -> v2;
+      numeric revs work ("Rev 2" -> 2)"""
+
+def test_rev_letter_from_commit():
+  commit_message="Battery Tray B -> v2"
+  assert rev_from_message(commit_message) == "2"
+  commit_message="Propeller B -> v1"
+  assert rev_from_message(commit_message) == "1"
+  commit_message="Rev 2"
+  

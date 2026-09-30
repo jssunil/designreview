@@ -1,0 +1,25 @@
+id = "t08_battery_tray_handoff"
+description = "Release readiness with cross-team hand-offs (dry run). The Battery Tray is NOT ready: the critical 2.0 mm bend-radius cracking blocker and the weld-access item need manufacturing, and 'PPAP level 3 required' needs quality -- the seat has neither tool, so the agent must propose one hand-off per owner, cite exactly those items, show what it would file, and file nothing. The project's 'DFM review closed' milestone (due 2026-09-19) is still in progress, so it is past due."
+pack = "packs.designreview"
+plan = "release_handoff"
+prompt = "Is the battery tray ready for release, is the project on schedule, and who else needs to act?"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6" }
+
+[[verifiers]]
+name = "release_gate_matches_db"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6" }
+
+[[verifiers]]
+name = "handoffs_match_platform"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6" }
+
+[[verifiers]]
+name = "schedule_matches_db"
+params = { project_id = "bf586214-c114-4a2c-86ca-8ed1e4fa9ee5" }
+
+[[verifiers]]
+name = "answer_states_handoffs"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6", project_id = "bf586214-c114-4a2c-86ca-8ed1e4fa9ee5" }
+
+[[verifiers]]
+name = "answer_audited"

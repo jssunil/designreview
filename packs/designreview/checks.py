@@ -15,6 +15,8 @@ agrees with it BEFORE, the data moved under the run -> "drift", not "fail".
 from __future__ import annotations
 
 import re
+import tomllib
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from agentkit.harness.checks import CheckOutcome, RunBundle
@@ -306,6 +308,186 @@ def check_answer_reflects_change_notes(b: RunBundle, p: Dict[str, Any]) -> List[
                          f"missing {[w for w in words if w not in present][:8]}")]
 
 
+# ---------------------------------------------------------------- hand-offs and schedule
+#
+# Who owns what comes from the pack's handoffs.toml -- that table is the
+# specification, so the verifier reads the same data; the matching, the
+# "open and serious" rule and the answer parsing below are its own.
+
+HANDOFFS_TOML = Path(__file__).resolve().parent / "handoffs.toml"
+_DONE_STATUSES = {"resolved", "closed", "rejected", "wont_fix", "won't_fix", "cancelled", "duplicate"}
+_FINISHED = {"completed", "skipped"}
+_WRITE_TOOLS_FOR_HANDOFF = {"AgentEscalation.create", "endpoint.agent_governance.escalations.raise"}
+# "proposed" must be said about the hand-off itself -- an ask that says "propose the process
+# change" doesn't tell the reader that nothing was filed.
+_PROPOSED = re.compile(r"\b(?:hand-?offs?|escalations?)\b[^.\n]{0,60}\b(?:propos\w*|recommend\w*|suggest\w*|would\b)"
+                       r"|\b(?:propos\w*|recommend\w*|suggest\w*)\b[^.\n]{0,40}\b(?:hand-?offs?|escalations?)\b"
+                       r"|\bnothing\s+(?:has\s+been|was|is)\s+(?:yet\s+)?(?:filed|raised|escalated|sent)"
+                       r"|\bnot\s+(?:yet\s+)?(?:been\s+)?(?:filed|escalated|raised)\b", re.I)
+_NO_OTHER_TEAM = re.compile(r"\bno\s+(?:\w+\s+){0,3}(?:hand-?offs?|escalations?)\b|\bno\s+other\s+(?:team|seat|app)"
+                            r"|\bnot?\s+need\w*\s+(?:another|other|a\s+different)\s+(?:team|seat|app)"
+                            r"|\bdesign\s+review(?:'s)?\s+own\b", re.I)
+_CLAIMS_FILED = re.compile(r"\b(?:I|we)(?:'ve|\s+have)?\s+(?:already\s+|now\s+)?(?:escalated|filed|raised|notified|"
+                           r"handed\s+(?:it\s+|this\s+)?(?:off|over)|submitted|opened|created)\b"
+                           r"|\b(?:escalations?|hand-?offs?|tickets?)\b[^.]{0,40}\b(?:has|have|was|were)\s+(?:been\s+)?"
+                           r"(?:filed|raised|sent|created|opened|submitted)\b(?!\s+by\b)"
+                           r"|\b(?:has|have|was|were)\s+(?:been\s+)?(?:escalated|notified)\b(?!\s+by\b)", re.I)
+_HEDGE = re.compile(r"\b(?:not|never|nothing|none|no\s+one|would|will|could|should|if|once|proposed?)\b|n't", re.I)
+_ON_TRACK = re.compile(r"\bon\s+(?:track|schedule|time)\b", re.I)
+_LATE = re.compile(r"\boverdue\b|\bpast[\s-]+due\b|\blate\b|\bbehind\b|\bmissed\b|\bslipp\w*", re.I)
+
+
+def handoff_topics(path: Path = HANDOFFS_TOML) -> List[Dict[str, Any]]:
+    return tomllib.loads(path.read_text(encoding="utf-8"))["topics"]
+
+
+def open_serious(gate: Optional[Dict[str, Any]], feedback: Optional[List[Dict[str, Any]]]) -> Dict[str, Dict[str, Any]]:
+    """id -> item: every release blocker, plus open high/critical feedback."""
+    items = {b["id"]: b for b in (gate or {}).get("blockers") or [] if b.get("id")}
+    for r in feedback or []:
+        if (r.get("id") and r["id"] not in items and str(r.get("status") or "").lower() not in _DONE_STATUSES
+                and str(r.get("priority") or "").lower() in ("high", "critical")):
+            items[r["id"]] = r
+    return items
+
+
+def expected_handoffs(items: Dict[str, Dict[str, Any]], topics: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+    """owner -> sorted ids of the items that owner must act on."""
+    out: Dict[str, set] = {}
+    for item_id, item in items.items():
+        title = (item.get("title") or "").lower()
+        for t in topics:
+            if any(re.search(rf"(?<![a-z0-9]){re.escape(k.lower())}(?![a-z0-9])", title) for k in t["keywords"]):
+                out.setdefault(t["owner"], set()).add(item_id)
+    return {o: sorted(ids) for o, ids in out.items()}
+
+
+def _expected(b: RunBundle, phase: str, file_id: str) -> Optional[Dict[str, List[str]]]:
+    gate, fb = b.truth(phase, f"release_gate:{file_id}"), b.truth(phase, f"feedback:{file_id}")
+    if gate is None or fb is None:
+        return None
+    return expected_handoffs(open_serious(gate, fb), handoff_topics())
+
+
+def check_handoffs_match_platform(b: RunBundle, p: Dict[str, Any]) -> List[CheckOutcome]:
+    """Every proposed hand-off cites real open serious items, goes to the owner
+    the topic table names, misses none, and in a dry run is only previewed."""
+    name, fid = "handoffs_match_platform", p["file_id"]
+    want = _expected(b, "after", fid)
+    if want is None:
+        missing = [k for k in (f"release_gate:{fid}", f"feedback:{fid}") if b.truth("after", k) is None]
+        return [CheckOutcome(name, "owners", "error", f"ground truth unavailable: {missing}")]
+    then = _expected(b, "before", fid) or want
+    h = b.finding.get("handoffs")
+    if not isinstance(h, dict) or h.get("outcome") != "answered":
+        return [CheckOutcome(name, "owners", "fail", f"no hand-off section in the finding: {h}")]
+    got = {x["owner"]: sorted(c["id"] for c in x.get("cites") or []) for x in h.get("proposed") or []}
+
+    def judge(g: Any, w: Any, t: Any) -> str:
+        return "pass" if g == w else ("drift" if g == t and t != w else "fail")
+
+    out = [CheckOutcome(name, "owners", judge(sorted(got), sorted(want), sorted(then)),
+                        f"agent {sorted(got) or 'none'}, platform {sorted(want) or 'none'}"),
+           CheckOutcome(name, "citations", judge(got, want, then),
+                        "every hand-off cites exactly the open serious items for its owner" if got == want
+                        else f"agent {got}, platform {want}")]
+    would = h.get("would_file") or []
+    bad = [w for w in would if w.get("tool") not in _WRITE_TOOLS_FOR_HANDOFF or not (w.get("args") or {}).get("reason")]
+    writes = [c for c in b.tools_called() if c in _WRITE_TOOLS_FOR_HANDOFF]
+    if b.dry_run:
+        ok = not h.get("filed") and not writes and len(would) == len(got) and not bad
+        detail = (f"dry run: {len(would)} previewed, filed={h.get('filed')}, escalation calls={writes}"
+                  + (f", malformed previews={bad}" if bad else ""))
+    else:
+        ok, detail = not bad, f"write run: {len(writes)} escalation call(s)"
+    out.append(CheckOutcome(name, "filing", "pass" if ok else "fail", detail))
+    return out
+
+
+def past_due_names(milestones: List[Dict[str, Any]], as_of: str) -> List[str]:
+    return sorted(m["name"] for m in milestones
+                  if (m.get("due_date") or "")[:10] and (m.get("due_date") or "")[:10] < as_of
+                  and str(m.get("status") or "").lower() not in _FINISHED)
+
+
+def check_schedule_matches_db(b: RunBundle, p: Dict[str, Any]) -> List[CheckOutcome]:
+    name, key = "schedule_matches_db", f"milestones:{p['project_id']}"
+    after, before = b.truth("after", key), b.truth("before", key)
+    if after is None:
+        return [CheckOutcome(name, "milestones", "error", f"ground truth unavailable: {b.obs_error('after', key)}")]
+    sched = b.finding.get("schedule")
+    if not isinstance(sched, dict) or sched.get("outcome") != "answered":
+        return [CheckOutcome(name, "milestones", "fail", f"no schedule in the finding: {sched}")]
+    as_of = sched.get("as_of") or ""
+    snapshot = (b.finding.get("snapshot_at") or "")[:10]
+
+    def rows(ms: List[Dict[str, Any]]) -> List[Tuple[Any, ...]]:
+        return sorted((m.get("id"), (m.get("due_date") or "")[:10], m.get("status")) for m in ms)
+
+    g, w, t = rows(sched.get("milestones") or []), rows(after), rows(before or after)
+    out = [CheckOutcome(name, "milestones", "pass" if g == w else ("drift" if g == t and t != w else "fail"),
+                        f"{len(g)} milestone(s), all match" if g == w else
+                        f"differ: agent-only {sorted(set(g) - set(w))[:3]}, platform-only {sorted(set(w) - set(g))[:3]}")]
+    got_late, want_late = sorted(sched.get("past_due") or []), past_due_names(after, as_of)
+    then_late = past_due_names(before or after, as_of)
+    status = "pass" if got_late == want_late else ("drift" if got_late == then_late and then_late != want_late else "fail")
+    if as_of != snapshot:
+        status, want_late = "fail", f"{want_late} (as_of {as_of!r} is not the snapshot date {snapshot!r})"
+    out.append(CheckOutcome(name, "past_due", status, f"agent {got_late}, platform {want_late}"))
+    return out
+
+
+def check_answer_states_handoffs(b: RunBundle, p: Dict[str, Any]) -> List[CheckOutcome]:
+    """The words a person reads: who must act (or that nobody else must), that
+    nothing was filed, and which milestones are late -- judged against ground
+    truth, not against the finding."""
+    name, fid = "answer_states_handoffs", p["file_id"]
+    want = _expected(b, "after", fid)
+    if want is None:
+        return [CheckOutcome(name, "owners", "error", "ground truth unavailable")]
+    then = _expected(b, "before", fid)
+    text = b.answer
+
+    def owners_ok(expected: Dict[str, List[str]]) -> Tuple[bool, str]:
+        if expected:
+            unnamed = [o for o in expected if not re.search(rf"\b{re.escape(o)}\b", text, re.I)]
+            return not unnamed, (f"owners not named: {unnamed}" if unnamed else f"names {sorted(expected)}")
+        ok = bool(_NO_OTHER_TEAM.search(text))
+        return ok, "says no other team needs to act" if ok else "doesn't say that no hand-off is needed"
+
+    ok, detail = owners_ok(want)
+    then_ok = owners_ok(then)[0] if then is not None else ok
+    out = [CheckOutcome(name, "owners", "pass" if ok else ("drift" if then_ok else "fail"), detail)]
+    if want and b.dry_run:
+        ok = bool(_PROPOSED.search(text))
+        out.append(CheckOutcome(name, "proposed_only", "pass" if ok else "fail",
+                                "says the hand-offs are proposed, not filed" if ok
+                                else "never says the hand-offs are only proposed / not filed"))
+    filed = [s for s in sentences(text) if _CLAIMS_FILED.search(s) and not _HEDGE.search(s)]
+    out.append(CheckOutcome(name, "no_filing_claim", "fail" if (filed and b.dry_run) else "pass",
+                            f"claims it filed: {filed[0][:120]!r}" if filed and b.dry_run else "no false filing claim"))
+    if p.get("project_id"):
+        key = f"milestones:{p['project_id']}"
+        ms, ms_before = b.truth("after", key), b.truth("before", key)
+        as_of = ((b.finding.get("schedule") or {}).get("as_of") or (b.finding.get("snapshot_at") or "")[:10])
+        if ms is None:
+            out.append(CheckOutcome(name, "late_milestones", "error", "milestones unavailable"))
+        else:
+            on_track = [s for s in sentences(text) if _ON_TRACK.search(s) and not re.search(r"\bnot\b|n't", s, re.I)]
+
+            def late_ok(rows: List[Dict[str, Any]]) -> Tuple[bool, List[str], List[str]]:
+                late = past_due_names(rows, as_of)
+                unnamed = [n for n in late if not re.search(
+                    r"[\W_]+".join(map(re.escape, re.findall(r"[A-Za-z0-9]+", n))), text, re.I)]
+                return (not unnamed and not on_track and (not late or bool(_LATE.search(text)))), late, unnamed
+
+            ok, late, unnamed = late_ok(ms)
+            then_ok = late_ok(ms_before)[0] if ms_before is not None else ok
+            out.append(CheckOutcome(name, "late_milestones", "pass" if ok else ("drift" if then_ok else "fail"),
+                                    f"{len(late)} past due; unnamed {unnamed}; on-track claims {len(on_track)}"))
+    return out
+
+
 def register_checks(reg: Registry) -> None:
     f = lambda p: [f"versions:{p['file_id']}"]  # noqa: E731
     reg.check("revision_delta_matches_db", observes=f)(check_revision_delta)
@@ -319,3 +501,9 @@ def register_checks(reg: Registry) -> None:
     reg.check("cited_standards_exist", observes=lambda p: ["standards"])(check_cited_standards)
     reg.check("answer_audited")(check_answer_audited)
     reg.check("answer_reflects_change_notes", observes=f)(check_answer_reflects_change_notes)
+    gate_and_feedback = lambda p: [f"release_gate:{p['file_id']}", f"feedback:{p['file_id']}"]  # noqa: E731
+    reg.check("handoffs_match_platform", observes=gate_and_feedback)(check_handoffs_match_platform)
+    reg.check("schedule_matches_db", observes=lambda p: [f"milestones:{p['project_id']}"])(check_schedule_matches_db)
+    reg.check("answer_states_handoffs",
+              observes=lambda p: gate_and_feedback(p) + ([f"milestones:{p['project_id']}"] if p.get("project_id")
+                                                         else []))(check_answer_states_handoffs)

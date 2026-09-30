@@ -72,3 +72,5 @@ https://www.openbom.com/blog/openbom-manifesto/connected-bom-product-data-founda
 
 https://nexcad.ai/
 
+https://blogs.oracle.com/scm/meet-the-agentic-ai-design-to-source-workspace-for-plm-from-cad-to-confident-sourcing-decisions
+

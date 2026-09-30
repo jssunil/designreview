@@ -33,7 +33,7 @@ tenant fixture is an error that says how to capture it.
 
 ## Results on the captured fixtures
 
-All seven tasks (five on Suryodaya, two on Keystone) pass offline in about a second. T01 under faults: `fail_once` flaky read → pass
+All nine tasks (six on Suryodaya, three on Keystone) pass offline in about a second. T01 under faults: `fail_once` flaky read → pass
 (retried); `drop_tool:DesignFeedback.list` → pass (degrades without false claims); release readiness always
 failing → fail (verdict unknown); rev C note edited during the run → drift.
 
