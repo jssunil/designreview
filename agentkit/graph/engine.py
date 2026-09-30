@@ -17,7 +17,10 @@ Rules the engine enforces (none of them domain-specific):
 - Transport errors map to verdicts: MISSING / NOT_IN_SEAT / DENIED ->
   DECLINED (the platform said no -- a refusal, not a crash); FLAKY is
   retried per action (never for writes) then FAILED; anything else FAILED.
-- A write action in a dry run is DECLINED without being called.
+- A write action in a dry run is never called. If it has a `preview`, the
+  node ends HANDED_OFF with {"would_file": <preview>, "filed": False} -- what
+  a person would receive, gradable without touching the platform; an empty
+  preview (nothing to file) is RESOLVED. Without a preview it is DECLINED.
 - After every outcome the whole graph is checkpointed (atomic write); a
   checkpoint can be loaded and continued. Nodes that were mid-flight at a
   crash go back to pending on resume.
@@ -33,7 +36,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Protocol, Tuple
 
-from agentkit.graph.node_result import (BYPASSED, DECLINED, FAILED, RESOLVED, NodeResult)
+from agentkit.graph.node_result import (BYPASSED, DECLINED, FAILED, HANDED_OFF, RESOLVED, NodeResult)
 from agentkit.record.durable_io import dump_record, load_record
 from agentkit.registry import Registry
 from agentkit.transport.seat_rpc import DENIED, FLAKY, MISSING, NOT_IN_SEAT, SeatCallFailure
@@ -305,7 +308,7 @@ class LiveGraphExecutor:
     def _execute(self, spec: TaskSpec, store: GraphStore) -> NodeResult:
         action = self.registry.get_action(spec.action)
         if action.writes and self.env.dry_run:
-            return NodeResult(DECLINED, reason="dry run: write action not executed")
+            return self._preview(spec, action, store)
         logger.info("node [%s] -> %s", spec.id, spec.action)
         while True:
             spec.attempts += 1
@@ -321,3 +324,18 @@ class LiveGraphExecutor:
             except Exception as e:  # a bug in an action: record it, keep the other branches
                 logger.exception("node [%s] crashed", spec.id)
                 return NodeResult(FAILED, reason=f"{type(e).__name__}: {e}", error_kind="internal")
+
+    def _preview(self, spec: TaskSpec, action: Any, store: GraphStore) -> NodeResult:
+        if action.preview is None:
+            return NodeResult(DECLINED, reason="dry run: write action not executed")
+        spec.attempts += 1
+        try:
+            would = action.preview(self.env, spec.args, store.results())
+        except Exception as e:
+            logger.exception("node [%s] preview crashed", spec.id)
+            return NodeResult(FAILED, reason=f"preview {type(e).__name__}: {e}", error_kind="internal")
+        if not would:
+            return NodeResult(RESOLVED, data={"would_file": would or [], "filed": False},
+                              reason="dry run: nothing to file")
+        return NodeResult(HANDED_OFF, data={"would_file": would, "filed": False},
+                          reason="dry run: prepared for a person, not filed")

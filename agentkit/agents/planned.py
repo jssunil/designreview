@@ -14,7 +14,7 @@ from typing import Optional
 
 from agentkit.answer import compose_answer
 from agentkit.graph.engine import GraphStore, LiveGraphExecutor, RunEnv
-from agentkit.graph.node_result import RESOLVED
+from agentkit.graph.node_result import HANDED_OFF, RESOLVED
 from agentkit.graph.plan_loader import Plan
 from agentkit.graph.rule_planner import RulePlanner
 from agentkit.record.run_record import TaskRun
@@ -34,8 +34,10 @@ def record_steps(run: TaskRun, store: GraphStore) -> None:
     specs = sorted(store.specs.values(), key=lambda s: (s.started_at is None, s.started_at or 0.0))
     for spec in specs:
         r = spec.result
-        run.add_step(kind=spec.action, target=spec.id, ok=bool(r and r.verdict == RESOLVED),
-                     detail=(r.data if r and r.verdict == RESOLVED else (r.reason if r else "not run")),
+        # A hand-off is a normal result, and its data (what a person would get) is the evidence.
+        carries_data = bool(r and r.verdict in (RESOLVED, HANDED_OFF))
+        run.add_step(kind=spec.action, target=spec.id, ok=carries_data,
+                     detail=(r.data if carries_data else (r.reason if r else "not run")),
                      status=r.verdict if r else "not_run", reason=r.reason if r else None,
                      error_kind=r.error_kind if r else None, attempts=spec.attempts,
                      added_by=spec.added_by, seconds=spec.seconds)

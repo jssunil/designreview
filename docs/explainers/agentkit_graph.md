@@ -17,8 +17,11 @@ the whole graph is checkpointed after every step.
 - **`requires = "resolved" | "settled"`.** `resolved`: run only if every dependency resolved, else bypass with
   the reason. `settled`: run once every dependency finished in any verdict — a partial join.
 - **Actions are an allowlist.** A node names a registered *action*, never a raw tool. A patch naming anything
-  else is rejected, so neither a plan nor the planner can reach a tool the pack didn't expose. The design-review
-  pack registers no write actions, and a write action in a dry run is declined without being called.
+  else is rejected, so neither a plan nor the planner can reach a tool the pack didn't expose. A write action
+  is never called in a dry run. If it registers a `preview`, the engine calls that instead and the node ends
+  `handed_off` with `{"would_file": ..., "filed": false}` (an empty preview is `resolved`, "nothing to file");
+  without a preview it is `declined`. The design-review pack's only write action, `raise_handoffs`, is
+  preview-only.
 - **Transport errors map to verdicts.** `missing`, `not_in_seat`, `denied` → declined; `flaky` → retried up to
   the action's `retries` (never for writes) then failed; anything else → failed; a bug in an action → failed
   with `error_kind = "internal"`, siblings keep running.
@@ -62,7 +65,7 @@ after = ["release_gate"]
 | `GraphStore` | nodes + validation + ready-set + checkpoint |
 | `LiveGraphExecutor` | runs the ready set, applies planner patches |
 | `NodeResult(verdict, data, reason, error_kind)` | how a node ended |
-| `Registry` / `ActionSpec` | a pack's actions (with `retries`, `writes`), probes, checks, mutants, extras |
+| `Registry` / `ActionSpec` | a pack's actions (with `retries`, `writes`, and `preview` for a write action), probes, checks, mutants, extras |
 
 ## How to test
 
