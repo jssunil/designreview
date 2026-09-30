@@ -12,7 +12,7 @@ put it into words, and those words are audited against the finding. Unchecked LL
 
 - **Deterministic audit.** `audit_narrative(text, finding, rules)` reports:
   `unsupported_ids` (a UUID not in the finding), `unsupported_quantities` (a number-with-unit whose value is
-  nowhere in the finding — numbers inside finding strings count), `contradictions` (pack-defined) and
+  nowhere in the finding — numbers inside finding strings count, except the digits of dates, clock times and UUIDs), `contradictions` (pack-defined) and
   `missing` (required facts left out). No LLM grades another LLM here.
 - **The pack decides the rules.** `ClaimRules(quantity_re, required, contradictions)` is supplied by the pack;
   this module holds no domain words.
@@ -39,7 +39,7 @@ put it into words, and those words are audited against the finding. Unchecked LL
 | `audit_narrative(text, finding, rules) -> dict` | `ok` + the four problem lists |
 | `correction_note(report) -> str` | the rewrite instruction |
 | `compose_answer(query, finding, gateway=, rules=, template=, system_prompt=, instructions=)` | the narrate loop |
-| `known_numbers(obj)` | every number anywhere in the finding |
+| `known_numbers(obj)` | every number anywhere in the finding, ignoring dates, times and UUIDs (a 12:05 snapshot must not support "12 mm") |
 
 ## How to test
 
