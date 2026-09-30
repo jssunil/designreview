@@ -42,7 +42,7 @@ description`. Unknown keys, unknown verifiers, missing plans and duplicate ids a
 
 | Command | What |
 |---|---|
-| `python -m agentkit.harness.batch [--only ids] [--skip-llm] [--grade] [--sim fixture.json --fault spec]` | run tasks |
+| `python -m agentkit.harness.batch [--only ids] [--skip-llm] [--grade] [--sim fixtures-dir-or-file --fault spec]` | run tasks (each on its own tenant) |
 | `python -m agentkit.harness.grade <batch-dir or run-dirs>` | grade saved runs (exit 1 on any fail) |
 | `python -m agentkit.harness.mutants [batch-dir]` | calibrate (exit 1 on MISSED/UNEXERCISED) |
 | `python -m agentkit.harness.run_one --task t.toml --run-dir d --run-id id` | one task, one folder |

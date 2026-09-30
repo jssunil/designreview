@@ -26,3 +26,7 @@ name = "cited_standards_exist"
 
 [[verifiers]]
 name = "answer_audited"
+
+[[verifiers]]
+name = "answer_reflects_change_notes"
+params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6", from_rev = "B", to_rev = "C" }

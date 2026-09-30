@@ -3,7 +3,7 @@
 *Reading order: **11th**. Thin wrappers over `agentkit/harness`.*
 
 ```bash
-python capstone_evals.py [--skip-llm] [--only t01_battery_tray_rev_diff] [--sim fixture.json]   # run + grade
+python capstone_evals.py [--skip-llm] [--only t01_battery_tray_rev_diff] [--sim packs/designreview/fixtures]   # run + grade
 python rescore.py [runs/batches/<id> | runs/<run_id> ...]                                       # re-grade (files only)
 ```
 

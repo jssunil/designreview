@@ -3,7 +3,7 @@ Capture a platform fixture for offline runs.
 
     python -m agentkit.sim.capture [--pack packs.<name>] [--tenant <tenant>] [--out <file.json>]
 
-Runs every task of the pack once against the LIVE tenant (template answers,
+Runs every task of the pack that targets the tenant once against the LIVE tenant (template answers,
 no LLM; always read-only) through recording clients, plus each task's
 ground-truth probes, and saves every exchange to one fixture file. Replay
 it with `python -m agentkit.harness.batch --sim <file.json> --grade`.
@@ -30,7 +30,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = ap.parse_args(argv)
     registry = load_pack(args.pack or default_pack())
     args.tenant = args.tenant or default_tenant()
-    tasks = load_tasks([Path(registry.extras["tasks_dir"])])
+    # only the tasks that run on this tenant: a fixture holds one tenant's platform
+    tasks = [t for t in load_tasks([Path(registry.extras["tasks_dir"])]) if args.tenant in t.tenants]
+    if not tasks:
+        print(f"no task runs on tenant {args.tenant!r}; nothing to capture")
+        return 1
     out = args.out or Path(registry.extras["fixtures_dir"]) / f"{args.tenant}.json"
     fixture = capture_fixture(tasks, args.tenant, note=f"{len(tasks)} task(s) of {args.pack or default_pack()}")
     fixture.save(out)

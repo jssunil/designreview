@@ -23,3 +23,7 @@ params = { file_id = "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4" }
 
 [[verifiers]]
 name = "answer_audited"
+
+[[verifiers]]
+name = "answer_reflects_change_notes"
+params = { file_id = "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4", from_rev = "2", to_rev = "3" }

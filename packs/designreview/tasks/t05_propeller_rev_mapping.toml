@@ -19,3 +19,7 @@ params = { file_id = "1131649b-a525-410a-97e3-e6b995a524fb" }
 
 [[verifiers]]
 name = "answer_audited"
+
+[[verifiers]]
+name = "answer_reflects_change_notes"
+params = { file_id = "1131649b-a525-410a-97e3-e6b995a524fb", from_rev = "B", to_rev = "C" }

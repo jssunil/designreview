@@ -80,16 +80,28 @@ class SimSession:
     """Offline batch plumbing: a fresh SimPlatform per task (so faults and
     scripted edits never leak across tasks), serving both the ground-truth
     reads and the agent. The agent runs in-process with faults armed only
-    around its own calls; scripted edits land after it finishes."""
+    around its own calls; scripted edits land after it finishes.
+
+    `fixture` is one fixture file (every task replays it) or a folder of
+    per-tenant fixtures `<tenant>.json` (each task replays its own tenant's)."""
 
     def __init__(self, fixture: Path, faults: List[str], read_only: Any = ()):
-        self.fixture, self.faults, self.read_only = fixture, list(faults), read_only
+        self.fixture, self.faults, self.read_only = Path(fixture), list(faults), read_only
         self.current: Any = None
+
+    def fixture_for(self, tenant: str) -> Path:
+        if not self.fixture.is_dir():
+            return self.fixture
+        path = self.fixture / f"{tenant}.json"
+        if not path.exists():
+            raise FileNotFoundError(f"no fixture for tenant {tenant!r} in {self.fixture} "
+                                    f"(capture it: python -m agentkit.sim.capture --tenant {tenant})")
+        return path
 
     def reader_for(self, tenant: str) -> Any:
         from agentkit.sim import SimPlatform
 
-        self.current = SimPlatform(self.fixture, self.faults, self.read_only)
+        self.current = SimPlatform(self.fixture_for(tenant), self.faults, self.read_only)
         self.current.armed = False  # the "before" ground truth is read undisturbed
         return self.current
 
@@ -154,7 +166,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--tenant", default=None, help="run every task on this tenant only")
     ap.add_argument("--skip-llm", action="store_true", help="template answers, no LLM calls")
     ap.add_argument("--grade", action="store_true", help="grade the batch when it finishes")
-    ap.add_argument("--sim", type=Path, default=None, help="replay this fixture instead of the live platform")
+    ap.add_argument("--sim", type=Path, default=None, help="replay a fixture file, or a folder of <tenant>.json fixtures, instead of the live platform")
     ap.add_argument("--fault", action="append", default=[], help="inject a fault (sim only), e.g. drop_tool:X.get")
     ap.add_argument("--runs-dir", type=Path, default=RUNS_DIR)
     args = ap.parse_args(argv)

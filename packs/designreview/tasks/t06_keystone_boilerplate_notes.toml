@@ -1,0 +1,33 @@
+id = "t06_keystone_boilerplate_notes"
+description = "Keystone: rev B and rev C notes only say the drawing and model were updated together. The agent must map Revision B/C to v2/v3, report exactly what the notes say, and invent no specific changes or quantities; no geometry claim (hash-only diffs)."
+pack = "packs.designreview"
+plan = "rev_diff_dfm"
+prompt = "What changed between rev B and rev C of the hydraulic manifold mount, and are there manufacturability problems?"
+params = { file_id = "5f3c30f5-0af7-4cd8-bb54-576f701e136c" }
+tenants = ["keystone"]
+
+[[verifiers]]
+name = "revision_delta_matches_db"
+params = { file_id = "5f3c30f5-0af7-4cd8-bb54-576f701e136c", from_rev = "B", to_rev = "C" }
+
+[[verifiers]]
+name = "answer_reflects_change_notes"
+params = { file_id = "5f3c30f5-0af7-4cd8-bb54-576f701e136c", from_rev = "B", to_rev = "C" }
+
+[[verifiers]]
+name = "answer_states_change"
+params = { file_id = "5f3c30f5-0af7-4cd8-bb54-576f701e136c", from_rev = "B", to_rev = "C" }
+
+[[verifiers]]
+name = "no_geometry_claim"
+params = { file_id = "5f3c30f5-0af7-4cd8-bb54-576f701e136c" }
+
+[[verifiers]]
+name = "release_gate_matches_db"
+params = { file_id = "5f3c30f5-0af7-4cd8-bb54-576f701e136c" }
+
+[[verifiers]]
+name = "cited_standards_exist"
+
+[[verifiers]]
+name = "answer_audited"

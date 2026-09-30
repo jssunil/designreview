@@ -24,17 +24,24 @@ for both the agent and the harness, with injectable faults.
   reads stay undisturbed.
 - **Validated fixtures.** `SeatFixture` is a pydantic model (format, tenant, captured_at, tools, calls).
 
-## Results on the captured Suryodaya fixture
+## Per-tenant fixtures
 
-All five tasks pass offline in well under a second. T01 under faults: `fail_once` flaky read → pass
+A fixture holds one tenant's platform. `python -m agentkit.sim.capture --tenant <t>` runs only the tasks
+whose `tenants` include `<t>` and writes `<pack>/fixtures/<t>.json`. `--sim` takes either one fixture
+file (every task replays it) or the fixtures folder (each task replays `<its tenant>.json`); a missing
+tenant fixture is an error that says how to capture it.
+
+## Results on the captured fixtures
+
+All seven tasks (five on Suryodaya, two on Keystone) pass offline in about a second. T01 under faults: `fail_once` flaky read → pass
 (retried); `drop_tool:DesignFeedback.list` → pass (degrades without false claims); release readiness always
 failing → fail (verdict unknown); rev C note edited during the run → drift.
 
 ## Data note
 
-The fixture (`packs/designreview/fixtures/suryodaya.json`, ~430 KB) is a snapshot of the course platform's
+The fixtures (`packs/designreview/fixtures/suryodaya.json` ~430 KB, `keystone.json` ~115 KB) are snapshots of the course platform's
 seed data, including person-like names in feedback text. Decide whether it belongs in git; offline tests skip
-without it, and `python -m agentkit.sim.capture` recreates it.
+without them, and `python -m agentkit.sim.capture --tenant <tenant>` recreates them.
 
 ## How to test
 

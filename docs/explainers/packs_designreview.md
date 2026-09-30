@@ -17,9 +17,9 @@
 | Prompts | `prompts/system.md`, `prompts/narrate.md` | narrator instructions |
 | Probes | `probes.py` | ground truth: `versions`, `design_file`, `feedback`, `release_gate`, `seat_tools`, `standards` |
 | Verifiers | `checks.py` | see below |
-| Mutants | `mutants.py` | 15 faults, one or two per verifier |
-| Tasks | `tasks/t01…t05.toml` | the graded task set |
-| Fixtures | `fixtures/suryodaya.json` | captured platform for offline runs |
+| Mutants | `mutants.py` | 16 faults, one or two per verifier |
+| Tasks | `tasks/t01…t07.toml` | the graded task set: t01–t05 on Suryodaya, t06–t07 on Keystone |
+| Fixtures | `fixtures/<tenant>.json` | captured platform per tenant, for offline runs |
 
 ## The finding
 
@@ -46,6 +46,13 @@ Each compares the finding and the answer with the harness's ground truth, using 
 | `tool_absent` | the agent calls, or answers as if it had, a tool the seat isn't given |
 | `cited_standards_exist` | a recalled standard id or a cited standard reference isn't on the platform |
 | `answer_audited` | the final answer failed the claim audit |
+| `answer_reflects_change_notes` | the answer doesn't carry the substance of the compared version's note (its distinctive words; default at least 3) — for a boilerplate note that means saying so instead of inventing changes (drift if the note was rewritten during the run) |
+
+**Which versions a check compares** is a task parameter, shared by `revision_delta_matches_db`,
+`answer_states_change` and `answer_reflects_change_notes`: `from_rev` / `to_rev` (rev letters or numbers read
+from commit messages: "Rev B", "Revision C", "Rev 2"), or `latest = true` for the two newest versions —
+for files whose notes carry no rev labels. The finding follows the same rule: rev labels named in the
+question, otherwise the latest two versions.
 
 ## How to test
 

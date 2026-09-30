@@ -40,7 +40,7 @@ Anything without a marker must run offline: no network, no LLM, no `.env`.
 | `test_modularity.py` | architecture guards (domain-free framework, no agent frameworks) | yes |
 | `test_platform_live.py` | platform facts the tasks rely on | live |
 | `test_platform_workflows.py` | review / feedback workflows | live + writes |
-| `test_agent_tasks.py` | the five tasks, end to end | live + agent |
+| `test_agent_tasks.py` | the seven tasks (t01–t05 Suryodaya, t06–t07 Keystone), end to end | live + agent |
 
 ## Tools you can use (all product code, not test code)
 
@@ -48,9 +48,10 @@ Anything without a marker must run offline: no network, no LLM, no `.env`.
   `send(method, url, headers, body, *, safe_to_repeat) -> WireReply(status, body_bytes)` —
   passed as `SeatSession(TenantLogin(...), wire=fake)`.
 - **No network for LLMs:** `LLMGateway(<routing.json>, transport=httpx.MockTransport(handler), sleep=list.append, env={...})`.
-- **A whole platform offline:** `SimPlatform("packs/designreview/fixtures/suryodaya.json", faults=[...])` —
+- **A whole platform offline:** `SimPlatform("packs/designreview/fixtures/<tenant>.json", faults=[...])` —
   the real captured responses. Faults: `drop_tool:<tool>`, `fail_once:<tool>:<kind>`,
-  `fail_always:<tool>:<kind>`, `edit_text:<old>=><new>`. Re-capture with `python -m agentkit.sim.capture`.
+  `fail_always:<tool>:<kind>`, `edit_text:<old>=><new>`. Re-capture with `python -m agentkit.sim.capture --tenant <tenant>`.
+  `SimSession("packs/designreview/fixtures", ...)` gives every task its own tenant's fixture.
 - **The whole harness offline:** `SimSession(fixture, faults, registry.read_only)` →
   `run_batch(tasks, runs_dir=tmp_path, reader_factory=sim.reader_for, agent_runner=sim.run_agent, fresh_reader_per_task=True)` →
   `grade_batch(batch_dir)`.

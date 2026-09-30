@@ -36,4 +36,4 @@ code-computed finding. What was once a hard-coded planner class and a synthesis 
 ## How to test
 
 `tests/test_agent_tasks.py` (live + agent). The offline twin: `python -m agentkit.harness.batch --sim
-packs/designreview/fixtures/suryodaya.json --skip-llm --grade`.
+packs/designreview/fixtures --skip-llm --grade`.

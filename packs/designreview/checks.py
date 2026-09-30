@@ -66,17 +66,36 @@ def _norm_std(body: str, number: str) -> str:
     return re.sub(r"[\s\-]", "", f"{body}{number}").lower().rstrip(".:")
 
 
-def _mapping(versions: List[Dict[str, Any]], frm: str, to: str) -> Tuple[Optional[int], Optional[int], List[str]]:
-    by = {}
-    for v in versions:
-        r = rev_of(v["commit_message"])
-        if r and r not in by:
-            by[r] = v
-    f, t = by.get(frm.upper()), by.get(to.upper())
-    if not f or not t:
-        return None, None, []
-    notes = [v["commit_message"] for v in versions if f["version_number"] < v["version_number"] <= t["version_number"]]
+def select_versions(versions: List[Dict[str, Any]], p: Dict[str, Any]) -> Tuple[Optional[int], Optional[int], List[str]]:
+    """(from_version, to_version, change notes in (from, to]) that the task
+    asks about. Task params choose how the two versions are picked:
+
+      from_rev / to_rev   rev letters or numbers read from commit messages
+                          ("Rev B", "Revision C", "Rev 2")
+      latest = true       the two newest versions by number (for files whose
+                          notes carry no rev labels)
+
+    (None, None, []) when the requested revs aren't both in the history."""
+    ordered = sorted(versions, key=lambda v: v["version_number"] or 0)
+    if p.get("latest"):
+        if len(ordered) < 2:
+            return None, None, []
+        f, t = ordered[-2], ordered[-1]
+    else:
+        by: Dict[str, Dict[str, Any]] = {}
+        for v in ordered:
+            r = rev_of(v["commit_message"])
+            if r and r not in by:
+                by[r] = v
+        f, t = by.get(str(p["from_rev"]).upper()), by.get(str(p["to_rev"]).upper())
+        if not f or not t:
+            return None, None, []
+    notes = [v["commit_message"] for v in ordered if f["version_number"] < v["version_number"] <= t["version_number"]]
     return f["version_number"], t["version_number"], notes
+
+
+def _which(p: Dict[str, Any]) -> str:
+    return "the latest two versions" if p.get("latest") else f"rev {p.get('from_rev')}/{p.get('to_rev')}"
 
 
 # ---------------------------------------------------------------- checks
@@ -87,14 +106,14 @@ def check_revision_delta(b: RunBundle, p: Dict[str, Any]) -> List[CheckOutcome]:
     if after is None:
         return [CheckOutcome(name, "versions", "error", f"ground truth unavailable: {b.obs_error('after', key)}")]
     delta = b.finding.get("revision_delta") or {}
-    want = _mapping(after, p["from_rev"], p["to_rev"])
+    want = select_versions(after, p)
     if want[0] is None:
         ok = delta.get("outcome") == "declined"
         return [CheckOutcome(name, "mapping", "pass" if ok else "fail",
-                             f"rev {p['from_rev']}/{p['to_rev']} not both in the version history; "
+                             f"{_which(p)} not both in the version history; "
                              f"agent outcome={delta.get('outcome')}")]
     got = (delta.get("from_version"), delta.get("to_version"), delta.get("change_notes") or [])
-    then = _mapping(before, p["from_rev"], p["to_rev"]) if before else want
+    then = select_versions(before, p) if before else want
     out = []
     for label, i in (("mapping", slice(0, 2)), ("change_notes", slice(2, 3))):
         g, w, t = got[i], want[i], then[i]
@@ -109,7 +128,7 @@ def _quantity_problems(b: RunBundle, p: Dict[str, Any], phase: str) -> Optional[
     versions = b.truth(phase, f"versions:{p['file_id']}")
     if versions is None:
         return None
-    _f, _t, notes = _mapping(versions, p["from_rev"], p["to_rev"])
+    _f, _t, notes = select_versions(versions, p)
     note_qty = quantities_in(notes[-1] if notes else "")
     said = quantities_in(b.answer)
     missing = [q for q in note_qty if not any(abs(q - s) < 1e-9 for s in said)]
@@ -241,6 +260,52 @@ def check_answer_audited(b: RunBundle, p: Dict[str, Any]) -> List[CheckOutcome]:
                          f"source={(step.get('detail') or {}).get('source')}; audit={ {k: v for k, v in audit.items() if v and k != 'ok'} or 'clean'}")]
 
 
+_NOTE_WORD = re.compile(r"[a-z]{4,}")
+_NOTE_FILLER = frozenset("""revision rev with from that this into have been were also made changed changes
+initial release version""".split())
+
+
+def note_words(note: str) -> List[str]:
+    """Distinctive words of a change note, in order, without filler."""
+    seen: List[str] = []
+    for w in _NOTE_WORD.findall((note or "").lower()):
+        if w not in _NOTE_FILLER and w not in seen:
+            seen.append(w)
+    return seen
+
+
+def _reflects(answer: str, words: List[str], need: int) -> Tuple[List[str], bool]:
+    text = (answer or "").lower()
+    present = [w for w in words if w in text or (w.endswith("s") and w[:-1] in text)]
+    return present, len(present) >= min(need, len(words))
+
+
+def check_answer_reflects_change_notes(b: RunBundle, p: Dict[str, Any]) -> List[CheckOutcome]:
+    """The answer must carry the substance of the compared version's note --
+    for a boilerplate note ("drawing and model updated together") that means
+    saying so, rather than inventing specific changes the platform never recorded."""
+    name, key = "answer_reflects_change_notes", f"versions:{p['file_id']}"
+    after, before = b.truth("after", key), b.truth("before", key)
+    if after is None:
+        return [CheckOutcome(name, "notes", "error", f"ground truth unavailable: {b.obs_error('after', key)}")]
+    need = int(p.get("min_words", 3))
+
+    def judge(versions: List[Dict[str, Any]]) -> Tuple[List[str], List[str], bool]:
+        _f, _t, notes = select_versions(versions, p)
+        words = note_words(notes[-1] if notes else "")
+        present, ok = _reflects(b.answer, words, need)
+        return words, present, ok
+
+    words, present, ok = judge(after)
+    if not words:
+        return [CheckOutcome(name, "notes", "skip", f"{_which(p)}: the note has no distinctive words")]
+    then_ok = judge(before)[2] if before else ok
+    status = "pass" if ok else ("drift" if then_ok else "fail")
+    return [CheckOutcome(name, "notes", status,
+                         f"{len(present)}/{len(words)} note words in the answer (need {min(need, len(words))}): "
+                         f"missing {[w for w in words if w not in present][:8]}")]
+
+
 def register_checks(reg: Registry) -> None:
     f = lambda p: [f"versions:{p['file_id']}"]  # noqa: E731
     reg.check("revision_delta_matches_db", observes=f)(check_revision_delta)
@@ -253,3 +318,4 @@ def register_checks(reg: Registry) -> None:
     reg.check("tool_absent", observes=lambda p: ["seat_tools"])(check_tool_absent)
     reg.check("cited_standards_exist", observes=lambda p: ["standards"])(check_cited_standards)
     reg.check("answer_audited")(check_answer_audited)
+    reg.check("answer_reflects_change_notes", observes=f)(check_answer_reflects_change_notes)
