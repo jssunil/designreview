@@ -1,14 +1,15 @@
 # `agentkit/harness/` — tasks, ground truth, grading, self-test
 
 *Reading order: **7th**. Files: `tasks.py`, `ground_truth.py`, `run_one.py`, `batch.py`, `checks.py`,
-`grade.py`, `mutants.py`. Domain checks live in `packs/designreview/checks.py`.*
+`grade.py`, `mutants.py`, `cleanup.py`. Domain checks live in `packs/designreview/checks.py`.*
 
 ## 10,000-ft view
 
 ```
 task.toml ──► ground truth BEFORE (harness's own login)
-          ──► agent run in a subprocess (dry run) ──► runs/<run_id>/{taskrun.json, tool_journal.jsonl, graph.json, llm_ledger.json}
+          ──► agent run in a subprocess (dry run, or write run with --write) ──► runs/<run_id>/{taskrun.json, tool_journal.jsonl, graph.json, llm_ledger.json}
           ──► ground truth AFTER
+          ──► write runs only: the pack's clean-up undoes what was filed ──► cleanup.json
           ──► grade (files only) ──► score.json per run, report.md per batch
           ──► mutants (prove every check can fail) ──► calibration.json
 ```
@@ -25,7 +26,14 @@ task.toml ──► ground truth BEFORE (harness's own login)
   the data moved under the run), `skip`, `error` (ground truth unavailable or the check crashed). `error`
   never counts as a pass. Task status: any fail/error → fail; only drift → drift; else pass.
 - **Built-in checks for every task:** `run_completed`, `tool_calls_policy` (from the journal: a dry run may
-  only read), `answer_present`.
+  only read; a write run may only write through the pack's `write_tools` allowlist), `answer_present`.
+- **Writes are opt-in twice.** A run writes only when the batch has `--write` *and* the task sets
+  `allow_writes = true`; every other run is a dry run, where write actions are previewed, never called.
+  `--write` is live only (a fixture can't take writes).
+- **Clean-up after the evidence.** In a write run the "after" ground truth is captured first, so the record of
+  what was filed is on disk. Then the pack's `cleanup` (in `registry.extras`) undoes it and writes
+  `cleanup.json`. `--keep-writes` skips this, and `python -m agentkit.harness.cleanup` does it later (or for a
+  crashed run).
 - **Subprocess per task** so an agent crash can't take the batch down; the running-record is the evidence.
 - **Unique batch ids.** The batch folder is claimed with an exclusive `mkdir`; a same-second collision gets
   `-2`, `-3`… (two batches once overwrote each other before this).
@@ -36,21 +44,23 @@ task.toml ──► ground truth BEFORE (harness's own login)
 ## Task files
 
 TOML, validated by the `TaskDef` pydantic model: `id, pack, plan, prompt, params, tenants, verifiers,
-description`. Unknown keys, unknown verifiers, missing plans and duplicate ids are errors at load time.
+allow_writes, description`. Unknown keys, unknown verifiers, missing plans and duplicate ids are errors at load time.
 
 ## CLIs
 
 | Command | What |
 |---|---|
 | `python -m agentkit.harness.batch [--only ids] [--skip-llm] [--grade] [--sim fixtures-dir-or-file --fault spec]` | run tasks (each on its own tenant) |
+| `python -m agentkit.harness.batch --write [--keep-writes] [--only ids] [--grade]` | **live writes** for tasks with `allow_writes = true`, cleaned up after capture unless `--keep-writes` |
+| `python -m agentkit.harness.cleanup --tenant t [--dry-run]` or `--run-dir runs/<id>` | undo what write runs left behind (the pack decides what is "ours") |
 | `python -m agentkit.harness.grade <batch-dir or run-dirs>` | grade saved runs (exit 1 on any fail) |
 | `python -m agentkit.harness.mutants [batch-dir]` | calibrate (exit 1 on MISSED/UNEXERCISED) |
-| `python -m agentkit.harness.run_one --task t.toml --run-dir d --run-id id` | one task, one folder |
+| `python -m agentkit.harness.run_one --task t.toml --run-dir d --run-id id [--write]` | one task, one folder |
 
 ## Key types
 
 `TaskDef`, `VerifierSpec`, `GroundTruthReader`, `RunBundle` (task, taskrun, graph, journal, before, after;
-`truth(phase, key)`, `obs_error()`, `tools_called()`), `CheckOutcome`, `CheckDef`, `MutantDef`, `SimSession`.
+`read_only_tools`, `write_tools`; `truth(phase, key)`, `obs_error()`, `tools_called()`), `CheckOutcome`, `CheckDef`, `MutantDef`, `SimSession`.
 
 ## How to test
 

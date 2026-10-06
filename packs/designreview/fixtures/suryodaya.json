@@ -1,7 +1,7 @@
 {
   "format": "agentkit-seat-fixture-v1",
   "tenant": "suryodaya",
-  "captured_at": "2026-09-30T12:28:43+00:00",
+  "captured_at": "2026-09-30T15:45:09+00:00",
   "note": "6 task(s) of packs.designreview",
   "tools": [
     "AccountPlan.get",
@@ -427,6 +427,164 @@
         },
         "_can_create": true,
         "_next": []
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "DesignVersion.list",
+      "args": "{\"file_id\": \"39b69109-b56a-4bf4-af48-1ecf2b18f8a6\", \"limit\": 50, \"sort_by\": \"version_number\", \"sort_order\": \"asc\"}",
+      "result": {
+        "data": [
+          {
+            "id": "082f4aec-4e74-4972-a998-a57049b36d8f",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_number": 1,
+            "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
+            "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Initial release against Bharat EV drawing BEV-BT-2400 rev A.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": null,
+            "file_hash": "sha256:e02f312a0add5dd631c245582e6909fd43ed9d2be21a3ff609fa1780234435a0",
+            "diff_from_parent_json": null,
+            "conversion_status": "completed",
+            "created_at": "2026-09-12T17:17:52.091595",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_display": "1",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          },
+          {
+            "id": "fbb7886f-fde4-49ef-a4c9-d4c83f9d90ab",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_number": 2,
+            "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
+            "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Rev B \u2014 cell layout updated, 2.0 mm corner bend radius, mounting hole pattern moved 6 mm inboard.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": "082f4aec-4e74-4972-a998-a57049b36d8f",
+            "file_hash": "sha256:15900e263be7416b5684c1f1425bfed7a190b3a515a021de4c9c1280c3dd34b8",
+            "diff_from_parent_json": {
+              "parent_version_id": "082f4aec-4e74-4972-a998-a57049b36d8f",
+              "parent_file_hash": "sha256:e02f312a0add5dd631c245582e6909fd43ed9d2be21a3ff609fa1780234435a0",
+              "file_hash": "sha256:15900e263be7416b5684c1f1425bfed7a190b3a515a021de4c9c1280c3dd34b8",
+              "version_number": 2
+            },
+            "conversion_status": "completed",
+            "created_at": "2026-09-12T17:17:52.092217",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_parent_version_id_display": 1,
+            "_display": "2",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          },
+          {
+            "id": "85696cb0-8662-44da-8021-2a56453234ed",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+            "version_number": 3,
+            "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
+            "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Rev C \u2014 corner bend radius opened from 2.0 mm to 3.0 mm to stop micro-cracking at the flange. Blank length grows 4.2 mm.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": "fbb7886f-fde4-49ef-a4c9-d4c83f9d90ab",
+            "file_hash": "sha256:0e7d218ae2f4b907f957f3fc65054586025e21e73036a21bb420c4d95efa6cce",
+            "diff_from_parent_json": {
+              "parent_version_id": "fbb7886f-fde4-49ef-a4c9-d4c83f9d90ab",
+              "parent_file_hash": "sha256:15900e263be7416b5684c1f1425bfed7a190b3a515a021de4c9c1280c3dd34b8",
+              "file_hash": "sha256:0e7d218ae2f4b907f957f3fc65054586025e21e73036a21bb420c4d95efa6cce",
+              "version_number": 3
+            },
+            "conversion_status": "completed",
+            "created_at": "2026-09-12T17:17:52.092663",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_parent_version_id_display": 2,
+            "_display": "3",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          }
+        ],
+        "total": 3,
+        "limit": 50,
+        "offset": 0
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "endpoint.designreview.release_readiness",
+      "args": "{\"file_id\": \"39b69109-b56a-4bf4-af48-1ecf2b18f8a6\"}",
+      "result": {
+        "status": "ok",
+        "result": {
+          "ok": true,
+          "available": true,
+          "ready": false,
+          "reason_codes": [
+            "no_assembly_tree",
+            "critical_findings_open",
+            "no_review_binding"
+          ],
+          "reasons": [
+            "The selected version has no recorded component assembly tree.",
+            "Open critical findings remain on the release scope.",
+            "No review is bound to this exact file version."
+          ],
+          "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+          "version_id": "85696cb0-8662-44da-8021-2a56453234ed",
+          "version_number": 3,
+          "critical_open": 1,
+          "blockers": [
+            {
+              "id": "13c4bc94-65da-4348-a37d-b7420beb7d30",
+              "title": "2.0 mm inside bend radius on 2.0 mm HR \u2014 cracking risk",
+              "status": "in_progress",
+              "priority": "critical",
+              "redacted": false
+            }
+          ],
+          "blockers_truncated": false
+        }
       },
       "error_kind": null,
       "error": null
@@ -962,177 +1120,6 @@
           }
         ],
         "total": 8,
-        "limit": 50,
-        "offset": 0
-      },
-      "error_kind": null,
-      "error": null
-    },
-    {
-      "channel": "mcp",
-      "op": "endpoint.designreview.release_readiness",
-      "args": "{\"file_id\": \"39b69109-b56a-4bf4-af48-1ecf2b18f8a6\"}",
-      "result": {
-        "status": "ok",
-        "result": {
-          "ok": true,
-          "available": true,
-          "ready": false,
-          "reason_codes": [
-            "no_assembly_tree",
-            "critical_findings_open",
-            "no_review_binding"
-          ],
-          "reasons": [
-            "The selected version has no recorded component assembly tree.",
-            "Open critical findings remain on the release scope.",
-            "No review is bound to this exact file version."
-          ],
-          "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
-          "version_id": "85696cb0-8662-44da-8021-2a56453234ed",
-          "version_number": 3,
-          "critical_open": 1,
-          "blockers": [
-            {
-              "id": "13c4bc94-65da-4348-a37d-b7420beb7d30",
-              "title": "2.0 mm inside bend radius on 2.0 mm HR \u2014 cracking risk",
-              "status": "in_progress",
-              "priority": "critical",
-              "redacted": false
-            }
-          ],
-          "blockers_truncated": false
-        }
-      },
-      "error_kind": null,
-      "error": null
-    },
-    {
-      "channel": "mcp",
-      "op": "DesignVersion.list",
-      "args": "{\"file_id\": \"39b69109-b56a-4bf4-af48-1ecf2b18f8a6\", \"limit\": 50, \"sort_by\": \"version_number\", \"sort_order\": \"asc\"}",
-      "result": {
-        "data": [
-          {
-            "id": "082f4aec-4e74-4972-a998-a57049b36d8f",
-            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
-            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
-            "version_number": 1,
-            "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
-            "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": null,
-            "commit_message": "Initial release against Bharat EV drawing BEV-BT-2400 rev A.",
-            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
-            "parent_version_id": null,
-            "file_hash": "sha256:e02f312a0add5dd631c245582e6909fd43ed9d2be21a3ff609fa1780234435a0",
-            "diff_from_parent_json": null,
-            "conversion_status": "completed",
-            "created_at": "2026-09-12T17:17:52.091595",
-            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
-            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
-            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
-            "_uploaded_by_display": "Bharat EV Motors Ltd",
-            "_display": "1",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          },
-          {
-            "id": "fbb7886f-fde4-49ef-a4c9-d4c83f9d90ab",
-            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
-            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
-            "version_number": 2,
-            "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
-            "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": null,
-            "commit_message": "Rev B \u2014 cell layout updated, 2.0 mm corner bend radius, mounting hole pattern moved 6 mm inboard.",
-            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
-            "parent_version_id": "082f4aec-4e74-4972-a998-a57049b36d8f",
-            "file_hash": "sha256:15900e263be7416b5684c1f1425bfed7a190b3a515a021de4c9c1280c3dd34b8",
-            "diff_from_parent_json": {
-              "parent_version_id": "082f4aec-4e74-4972-a998-a57049b36d8f",
-              "parent_file_hash": "sha256:e02f312a0add5dd631c245582e6909fd43ed9d2be21a3ff609fa1780234435a0",
-              "file_hash": "sha256:15900e263be7416b5684c1f1425bfed7a190b3a515a021de4c9c1280c3dd34b8",
-              "version_number": 2
-            },
-            "conversion_status": "completed",
-            "created_at": "2026-09-12T17:17:52.092217",
-            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
-            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
-            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
-            "_uploaded_by_display": "Bharat EV Motors Ltd",
-            "_parent_version_id_display": 1,
-            "_display": "2",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          },
-          {
-            "id": "85696cb0-8662-44da-8021-2a56453234ed",
-            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
-            "file_id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
-            "version_number": 3,
-            "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
-            "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": null,
-            "commit_message": "Rev C \u2014 corner bend radius opened from 2.0 mm to 3.0 mm to stop micro-cracking at the flange. Blank length grows 4.2 mm.",
-            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
-            "parent_version_id": "fbb7886f-fde4-49ef-a4c9-d4c83f9d90ab",
-            "file_hash": "sha256:0e7d218ae2f4b907f957f3fc65054586025e21e73036a21bb420c4d95efa6cce",
-            "diff_from_parent_json": {
-              "parent_version_id": "fbb7886f-fde4-49ef-a4c9-d4c83f9d90ab",
-              "parent_file_hash": "sha256:15900e263be7416b5684c1f1425bfed7a190b3a515a021de4c9c1280c3dd34b8",
-              "file_hash": "sha256:0e7d218ae2f4b907f957f3fc65054586025e21e73036a21bb420c4d95efa6cce",
-              "version_number": 3
-            },
-            "conversion_status": "completed",
-            "created_at": "2026-09-12T17:17:52.092663",
-            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
-            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
-            "_file_id_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
-            "_uploaded_by_display": "Bharat EV Motors Ltd",
-            "_parent_version_id_display": 2,
-            "_display": "3",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          }
-        ],
-        "total": 3,
-        "limit": 50,
-        "offset": 0
-      },
-      "error_kind": null,
-      "error": null
-    },
-    {
-      "channel": "mcp",
-      "op": "DesignChecklistResult.list",
-      "args": "{\"file_id\": \"39b69109-b56a-4bf4-af48-1ecf2b18f8a6\", \"limit\": 50, \"overall_result\": \"fail\"}",
-      "result": {
-        "data": [],
-        "total": 0,
         "limit": 50,
         "offset": 0
       },
@@ -3876,6 +3863,19 @@
         ],
         "total": 100,
         "limit": 100,
+        "offset": 0
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "DesignChecklistResult.list",
+      "args": "{\"file_id\": \"39b69109-b56a-4bf4-af48-1ecf2b18f8a6\", \"limit\": 50, \"overall_result\": \"fail\"}",
+      "result": {
+        "data": [],
+        "total": 0,
+        "limit": 50,
         "offset": 0
       },
       "error_kind": null,
@@ -7469,519 +7469,6 @@
     },
     {
       "channel": "mcp",
-      "op": "DesignVersion.list",
-      "args": "{\"file_id\": \"4e6bf256-9e16-4158-bdf5-633b4bc2ecb4\", \"limit\": 50, \"sort_by\": \"version_number\", \"sort_order\": \"asc\"}",
-      "result": {
-        "data": [
-          {
-            "id": "d2cbcd88-c8b2-4601-8849-2b2947297f8b",
-            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
-            "file_id": "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4",
-            "version_number": 1,
-            "original_file": "",
-            "gltf_file": "",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": {
-              "root": {
-                "part_number": "ST-VICE-150",
-                "name": "SuryaTools Bench Vice 150mm",
-                "description": "Bench vice, 150 mm jaw, rev 1",
-                "quantity": 1,
-                "process": "assembly",
-                "cycle_time_mins": 0,
-                "children": [
-                  {
-                    "part_number": "ST-VICE-150-BODY",
-                    "name": "Vice Body",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 4180,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_milling",
-                    "cycle_time_mins": 26,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-JAWF",
-                    "name": "Fixed Jaw Plate",
-                    "material": "EN19 Round Bar 40mm",
-                    "weight": 620,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_milling",
-                    "cycle_time_mins": 9,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-JAWM",
-                    "name": "Moving Jaw",
-                    "material": "EN19 Round Bar 40mm",
-                    "weight": 540,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_milling",
-                    "cycle_time_mins": 8,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-SCREW",
-                    "name": "Lead Screw (trapezoidal)",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 780,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_turning",
-                    "cycle_time_mins": 14,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-HNDL",
-                    "name": "Handle Bar",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 260,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_turning",
-                    "cycle_time_mins": 5,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-BASE",
-                    "name": "Swivel Base",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 1450,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "drilling_tapping",
-                    "cycle_time_mins": 12,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "RM-BOLT-M10",
-                    "name": "Hex Bolt M10x30 Zinc 8.8",
-                    "material": "",
-                    "weight": 0,
-                    "weight_unit": "g",
-                    "quantity": 4,
-                    "process": "assembly",
-                    "cycle_time_mins": 1.5,
-                    "is_purchased": true
-                  },
-                  {
-                    "part_number": "RM-WASH-M8",
-                    "name": "Spring Washer M8",
-                    "material": "",
-                    "weight": 0,
-                    "weight_unit": "g",
-                    "quantity": 4,
-                    "process": "assembly",
-                    "cycle_time_mins": 0.5,
-                    "is_purchased": true
-                  },
-                  {
-                    "part_number": "RM-NUT-M8",
-                    "name": "Nyloc Nut M8",
-                    "material": "",
-                    "weight": 0,
-                    "weight_unit": "g",
-                    "quantity": 2,
-                    "process": "assembly",
-                    "cycle_time_mins": 0.5,
-                    "is_purchased": true
-                  },
-                  {
-                    "part_number": "ST-VICE-150-PC",
-                    "name": "Powder Coat Finish",
-                    "material": "Powder Coat Black RAL9005",
-                    "weight": 240,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "powder_coating",
-                    "cycle_time_mins": 6,
-                    "is_purchased": false
-                  }
-                ]
-              }
-            },
-            "commit_message": "Vice assembly rev 1.",
-            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
-            "parent_version_id": null,
-            "file_hash": "sha256:52e00e9fa32f210c9614526d73b1edd7e3280f880eb3ea27b4421d8ccf6235a9",
-            "diff_from_parent_json": null,
-            "conversion_status": "pending",
-            "created_at": "2026-09-12T17:17:52.104531",
-            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
-            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
-            "_file_id_display": "ST-VICE-150 Bench Vice Assembly",
-            "_uploaded_by_display": "Bharat EV Motors Ltd",
-            "_display": "1",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          },
-          {
-            "id": "bbf5e3a2-03f7-4563-9670-65a6debbb31c",
-            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
-            "file_id": "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4",
-            "version_number": 2,
-            "original_file": "",
-            "gltf_file": "",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": {
-              "root": {
-                "part_number": "ST-VICE-150",
-                "name": "SuryaTools Bench Vice 150mm",
-                "description": "Bench vice, 150 mm jaw, rev 2",
-                "quantity": 1,
-                "process": "assembly",
-                "cycle_time_mins": 0,
-                "children": [
-                  {
-                    "part_number": "ST-VICE-150-BODY",
-                    "name": "Vice Body",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 4080,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_milling",
-                    "cycle_time_mins": 26,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-JAWF",
-                    "name": "Fixed Jaw Plate",
-                    "material": "EN19 Round Bar 40mm",
-                    "weight": 620,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_milling",
-                    "cycle_time_mins": 9,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-JAWM",
-                    "name": "Moving Jaw",
-                    "material": "EN19 Round Bar 40mm",
-                    "weight": 540,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_milling",
-                    "cycle_time_mins": 8,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-SCREW",
-                    "name": "Lead Screw (trapezoidal)",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 780,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_turning",
-                    "cycle_time_mins": 14,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-HNDL",
-                    "name": "Handle Bar",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 260,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_turning",
-                    "cycle_time_mins": 5,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-BASE",
-                    "name": "Swivel Base",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 1450,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "drilling_tapping",
-                    "cycle_time_mins": 12,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "RM-BOLT-M10",
-                    "name": "Hex Bolt M10x30 Zinc 8.8",
-                    "material": "",
-                    "weight": 0,
-                    "weight_unit": "g",
-                    "quantity": 4,
-                    "process": "assembly",
-                    "cycle_time_mins": 1.5,
-                    "is_purchased": true
-                  },
-                  {
-                    "part_number": "RM-WASH-M8",
-                    "name": "Spring Washer M8",
-                    "material": "",
-                    "weight": 0,
-                    "weight_unit": "g",
-                    "quantity": 4,
-                    "process": "assembly",
-                    "cycle_time_mins": 0.5,
-                    "is_purchased": true
-                  },
-                  {
-                    "part_number": "RM-NUT-M8",
-                    "name": "Nyloc Nut M8",
-                    "material": "",
-                    "weight": 0,
-                    "weight_unit": "g",
-                    "quantity": 2,
-                    "process": "assembly",
-                    "cycle_time_mins": 0.5,
-                    "is_purchased": true
-                  },
-                  {
-                    "part_number": "ST-VICE-150-PC",
-                    "name": "Powder Coat Finish",
-                    "material": "Powder Coat Black RAL9005",
-                    "weight": 240,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "powder_coating",
-                    "cycle_time_mins": 6,
-                    "is_purchased": false
-                  }
-                ]
-              }
-            },
-            "commit_message": "Rev 2 \u2014 jaw insert hardened, screw thread changed to trapezoidal.",
-            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
-            "parent_version_id": "d2cbcd88-c8b2-4601-8849-2b2947297f8b",
-            "file_hash": "sha256:b1b66218f5fc095a2128e2de33d8339929573180c0d0267ea1424426c69a7c9b",
-            "diff_from_parent_json": {
-              "parent_version_id": "d2cbcd88-c8b2-4601-8849-2b2947297f8b",
-              "parent_file_hash": "sha256:52e00e9fa32f210c9614526d73b1edd7e3280f880eb3ea27b4421d8ccf6235a9",
-              "file_hash": "sha256:b1b66218f5fc095a2128e2de33d8339929573180c0d0267ea1424426c69a7c9b",
-              "version_number": 2
-            },
-            "conversion_status": "pending",
-            "created_at": "2026-09-12T17:17:52.104981",
-            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
-            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
-            "_file_id_display": "ST-VICE-150 Bench Vice Assembly",
-            "_uploaded_by_display": "Bharat EV Motors Ltd",
-            "_parent_version_id_display": 1,
-            "_display": "2",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          },
-          {
-            "id": "02beafcf-f354-4745-b58e-5a37f6a36bb6",
-            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
-            "file_id": "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4",
-            "version_number": 3,
-            "original_file": "",
-            "gltf_file": "",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": {
-              "root": {
-                "part_number": "ST-VICE-150",
-                "name": "SuryaTools Bench Vice 150mm",
-                "description": "Bench vice, 150 mm jaw, rev 3, ribbed body",
-                "quantity": 1,
-                "process": "assembly",
-                "cycle_time_mins": 0,
-                "children": [
-                  {
-                    "part_number": "ST-VICE-150-BODY",
-                    "name": "Vice Body",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 3900,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_milling",
-                    "cycle_time_mins": 26,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-JAWF",
-                    "name": "Fixed Jaw Plate",
-                    "material": "EN19 Round Bar 40mm",
-                    "weight": 620,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_milling",
-                    "cycle_time_mins": 9,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-JAWM",
-                    "name": "Moving Jaw",
-                    "material": "EN19 Round Bar 40mm",
-                    "weight": 540,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_milling",
-                    "cycle_time_mins": 8,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-SCREW",
-                    "name": "Lead Screw (trapezoidal)",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 780,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_turning",
-                    "cycle_time_mins": 14,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-HNDL",
-                    "name": "Handle Bar",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 260,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "cnc_turning",
-                    "cycle_time_mins": 5,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "ST-VICE-150-BASE",
-                    "name": "Swivel Base",
-                    "material": "EN8 Round Bar 25mm",
-                    "weight": 1450,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "drilling_tapping",
-                    "cycle_time_mins": 12,
-                    "is_purchased": false
-                  },
-                  {
-                    "part_number": "RM-BOLT-M10",
-                    "name": "Hex Bolt M10x30 Zinc 8.8",
-                    "material": "",
-                    "weight": 0,
-                    "weight_unit": "g",
-                    "quantity": 4,
-                    "process": "assembly",
-                    "cycle_time_mins": 1.5,
-                    "is_purchased": true
-                  },
-                  {
-                    "part_number": "RM-WASH-M8",
-                    "name": "Spring Washer M8",
-                    "material": "",
-                    "weight": 0,
-                    "weight_unit": "g",
-                    "quantity": 4,
-                    "process": "assembly",
-                    "cycle_time_mins": 0.5,
-                    "is_purchased": true
-                  },
-                  {
-                    "part_number": "RM-NUT-M8",
-                    "name": "Nyloc Nut M8",
-                    "material": "",
-                    "weight": 0,
-                    "weight_unit": "g",
-                    "quantity": 2,
-                    "process": "assembly",
-                    "cycle_time_mins": 0.5,
-                    "is_purchased": true
-                  },
-                  {
-                    "part_number": "ST-VICE-150-PC",
-                    "name": "Powder Coat Finish",
-                    "material": "Powder Coat Black RAL9005",
-                    "weight": 240,
-                    "weight_unit": "g",
-                    "quantity": 1,
-                    "process": "powder_coating",
-                    "cycle_time_mins": 6,
-                    "is_purchased": false
-                  }
-                ]
-              }
-            },
-            "commit_message": "Rev 3 \u2014 body ribbing added, 180 g weight saving.",
-            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
-            "parent_version_id": "bbf5e3a2-03f7-4563-9670-65a6debbb31c",
-            "file_hash": "sha256:3ae1570af3dc232ac3eaead335498e609ea61e33a82d598043771108fa606aac",
-            "diff_from_parent_json": {
-              "parent_version_id": "bbf5e3a2-03f7-4563-9670-65a6debbb31c",
-              "parent_file_hash": "sha256:b1b66218f5fc095a2128e2de33d8339929573180c0d0267ea1424426c69a7c9b",
-              "file_hash": "sha256:3ae1570af3dc232ac3eaead335498e609ea61e33a82d598043771108fa606aac",
-              "version_number": 3
-            },
-            "conversion_status": "pending",
-            "created_at": "2026-09-12T17:17:52.105423",
-            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
-            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
-            "_file_id_display": "ST-VICE-150 Bench Vice Assembly",
-            "_uploaded_by_display": "Bharat EV Motors Ltd",
-            "_parent_version_id_display": 2,
-            "_display": "3",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          }
-        ],
-        "total": 3,
-        "limit": 50,
-        "offset": 0
-      },
-      "error_kind": null,
-      "error": null
-    },
-    {
-      "channel": "mcp",
-      "op": "endpoint.designreview.release_readiness",
-      "args": "{\"file_id\": \"4e6bf256-9e16-4158-bdf5-633b4bc2ecb4\"}",
-      "result": {
-        "status": "ok",
-        "result": {
-          "ok": true,
-          "available": true,
-          "ready": false,
-          "reason_codes": [
-            "not_ready",
-            "conversion_incomplete",
-            "no_review_binding"
-          ],
-          "reasons": [
-            "The file is not in the canonical ready state.",
-            "The selected version has no completed recorded conversion.",
-            "No review is bound to this exact file version."
-          ],
-          "file_id": "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4",
-          "version_id": "02beafcf-f354-4745-b58e-5a37f6a36bb6",
-          "version_number": 3,
-          "critical_open": 0,
-          "blockers": [],
-          "blockers_truncated": false
-        }
-      },
-      "error_kind": null,
-      "error": null
-    },
-    {
-      "channel": "mcp",
       "op": "DesignFeedback.list",
       "args": "{\"file_id\": \"4e6bf256-9e16-4158-bdf5-633b4bc2ecb4\", \"limit\": 50}",
       "result": {
@@ -8578,6 +8065,519 @@
           }
         ],
         "total": 8,
+        "limit": 50,
+        "offset": 0
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "endpoint.designreview.release_readiness",
+      "args": "{\"file_id\": \"4e6bf256-9e16-4158-bdf5-633b4bc2ecb4\"}",
+      "result": {
+        "status": "ok",
+        "result": {
+          "ok": true,
+          "available": true,
+          "ready": false,
+          "reason_codes": [
+            "not_ready",
+            "conversion_incomplete",
+            "no_review_binding"
+          ],
+          "reasons": [
+            "The file is not in the canonical ready state.",
+            "The selected version has no completed recorded conversion.",
+            "No review is bound to this exact file version."
+          ],
+          "file_id": "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4",
+          "version_id": "02beafcf-f354-4745-b58e-5a37f6a36bb6",
+          "version_number": 3,
+          "critical_open": 0,
+          "blockers": [],
+          "blockers_truncated": false
+        }
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "DesignVersion.list",
+      "args": "{\"file_id\": \"4e6bf256-9e16-4158-bdf5-633b4bc2ecb4\", \"limit\": 50, \"sort_by\": \"version_number\", \"sort_order\": \"asc\"}",
+      "result": {
+        "data": [
+          {
+            "id": "d2cbcd88-c8b2-4601-8849-2b2947297f8b",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4",
+            "version_number": 1,
+            "original_file": "",
+            "gltf_file": "",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": {
+              "root": {
+                "part_number": "ST-VICE-150",
+                "name": "SuryaTools Bench Vice 150mm",
+                "description": "Bench vice, 150 mm jaw, rev 1",
+                "quantity": 1,
+                "process": "assembly",
+                "cycle_time_mins": 0,
+                "children": [
+                  {
+                    "part_number": "ST-VICE-150-BODY",
+                    "name": "Vice Body",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 4180,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_milling",
+                    "cycle_time_mins": 26,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-JAWF",
+                    "name": "Fixed Jaw Plate",
+                    "material": "EN19 Round Bar 40mm",
+                    "weight": 620,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_milling",
+                    "cycle_time_mins": 9,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-JAWM",
+                    "name": "Moving Jaw",
+                    "material": "EN19 Round Bar 40mm",
+                    "weight": 540,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_milling",
+                    "cycle_time_mins": 8,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-SCREW",
+                    "name": "Lead Screw (trapezoidal)",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 780,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_turning",
+                    "cycle_time_mins": 14,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-HNDL",
+                    "name": "Handle Bar",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 260,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_turning",
+                    "cycle_time_mins": 5,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-BASE",
+                    "name": "Swivel Base",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 1450,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "drilling_tapping",
+                    "cycle_time_mins": 12,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "RM-BOLT-M10",
+                    "name": "Hex Bolt M10x30 Zinc 8.8",
+                    "material": "",
+                    "weight": 0,
+                    "weight_unit": "g",
+                    "quantity": 4,
+                    "process": "assembly",
+                    "cycle_time_mins": 1.5,
+                    "is_purchased": true
+                  },
+                  {
+                    "part_number": "RM-WASH-M8",
+                    "name": "Spring Washer M8",
+                    "material": "",
+                    "weight": 0,
+                    "weight_unit": "g",
+                    "quantity": 4,
+                    "process": "assembly",
+                    "cycle_time_mins": 0.5,
+                    "is_purchased": true
+                  },
+                  {
+                    "part_number": "RM-NUT-M8",
+                    "name": "Nyloc Nut M8",
+                    "material": "",
+                    "weight": 0,
+                    "weight_unit": "g",
+                    "quantity": 2,
+                    "process": "assembly",
+                    "cycle_time_mins": 0.5,
+                    "is_purchased": true
+                  },
+                  {
+                    "part_number": "ST-VICE-150-PC",
+                    "name": "Powder Coat Finish",
+                    "material": "Powder Coat Black RAL9005",
+                    "weight": 240,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "powder_coating",
+                    "cycle_time_mins": 6,
+                    "is_purchased": false
+                  }
+                ]
+              }
+            },
+            "commit_message": "Vice assembly rev 1.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": null,
+            "file_hash": "sha256:52e00e9fa32f210c9614526d73b1edd7e3280f880eb3ea27b4421d8ccf6235a9",
+            "diff_from_parent_json": null,
+            "conversion_status": "pending",
+            "created_at": "2026-09-12T17:17:52.104531",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "ST-VICE-150 Bench Vice Assembly",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_display": "1",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          },
+          {
+            "id": "bbf5e3a2-03f7-4563-9670-65a6debbb31c",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4",
+            "version_number": 2,
+            "original_file": "",
+            "gltf_file": "",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": {
+              "root": {
+                "part_number": "ST-VICE-150",
+                "name": "SuryaTools Bench Vice 150mm",
+                "description": "Bench vice, 150 mm jaw, rev 2",
+                "quantity": 1,
+                "process": "assembly",
+                "cycle_time_mins": 0,
+                "children": [
+                  {
+                    "part_number": "ST-VICE-150-BODY",
+                    "name": "Vice Body",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 4080,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_milling",
+                    "cycle_time_mins": 26,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-JAWF",
+                    "name": "Fixed Jaw Plate",
+                    "material": "EN19 Round Bar 40mm",
+                    "weight": 620,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_milling",
+                    "cycle_time_mins": 9,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-JAWM",
+                    "name": "Moving Jaw",
+                    "material": "EN19 Round Bar 40mm",
+                    "weight": 540,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_milling",
+                    "cycle_time_mins": 8,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-SCREW",
+                    "name": "Lead Screw (trapezoidal)",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 780,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_turning",
+                    "cycle_time_mins": 14,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-HNDL",
+                    "name": "Handle Bar",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 260,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_turning",
+                    "cycle_time_mins": 5,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-BASE",
+                    "name": "Swivel Base",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 1450,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "drilling_tapping",
+                    "cycle_time_mins": 12,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "RM-BOLT-M10",
+                    "name": "Hex Bolt M10x30 Zinc 8.8",
+                    "material": "",
+                    "weight": 0,
+                    "weight_unit": "g",
+                    "quantity": 4,
+                    "process": "assembly",
+                    "cycle_time_mins": 1.5,
+                    "is_purchased": true
+                  },
+                  {
+                    "part_number": "RM-WASH-M8",
+                    "name": "Spring Washer M8",
+                    "material": "",
+                    "weight": 0,
+                    "weight_unit": "g",
+                    "quantity": 4,
+                    "process": "assembly",
+                    "cycle_time_mins": 0.5,
+                    "is_purchased": true
+                  },
+                  {
+                    "part_number": "RM-NUT-M8",
+                    "name": "Nyloc Nut M8",
+                    "material": "",
+                    "weight": 0,
+                    "weight_unit": "g",
+                    "quantity": 2,
+                    "process": "assembly",
+                    "cycle_time_mins": 0.5,
+                    "is_purchased": true
+                  },
+                  {
+                    "part_number": "ST-VICE-150-PC",
+                    "name": "Powder Coat Finish",
+                    "material": "Powder Coat Black RAL9005",
+                    "weight": 240,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "powder_coating",
+                    "cycle_time_mins": 6,
+                    "is_purchased": false
+                  }
+                ]
+              }
+            },
+            "commit_message": "Rev 2 \u2014 jaw insert hardened, screw thread changed to trapezoidal.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": "d2cbcd88-c8b2-4601-8849-2b2947297f8b",
+            "file_hash": "sha256:b1b66218f5fc095a2128e2de33d8339929573180c0d0267ea1424426c69a7c9b",
+            "diff_from_parent_json": {
+              "parent_version_id": "d2cbcd88-c8b2-4601-8849-2b2947297f8b",
+              "parent_file_hash": "sha256:52e00e9fa32f210c9614526d73b1edd7e3280f880eb3ea27b4421d8ccf6235a9",
+              "file_hash": "sha256:b1b66218f5fc095a2128e2de33d8339929573180c0d0267ea1424426c69a7c9b",
+              "version_number": 2
+            },
+            "conversion_status": "pending",
+            "created_at": "2026-09-12T17:17:52.104981",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "ST-VICE-150 Bench Vice Assembly",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_parent_version_id_display": 1,
+            "_display": "2",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          },
+          {
+            "id": "02beafcf-f354-4745-b58e-5a37f6a36bb6",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "4e6bf256-9e16-4158-bdf5-633b4bc2ecb4",
+            "version_number": 3,
+            "original_file": "",
+            "gltf_file": "",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": {
+              "root": {
+                "part_number": "ST-VICE-150",
+                "name": "SuryaTools Bench Vice 150mm",
+                "description": "Bench vice, 150 mm jaw, rev 3, ribbed body",
+                "quantity": 1,
+                "process": "assembly",
+                "cycle_time_mins": 0,
+                "children": [
+                  {
+                    "part_number": "ST-VICE-150-BODY",
+                    "name": "Vice Body",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 3900,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_milling",
+                    "cycle_time_mins": 26,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-JAWF",
+                    "name": "Fixed Jaw Plate",
+                    "material": "EN19 Round Bar 40mm",
+                    "weight": 620,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_milling",
+                    "cycle_time_mins": 9,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-JAWM",
+                    "name": "Moving Jaw",
+                    "material": "EN19 Round Bar 40mm",
+                    "weight": 540,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_milling",
+                    "cycle_time_mins": 8,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-SCREW",
+                    "name": "Lead Screw (trapezoidal)",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 780,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_turning",
+                    "cycle_time_mins": 14,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-HNDL",
+                    "name": "Handle Bar",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 260,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "cnc_turning",
+                    "cycle_time_mins": 5,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "ST-VICE-150-BASE",
+                    "name": "Swivel Base",
+                    "material": "EN8 Round Bar 25mm",
+                    "weight": 1450,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "drilling_tapping",
+                    "cycle_time_mins": 12,
+                    "is_purchased": false
+                  },
+                  {
+                    "part_number": "RM-BOLT-M10",
+                    "name": "Hex Bolt M10x30 Zinc 8.8",
+                    "material": "",
+                    "weight": 0,
+                    "weight_unit": "g",
+                    "quantity": 4,
+                    "process": "assembly",
+                    "cycle_time_mins": 1.5,
+                    "is_purchased": true
+                  },
+                  {
+                    "part_number": "RM-WASH-M8",
+                    "name": "Spring Washer M8",
+                    "material": "",
+                    "weight": 0,
+                    "weight_unit": "g",
+                    "quantity": 4,
+                    "process": "assembly",
+                    "cycle_time_mins": 0.5,
+                    "is_purchased": true
+                  },
+                  {
+                    "part_number": "RM-NUT-M8",
+                    "name": "Nyloc Nut M8",
+                    "material": "",
+                    "weight": 0,
+                    "weight_unit": "g",
+                    "quantity": 2,
+                    "process": "assembly",
+                    "cycle_time_mins": 0.5,
+                    "is_purchased": true
+                  },
+                  {
+                    "part_number": "ST-VICE-150-PC",
+                    "name": "Powder Coat Finish",
+                    "material": "Powder Coat Black RAL9005",
+                    "weight": 240,
+                    "weight_unit": "g",
+                    "quantity": 1,
+                    "process": "powder_coating",
+                    "cycle_time_mins": 6,
+                    "is_purchased": false
+                  }
+                ]
+              }
+            },
+            "commit_message": "Rev 3 \u2014 body ribbing added, 180 g weight saving.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": "bbf5e3a2-03f7-4563-9670-65a6debbb31c",
+            "file_hash": "sha256:3ae1570af3dc232ac3eaead335498e609ea61e33a82d598043771108fa606aac",
+            "diff_from_parent_json": {
+              "parent_version_id": "bbf5e3a2-03f7-4563-9670-65a6debbb31c",
+              "parent_file_hash": "sha256:b1b66218f5fc095a2128e2de33d8339929573180c0d0267ea1424426c69a7c9b",
+              "file_hash": "sha256:3ae1570af3dc232ac3eaead335498e609ea61e33a82d598043771108fa606aac",
+              "version_number": 3
+            },
+            "conversion_status": "pending",
+            "created_at": "2026-09-12T17:17:52.105423",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "ST-VICE-150 Bench Vice Assembly",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_parent_version_id_display": 2,
+            "_display": "3",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          }
+        ],
+        "total": 3,
         "limit": 50,
         "offset": 0
       },
@@ -9723,117 +9723,6 @@
     },
     {
       "channel": "mcp",
-      "op": "DesignVersion.list",
-      "args": "{\"file_id\": \"1131649b-a525-410a-97e3-e6b995a524fb\", \"limit\": 50, \"sort_by\": \"version_number\", \"sort_order\": \"asc\"}",
-      "result": {
-        "data": [
-          {
-            "id": "0cc63461-9080-485c-8f9a-e23d873fee38",
-            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
-            "file_id": "1131649b-a525-410a-97e3-e6b995a524fb",
-            "version_number": 1,
-            "original_file": "uploads/designreview/seed-66537c8187650b19e7537f17843e6909/original.stl",
-            "gltf_file": "uploads/designreview/seed-66537c8187650b19e7537f17843e6909/original.stl",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": null,
-            "commit_message": "Rev B \u2014 three-blade, 380 mm diameter, 9 mm root thickness.",
-            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
-            "parent_version_id": null,
-            "file_hash": "sha256:5abc27f0621840905a7de87be5a22564a988c03299ca479266d1d1dfe2765d42",
-            "diff_from_parent_json": null,
-            "conversion_status": "completed",
-            "created_at": "2026-09-12T17:17:52.107793",
-            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
-            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
-            "_file_id_display": "AP-PR-001 Propeller \u2014 380 mm marine",
-            "_uploaded_by_display": "Bharat EV Motors Ltd",
-            "_display": "1",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          },
-          {
-            "id": "d9e585a4-d72d-4ae7-be02-35cbb8484927",
-            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
-            "file_id": "1131649b-a525-410a-97e3-e6b995a524fb",
-            "version_number": 2,
-            "original_file": "uploads/designreview/seed-68bca24a2a3cf1e79d9ca9ddc7ea0241/original.stl",
-            "gltf_file": "uploads/designreview/seed-68bca24a2a3cf1e79d9ca9ddc7ea0241/original.stl",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": "uploads/designreview/seed-68bca24a2a3cf1e79d9ca9ddc7ea0241/thumb.png",
-            "metadata_json": null,
-            "assembly_tree_json": null,
-            "commit_message": "Rev C \u2014 fourth blade added for cavitation margin; diameter opens 380 mm to 500 mm.",
-            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
-            "parent_version_id": "0cc63461-9080-485c-8f9a-e23d873fee38",
-            "file_hash": "sha256:57b7fc4653805255d43bf3890a152fe89ee21d79e72bcf444d53e7c0f43e12d6",
-            "diff_from_parent_json": {
-              "parent_version_id": "0cc63461-9080-485c-8f9a-e23d873fee38",
-              "parent_file_hash": "sha256:5abc27f0621840905a7de87be5a22564a988c03299ca479266d1d1dfe2765d42",
-              "file_hash": "sha256:57b7fc4653805255d43bf3890a152fe89ee21d79e72bcf444d53e7c0f43e12d6",
-              "version_number": 2
-            },
-            "conversion_status": "completed",
-            "created_at": "2026-09-12T17:17:52.345844",
-            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
-            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
-            "_file_id_display": "AP-PR-001 Propeller \u2014 380 mm marine",
-            "_uploaded_by_display": "Bharat EV Motors Ltd",
-            "_parent_version_id_display": 1,
-            "_display": "2",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          }
-        ],
-        "total": 2,
-        "limit": 50,
-        "offset": 0
-      },
-      "error_kind": null,
-      "error": null
-    },
-    {
-      "channel": "mcp",
-      "op": "endpoint.designreview.release_readiness",
-      "args": "{\"file_id\": \"1131649b-a525-410a-97e3-e6b995a524fb\"}",
-      "result": {
-        "status": "ok",
-        "result": {
-          "ok": true,
-          "available": true,
-          "ready": false,
-          "reason_codes": [
-            "no_assembly_tree",
-            "no_review_binding"
-          ],
-          "reasons": [
-            "The selected version has no recorded component assembly tree.",
-            "No review is bound to this exact file version."
-          ],
-          "file_id": "1131649b-a525-410a-97e3-e6b995a524fb",
-          "version_id": "d9e585a4-d72d-4ae7-be02-35cbb8484927",
-          "version_number": 2,
-          "critical_open": 0,
-          "blockers": [],
-          "blockers_truncated": false
-        }
-      },
-      "error_kind": null,
-      "error": null
-    },
-    {
-      "channel": "mcp",
       "op": "DesignFeedback.list",
       "args": "{\"file_id\": \"1131649b-a525-410a-97e3-e6b995a524fb\", \"limit\": 50}",
       "result": {
@@ -10000,6 +9889,117 @@
         "total": 2,
         "limit": 50,
         "offset": 0
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "DesignVersion.list",
+      "args": "{\"file_id\": \"1131649b-a525-410a-97e3-e6b995a524fb\", \"limit\": 50, \"sort_by\": \"version_number\", \"sort_order\": \"asc\"}",
+      "result": {
+        "data": [
+          {
+            "id": "0cc63461-9080-485c-8f9a-e23d873fee38",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "1131649b-a525-410a-97e3-e6b995a524fb",
+            "version_number": 1,
+            "original_file": "uploads/designreview/seed-66537c8187650b19e7537f17843e6909/original.stl",
+            "gltf_file": "uploads/designreview/seed-66537c8187650b19e7537f17843e6909/original.stl",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Rev B \u2014 three-blade, 380 mm diameter, 9 mm root thickness.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": null,
+            "file_hash": "sha256:5abc27f0621840905a7de87be5a22564a988c03299ca479266d1d1dfe2765d42",
+            "diff_from_parent_json": null,
+            "conversion_status": "completed",
+            "created_at": "2026-09-12T17:17:52.107793",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "AP-PR-001 Propeller \u2014 380 mm marine",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_display": "1",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          },
+          {
+            "id": "d9e585a4-d72d-4ae7-be02-35cbb8484927",
+            "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+            "file_id": "1131649b-a525-410a-97e3-e6b995a524fb",
+            "version_number": 2,
+            "original_file": "uploads/designreview/seed-68bca24a2a3cf1e79d9ca9ddc7ea0241/original.stl",
+            "gltf_file": "uploads/designreview/seed-68bca24a2a3cf1e79d9ca9ddc7ea0241/original.stl",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": "uploads/designreview/seed-68bca24a2a3cf1e79d9ca9ddc7ea0241/thumb.png",
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Rev C \u2014 fourth blade added for cavitation margin; diameter opens 380 mm to 500 mm.",
+            "uploaded_by": "dfbf9b89-7993-418c-8cf4-37d1ac423f23",
+            "parent_version_id": "0cc63461-9080-485c-8f9a-e23d873fee38",
+            "file_hash": "sha256:57b7fc4653805255d43bf3890a152fe89ee21d79e72bcf444d53e7c0f43e12d6",
+            "diff_from_parent_json": {
+              "parent_version_id": "0cc63461-9080-485c-8f9a-e23d873fee38",
+              "parent_file_hash": "sha256:5abc27f0621840905a7de87be5a22564a988c03299ca479266d1d1dfe2765d42",
+              "file_hash": "sha256:57b7fc4653805255d43bf3890a152fe89ee21d79e72bcf444d53e7c0f43e12d6",
+              "version_number": 2
+            },
+            "conversion_status": "completed",
+            "created_at": "2026-09-12T17:17:52.345844",
+            "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+            "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+            "_file_id_display": "AP-PR-001 Propeller \u2014 380 mm marine",
+            "_uploaded_by_display": "Bharat EV Motors Ltd",
+            "_parent_version_id_display": 1,
+            "_display": "2",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          }
+        ],
+        "total": 2,
+        "limit": 50,
+        "offset": 0
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "endpoint.designreview.release_readiness",
+      "args": "{\"file_id\": \"1131649b-a525-410a-97e3-e6b995a524fb\"}",
+      "result": {
+        "status": "ok",
+        "result": {
+          "ok": true,
+          "available": true,
+          "ready": false,
+          "reason_codes": [
+            "no_assembly_tree",
+            "no_review_binding"
+          ],
+          "reasons": [
+            "The selected version has no recorded component assembly tree.",
+            "No review is bound to this exact file version."
+          ],
+          "file_id": "1131649b-a525-410a-97e3-e6b995a524fb",
+          "version_id": "d9e585a4-d72d-4ae7-be02-35cbb8484927",
+          "version_number": 2,
+          "critical_open": 0,
+          "blockers": [],
+          "blockers_truncated": false
+        }
       },
       "error_kind": null,
       "error": null
@@ -10427,6 +10427,166 @@
         "total": 4,
         "limit": 100,
         "offset": 0
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "rest",
+      "op": "get:DesignFile",
+      "args": "{\"id\": \"39b69109-b56a-4bf4-af48-1ecf2b18f8a6\"}",
+      "result": {
+        "id": "39b69109-b56a-4bf4-af48-1ecf2b18f8a6",
+        "number": "DF-2026-00001",
+        "company_id": "5cbe5a55-af74-4363-a436-f5350593114c",
+        "name": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+        "project_id": "bf586214-c114-4a2c-86ca-8ed1e4fa9ee5",
+        "file_type": "cad_assembly",
+        "format": "step",
+        "original_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/original.stp",
+        "gltf_file": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/wireframe.gltf",
+        "drawing_file": null,
+        "representation": "wireframe",
+        "thumbnail": "uploads/designreview/seed-b49d565db4bbddaa214f2b76c67eddd7/thumb.png",
+        "metadata_json": {
+          "schema": "AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }",
+          "protocol": "AP214",
+          "file_name": "Open CASCADE Shape Model",
+          "timestamp": "2008-07-24T15:00:20",
+          "originating_system": "Open CASCADE Model",
+          "distinct_products": 9,
+          "occurrence_links": 13,
+          "is_assembly": true,
+          "part_count": 18
+        },
+        "assembly_tree_json": {
+          "root": {
+            "part_number": "as1",
+            "name": "as1",
+            "quantity": 1,
+            "children": [
+              {
+                "part_number": "rod-assembly",
+                "name": "rod-assembly",
+                "quantity": 1,
+                "children": [
+                  {
+                    "part_number": "nut",
+                    "name": "nut",
+                    "quantity": 2,
+                    "children": []
+                  },
+                  {
+                    "part_number": "rod",
+                    "name": "rod",
+                    "quantity": 1,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "part_number": "l-bracket-assembly",
+                "name": "l-bracket-assembly",
+                "quantity": 2,
+                "children": [
+                  {
+                    "part_number": "nut-bolt-assembly",
+                    "name": "nut-bolt-assembly",
+                    "quantity": 3,
+                    "children": [
+                      {
+                        "part_number": "bolt",
+                        "name": "bolt",
+                        "quantity": 1,
+                        "children": []
+                      },
+                      {
+                        "part_number": "nut",
+                        "name": "nut",
+                        "quantity": 1,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "part_number": "l-bracket",
+                    "name": "l-bracket",
+                    "quantity": 1,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "part_number": "plate",
+                "name": "plate",
+                "quantity": 1,
+                "children": []
+              }
+            ]
+          }
+        },
+        "conversion_status": "completed",
+        "conversion_error": null,
+        "file_size_bytes": 433606,
+        "part_count": 18,
+        "current_version": 3,
+        "has_pmi": 1,
+        "has_brep": 0,
+        "status": "ready",
+        "released_version_id": null,
+        "released_at": null,
+        "item_id": null,
+        "created_at": "2026-09-12T17:17:51.141229",
+        "updated_at": "2026-09-12T22:47:52.359062",
+        "created_by": "3a886380-8d33-419d-8674-a5b6c9b32fa3",
+        "updated_by": null,
+        "_company_id_display": "Suryodaya Precision Works Pvt. Ltd.",
+        "_project_id_display": "Bharat EV \u2014 Battery Tray Assembly 2400",
+        "_display": "BEV-BT-2400 Battery Tray Assembly (customer drawing)",
+        "_transitions": [],
+        "_permissions": {
+          "write": true,
+          "delete": false
+        },
+        "_can_create": true
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "endpoint.agent_governance.escalations.assignees",
+      "args": "{}",
+      "result": {
+        "status": "ok",
+        "result": {
+          "ok": true,
+          "options": [
+            {
+              "id": "99e50109-63ca-48a5-be61-c6a2589169d2",
+              "label": "Meera Kulkarni",
+              "display": "Meera Kulkarni",
+              "user_id": "ae8cff28-f42f-4d4b-ad29-305fe1d3446a",
+              "email": "meera.kulkarni@suryodaya.in"
+            }
+          ],
+          "window": {
+            "offset": 0,
+            "limit": 25,
+            "returned": 1,
+            "total": 1,
+            "has_more": false,
+            "next_offset": null,
+            "prev_offset": null,
+            "covers_everything": true,
+            "basis_code": "window.everything",
+            "basis_count": 1,
+            "basis_total": 1,
+            "basis_from": 1
+          },
+          "candidate_scan_truncated": false,
+          "reason_code": "assignees.ready"
+        }
       },
       "error_kind": null,
       "error": null

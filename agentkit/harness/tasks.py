@@ -46,6 +46,9 @@ class TaskDef(BaseModel):
     params: Dict[str, Any] = Field(default_factory=dict)
     tenants: List[str] = Field(default_factory=lambda: [default_tenant()], min_length=1)
     verifiers: List[VerifierSpec] = Field(default_factory=list)
+    # A task may write to the platform only if it says so here AND the run is
+    # started with --write; otherwise it is a dry run.
+    allow_writes: bool = False
     description: str = ""
     source: str = ""
 

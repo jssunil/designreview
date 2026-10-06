@@ -145,8 +145,14 @@ def handoff_facts(finding: Dict[str, Any]) -> List[RequiredFact]:
         for item in proposed:
             facts.append(RequiredFact(f"that {item['owner']} needs to act (proposed hand-off)",
                                       [rf"\b{re.escape(item['owner'])}\b"]))
-        if proposed and not h.get("filed"):
+        if proposed and not h.get("filed") and not h.get("escalations"):
             facts.append(RequiredFact("that the hand-offs are proposed only -- nothing was filed", [PROPOSED_RE]))
+        for e in (h.get("escalations") or []) + (h.get("already_open") or []):
+            if e.get("number"):
+                facts.append(RequiredFact(f"escalation {e['number']} ({e.get('owner')})", [re.escape(e["number"])]))
+        if h.get("filed") and h.get("assignee"):
+            facts.append(RequiredFact(f"that the escalations are assigned to {h['assignee']}",
+                                      [name_pattern(h["assignee"])]))
         if not proposed:
             facts.append(RequiredFact("that no other team needs to act on the open items", [NO_HANDOFF_RE]))
     sched = finding.get("schedule") or {}
@@ -160,7 +166,7 @@ def handoff_facts(finding: Dict[str, Any]) -> List[RequiredFact]:
 def handoff_contradictions(text: str, finding: Dict[str, Any]) -> List[str]:
     out: List[str] = []
     h = finding.get("handoffs")
-    if h is not None and not h.get("filed"):
+    if h is not None and not h.get("filed") and not h.get("escalations"):
         for s in sentences(text):
             if FILED_CLAIM_RE.search(s) and not FILED_NEGATION_RE.search(s):
                 out.append(f"says something was filed/escalated, but nothing was filed: {s[:160]!r}")

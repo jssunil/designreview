@@ -9,6 +9,8 @@ checks need.
   feedback:<file_id>      REST  DesignFeedback titles/priority/status for a file
   release_gate:<file_id>  MCP   release readiness (a POST-only computed endpoint; REST can't GET it)
   milestones:<project_id> REST  DesignMilestone rows of a project (name, due date, status)
+  escalations:<file_id>   MCP   our hand-off escalations for that file (subject prefix), any status
+  assignees               MCP   who escalations can be assigned to (display names)
   seat_tools              MCP   this seat's tools/list names
   standards               REST  DesignStandard ids, names, body/number
 """
@@ -58,6 +60,27 @@ def _milestones(reader: Any, project_id: str) -> List[Dict[str, Any]]:
                   key=lambda r: (r["due_date"] or "", r["name"] or ""))
 
 
+def _escalations(reader: Any, file_id: str) -> List[Dict[str, Any]]:
+    """Our hand-off escalations for one file (subject "<prefix> <file number>: ..."),
+    any status -- before/after show exactly what a run filed."""
+    from packs.designreview.handoffs import load_handoff_table
+
+    number = reader.rest.get("DesignFile", file_id).get("number") or file_id
+    prefix = f"{load_handoff_table().subject_prefix} {number}: "
+    rows = reader.mcp.fetch_every_page("AgentEscalation.list", {})
+    return sorted(({k: r.get(k) for k in ("id", "number", "subject", "status", "reason_code", "assignee_display",
+                                          "assignee_party_id", "session_id", "sla_minutes")}
+                   for r in rows if str(r.get("subject") or "").startswith(prefix)),
+                  key=lambda r: (r["subject"] or "", r["number"] or ""))
+
+
+def _assignees(reader: Any, _arg: str) -> List[str]:
+    """Who escalations can be assigned to on this tenant (display names)."""
+    payload = reader.mcp.invoke_tool("endpoint.agent_governance.escalations.assignees", {})
+    result = payload.get("result", payload) if isinstance(payload, dict) else {}
+    return sorted((o.get("label") or o.get("display") or "") for o in result.get("options") or [])
+
+
 def _seat_tools(reader: Any, _arg: str) -> List[str]:
     return sorted(reader.mcp.seat_catalog(refresh=True))
 
@@ -69,5 +92,5 @@ def _standards(reader: Any, _arg: str) -> List[Dict[str, Any]]:
 
 def register_probes(reg: Registry) -> None:
     reg.probes.update({"versions": _versions, "design_file": _design_file, "release_gate": _release_gate,
-                       "feedback": _feedback, "milestones": _milestones,
+                       "feedback": _feedback, "milestones": _milestones, "escalations": _escalations, "assignees": _assignees,
                        "seat_tools": _seat_tools, "standards": _standards})

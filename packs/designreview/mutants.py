@@ -196,6 +196,24 @@ def register_mutants(reg: Registry) -> None:
                                           r"need\w*\s+(?:another|other)", line))
         return _answer(b, text)
 
+    @reg.mutant("escalation_not_on_platform", target="handoffs_match_platform")
+    def escalation_not_on_platform(b: RunBundle) -> Optional[RunBundle]:
+        h = _handoffs(b)
+        if h is None or b.dry_run or not h.get("escalations"):
+            return None  # write runs that filed only
+        h["escalations"][0]["id"] = "00000000-0000-0000-0000-0000000e5c00"
+        return b
+
+    @reg.mutant("filed_number_unstated", target="answer_states_handoffs")
+    def filed_number_unstated(b: RunBundle) -> Optional[RunBundle]:
+        h = _handoffs(b)
+        if h is None or b.dry_run or not h.get("escalations"):
+            return None
+        text = b.answer
+        for e in h["escalations"]:
+            text = text.replace(e.get("number") or "\x00", "an escalation")
+        return _answer(b, text)
+
     @reg.mutant("late_milestone_hidden", target="schedule_matches_db")
     def late_milestone_hidden(b: RunBundle) -> Optional[RunBundle]:
         s = b.finding.get("schedule") or {}

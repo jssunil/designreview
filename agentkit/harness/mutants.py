@@ -43,8 +43,8 @@ def _crashed(b: RunBundle) -> RunBundle:
 
 
 def _sneaky_write(b: RunBundle) -> Optional[RunBundle]:
-    if not b.dry_run:
-        return None
+    # A write no pack allowlists: forbidden in a dry run, and outside the write
+    # allowlist in a write run -- tool_calls_policy must catch it either way.
     b.journal.append({"seq": 999, "tool": "Record.create", "args": {"title": "x"}, "ok": True})
     return b
 
@@ -84,7 +84,7 @@ def calibrate(paths: List[Path], registry: Optional[Registry] = None) -> Dict[st
     for run_dir in _run_dirs(paths):
         task = load_record(run_dir / "task.json") if (run_dir / "task.json").exists() else {}
         reg = registry or regs.setdefault(task.get("pack", ""), load_pack(task.get("pack") or default_pack()))
-        base = RunBundle.load(run_dir, read_only_tools=reg.read_only)
+        base = RunBundle.load(run_dir, read_only_tools=reg.read_only, write_tools=reg.extras.get("write_tools", ()))
         if overall_status(check_run(base, reg)) != "pass":
             skipped_runs.append(run_dir.name)  # only passing runs can prove a check fails
             continue
