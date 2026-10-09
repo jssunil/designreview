@@ -2,7 +2,7 @@
 Offline tests for the finding (packs/designreview/finding.py), the claim audit
 (agentkit/answer + packs/designreview/claims.py), the template and the narrator.    Markers: none
 
-Author(s): ____________    Written by hand: [ ] yes
+Author(s): Sunil Jakkaraju , Bharath KR    Written by hand:  yes
 
 Use cases to cover:
   [ ] Rev letters come from commit messages: Battery Tray B -> v2, C -> v3; Propeller B -> v1, C -> v2;
@@ -63,4 +63,24 @@ def test_rev_letter_from_commit():
     assert prop_finding["revision_delta"]["from_version"] == 1
     assert prop_finding["revision_delta"]["to_version"] == 2
 
-  
+def test_first_label_wins_when_note_has_two():
+    #Documents current behaviour: first match wins if a note contains multiple labels.
+    assert rev_letter("Rev B reverted to rev A") == "B"
+
+def test_no_label_gives_none():
+    # No revision or rev present gives None.
+    assert rev_letter("Initial release against Bharat EV drawing BEV-BT-2400") is None
+    assert rev_letter("") is None
+    assert rev_letter(" ") is None
+    assert rev_letter(None) is None
+
+def test_label_at_last_in_small():
+    # label at the end of commit message is identified even in lowercase
+    assert rev_letter("Initial release against Bharat EV drawing BEV-BT-2400 rev a") == "A"
+    assert rev_letter("Vice assembly rev 1.") == "1"
+
+def test_rev_letter_review_is_not_a_revision():
+    # word starting with rev is not always a label
+    assert rev_letter("Review comments applied") is None
+    assert rev_letter("Review 2 comments applied") is None
+    assert rev_letter("Review B applied") is None
