@@ -132,6 +132,13 @@ class TenantLogin:
 def tenant_login(name: str, tenants_path: Path = TENANTS_PATH) -> TenantLogin:
     """Resolve one tenant's URL + credentials. Raises ValueError for an
     unknown tenant or a missing password (naming the variable to set)."""
+    token = os.getenv("AGENTSWITCH_TOKEN")
+    base_url = os.getenv("AGENTSWITCH_BASE_URL")
+    active_instance = os.getenv("AGENTSWITCH_INSTANCE", "").lower()
+    if token and base_url and (not active_instance or active_instance == name.lower()):
+        instance = active_instance or name.lower()
+        email = os.getenv("AS_EMAIL", "team21@theschoolofai.in")
+        return TenantLogin(name=instance, base_url=base_url, email=email, password="")
     load_env()
     cfg = load_tenants(tenants_path)
     key = name.lower()

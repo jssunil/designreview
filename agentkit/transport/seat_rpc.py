@@ -25,6 +25,7 @@ What callers can rely on:
 from __future__ import annotations
 
 import json
+import os
 import threading
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
@@ -120,7 +121,7 @@ class SeatSession:
         self.base_url = login.base_url.rstrip("/")
         self.wire: Wire = wire or UrllibWire()
         self._lock = threading.Lock()
-        self.token: Optional[str] = token
+        self.token: Optional[str] = token or os.getenv("AGENTSWITCH_TOKEN")
         self.login_count = 0
 
     @classmethod
@@ -128,6 +129,8 @@ class SeatSession:
         return cls(tenant_login(tenant), wire)
 
     def login(self) -> str:
+        if not self.login_info.password and self.token:
+            return self.token
         body = json.dumps({"email": self.login_info.email, "password": self.login_info.password}).encode()
         try:
             reply = self.wire.send("POST", self.base_url + LOGIN_PATH, {"Content-Type": "application/json"},

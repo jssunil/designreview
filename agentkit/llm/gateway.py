@@ -219,11 +219,18 @@ class LLMGateway:
             "gemini": self._call_gemini,
             "anthropic": self._call_anthropic,
             "ollama": self._call_ollama,
-            "groq": self._openai_compat("https://api.groq.com/openai/v1/chat/completions"),
-            "cerebras": self._openai_compat("https://api.cerebras.ai/v1/chat/completions"),
-            "nvidia": self._openai_compat("https://integrate.api.nvidia.com/v1/chat/completions"),
-            "openrouter": self._openai_compat("https://openrouter.ai/api/v1/chat/completions"),
+            "groq": self._openai_compat("https://api.groq.com/openai/v1/chat/completions", "groq"),
+            "cerebras": self._openai_compat("https://api.cerebras.ai/v1/chat/completions", "cerebras"),
+            "nvidia": self._openai_compat("https://integrate.api.nvidia.com/v1/chat/completions", "nvidia"),
+            "openrouter": self._openai_compat("https://openrouter.ai/api/v1/chat/completions", "openrouter"),
         }
+        if self._env.get("OPENAI_API_KEY"):
+            base = self._env.get("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+            url = f"{base}/chat/completions" if not base.endswith("/chat/completions") else base
+            self._adapters["openai"] = self._openai_compat(url, "openai")
+            self._providers["openai"] = ProviderSpec(name="openai", model=self._env.get("OPENAI_MODEL", ""),
+                                                     model_env="OPENAI_MODEL", key_env="OPENAI_API_KEY", rpm=60, timeout=120)
+            self._rate["openai"] = RateState(rpm_limit=60)
 
     # ---- config helpers ---------------------------------------------------
 
@@ -247,7 +254,10 @@ class LLMGateway:
 
     def candidate_order(self, tier: str) -> List[str]:
         tiers = self._config.tiers
-        return list(tiers.get(tier) or tiers.get("default") or DEFAULT_TIER_ORDER)
+        order = list(tiers.get(tier) or tiers.get("default") or DEFAULT_TIER_ORDER)
+        if "openai" in self._adapters and "openai" not in order:
+            order.insert(0, "openai")
+        return order
 
     def available_providers(self, tier: str = "default") -> List[str]:
         return [p for p in self.candidate_order(tier) if p in self._adapters and self._key(p) is not None]
@@ -379,9 +389,11 @@ class LLMGateway:
         return LLMReply(text, "anthropic", data.get("model", model), _norm_stop(data.get("stop_reason")),
                         tin, usage.get("output_tokens"))
 
-    def _openai_compat(self, url: str) -> Callable[..., LLMReply]:
-        provider = {"api.groq.com": "groq", "api.cerebras.ai": "cerebras", "integrate.api.nvidia.com": "nvidia",
-                    "openrouter.ai": "openrouter"}[httpx.URL(url).host]
+    def _openai_compat(self, url: str, provider_name: Optional[str] = None) -> Callable[..., LLMReply]:
+        host = httpx.URL(url).host
+        known = {"api.groq.com": "groq", "api.cerebras.ai": "cerebras", "integrate.api.nvidia.com": "nvidia",
+                 "openrouter.ai": "openrouter"}
+        provider = provider_name or known.get(host, "openai")
 
         def call(key, model, prompt, system_prompt, temp, max_tok, json_mode) -> LLMReply:
             messages = ([{"role": "system", "content": system_prompt}] if system_prompt else []) + \
