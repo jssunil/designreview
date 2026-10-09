@@ -286,6 +286,19 @@ Found while building and testing (see [`GAP_REPORT.md`](GAP_REPORT.md) and `plat
 
 ---
 
+## 🛡️ Security & Secret Hygiene
+
+To ensure zero credential exposure, the repository's entire Git commit history is audited against API key patterns, seat tokens, and private `.env` files using [Gitleaks](https://github.com/gitleaks/gitleaks):
+
+```bash
+gitleaks detect --source . --verbose
+```
+
+* **Status**: Passed ✅ (`0 leaks found` across all 28 commits).
+* **Policy**: Environment files (`.env`, `secrets.local.txt`) and private test artifacts (`tests_local/`, `proofs/`) are strictly git-ignored.
+
+---
+
 ## 👥 Contributors & Team
 
 * **Sunil Jakkaraju** ([@jssunil](https://github.com/jssunil)) — Team Lead / Core Agent Architecture, AgentKit transport & graph execution, Release 8.1 harness integration.
