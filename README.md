@@ -2,6 +2,7 @@
 
 > **EAGv3 Capstone Project** | **Team 21**  
 > **Assigned Seat:** Design Review (`designreview`) — Design Files, Versions, Reviews  
+> **Team Members:** Sunil Jakkaraju ([@jssunil](https://github.com/jssunil)), Bharath KR ([@bharathkrd](https://github.com/bharathkrd))  
 > **Core Request:** *"What changed between rev B and rev C, and are there manufacturability problems in this part?"*
 
 ---
@@ -199,6 +200,66 @@ python -m pytest -m "live and not writes"   # live read-only platform tests
 
 ---
 
+## 🚀 Official Platform Harness Run (Release 8.1)
+
+The platform evaluates agent repositories by pulling the saved branch from GitHub and executing an isolated, automated benchmark against fresh enterprise instances via **"Our harness" → "Submit for a run"**.
+
+### Runner Execution Lifecycle
+1. **Repository Checkout**: Clones the exact commit on the saved branch from GitHub.
+2. **Installation Phase**: Executes `install` (`pip install -r requirements.txt`). Internet access to PyPI/GitHub is allowed during this step.
+3. **Execution Phase**: Executes `run` (`python -m harness.runner`) once per listed instance against a fresh copy of that instance (writes are discarded). **No internet access** is allowed during this phase — all communication must route through the provided `AGENTSWITCH_BASE_URL` and `OPENAI_BASE_URL`.
+4. **Scoring Phase**: Reads `results.json` and reports task pass/fail status and overall score (limited to 1 run per team every 3 days; default timeout: 20 minutes).
+
+### Configuration: `agentswitch-harness.toml`
+Located at the repository root:
+```toml
+install = "pip install -r requirements.txt"
+run = "python -m harness.runner"
+results = "results.json"
+instances = ["suryodaya", "keystone"]
+timeout_minutes = 20
+```
+
+### Server vs. Local Environment Contract
+The runner is designed to work in two modes:
+
+| Mode | Credentials Source | Environment Variables |
+|---|---|---|
+| **Official Server Run** | Injected by platform runner | `AGENTSWITCH_BASE_URL`, `AGENTSWITCH_TOKEN`, `AGENTSWITCH_INSTANCE`, `OPENAI_BASE_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL` |
+| **Local Development** | `.env` / `as_client` fallback | Uses `.env` credentials, supports `python -m harness.runner` (default: Suryodaya) or `python -m harness.runner --instance keystone` |
+
+### Evaluated Checks (`harness/runner.py`)
+Each run against an instance executes 7 comprehensive checks and records structured proof:
+
+1. **`mcp_tools_list`**: Verifies MCP JSON-RPC 2.0 handshake and seat tool catalog availability (>320 tools).
+2. **`mcp_tool_call`**: Direct MCP call to `TeamHarness.get_mine` validating the team's saved repository URL.
+3. **`agent_answers_with_tool`**: Platform LLM tool-calling loop where the model calls `TeamHarness.get_mine` and answers with the repo link.
+4. **`design_file_retrieval`**: Inspects target CAD files (`DesignFile.get`) and revision history (`DesignVersion.list`) with commit message notes (Bharat EV Battery Tray on Suryodaya; Hydraulic Manifold Mount on Keystone).
+5. **`release_readiness_gate`**: Evaluates release gate blockers, reason codes, and critical issue readiness via `endpoint.designreview.release_readiness`.
+6. **`refusal_unknown_entity`**: Verifies robust error propagation and clean refusal when querying a non-existent design file UUID (`00000000-0000-0000-0000-000000000000`).
+7. **`agent_design_review_verdict`**: Autonomous agent evaluation where the LLM uses design review inspection tools to answer engineering questions and correctly diagnose release blockers.
+
+### Output Specification: `results.json`
+```json
+{
+  "tasks": [
+    {
+      "id": "suryodaya:mcp_tools_list",
+      "title": "MCP tools/list works with the seat token",
+      "passed": true,
+      "score": 1.0,
+      "evidence": "323 tools available"
+    }
+  ],
+  "summary": "suryodaya: 7/7 checks passed"
+}
+```
+* `passed`: strict boolean (`true` or `false`).
+* `score`: float between 0.0 and 1.0.
+* `tasks`: 1 to 200 task entries.
+
+---
+
 ## ⚙️ Workflow State Machines
 
 The `designreview` seat manages 6 primary flow entities with strict state machines:
@@ -222,3 +283,10 @@ Found while building and testing (see [`GAP_REPORT.md`](GAP_REPORT.md) and `plat
   HTTP clients (worked around in `agentkit/transport/wire.py`).
 - Candidates tracked as strict `xfail` live tests: `release_impact` lists items via other files' design
   BOMs (C-1); `released_version_id` points at another file's version (C-2).
+
+---
+
+## 👥 Contributors & Team
+
+* **Sunil Jakkaraju** ([@jssunil](https://github.com/jssunil)) — Team Lead / Core Agent Architecture, AgentKit transport & graph execution, Release 8.1 harness integration.
+* **Bharath KR** ([@bharathkrd](https://github.com/bharathkrd)) — Contributor ([PR #4](https://github.com/jssunil/designreview/pull/4)), hand-written edge-case test suite for revision letter parsing in [`tests/test_finding_and_claims.py`](tests/test_finding_and_claims.py).
