@@ -27,18 +27,40 @@ import pytest
 from agentkit.answer import audit_narrative, compose_answer
 from agentkit.graph import NodeResult
 from packs.designreview.claims import CLAIM_RULES
-from packs.designreview.finding import build_finding
+from packs.designreview.finding import build_finding, rev_letter
 from packs.designreview.templates import plain_rendering
 
 # Write your tests below.
 
-"""  [ ] Rev letters come from commit messages: Battery Tray B -> v2, C -> v3; Propeller B -> v1, C -> v2;
-      numeric revs work ("Rev 2" -> 2)"""
-
 def test_rev_letter_from_commit():
-  commit_message="Battery Tray B -> v2"
-  assert rev_from_message(commit_message) == "2"
-  commit_message="Propeller B -> v1"
-  assert rev_from_message(commit_message) == "1"
-  commit_message="Rev 2"
+    # Numeric and letter revs extracted from commit messages
+    assert rev_letter("Rev B — cell layout updated") == "B"
+    assert rev_letter("Rev C — corner bend radius opened") == "C"
+    assert rev_letter("Rev 2 — jaw insert hardened") == "2"
+
+    # Battery Tray mapping: B -> v2, C -> v3
+    tray_results = {
+        "design_file": NodeResult("resolved", data={"id": "f1", "name": "Battery Tray"}),
+        "revisions": NodeResult("resolved", data={"data": [
+            {"version_number": 1, "commit_message": "Initial release against Bharat EV drawing BEV-BT-2400 rev A."},
+            {"version_number": 2, "commit_message": "Rev B — cell layout updated, 2.0 mm corner bend radius."},
+            {"version_number": 3, "commit_message": "Rev C — corner bend radius opened from 2.0 mm to 3.0 mm."},
+        ]}),
+    }
+    tray_finding = build_finding(tray_results, {"file_id": "f1", "prompt": "What changed between rev B and rev C?"})
+    assert tray_finding["revision_delta"]["from_version"] == 2
+    assert tray_finding["revision_delta"]["to_version"] == 3
+
+    # Propeller mapping: B -> v1, C -> v2
+    prop_results = {
+        "design_file": NodeResult("resolved", data={"id": "f2", "name": "Propeller"}),
+        "revisions": NodeResult("resolved", data={"data": [
+            {"version_number": 1, "commit_message": "Rev B — three-blade, 380 mm diameter."},
+            {"version_number": 2, "commit_message": "Rev C — fourth blade added."},
+        ]}),
+    }
+    prop_finding = build_finding(prop_results, {"file_id": "f2", "prompt": "What changed between rev B and rev C?"})
+    assert prop_finding["revision_delta"]["from_version"] == 1
+    assert prop_finding["revision_delta"]["to_version"] == 2
+
   

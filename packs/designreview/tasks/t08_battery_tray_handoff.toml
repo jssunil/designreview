@@ -4,6 +4,9 @@ pack = "packs.designreview"
 plan = "release_handoff"
 prompt = "Is the battery tray ready for release, is the project on schedule, and who else needs to act?"
 params = { file_id = "39b69109-b56a-4bf4-af48-1ecf2b18f8a6" }
+# With `batch --write`: files one escalation per hand-off to Suryodaya's configured assignee, then the
+# batch withdraws them after the ground truth is captured. Without --write it stays a dry run.
+allow_writes = true
 
 [[verifiers]]
 name = "release_gate_matches_db"

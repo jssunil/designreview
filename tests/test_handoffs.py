@@ -32,6 +32,14 @@ Use cases to cover:
   [ ] schedule_matches_db: fail when a late milestone is hidden or a date moved; drift when it moved mid-run
   [ ] answer_states_handoffs: fail when an owner isn't named, "proposed" only appears in the ask text,
       the answer claims it filed, a late milestone isn't named, or it says "on track"
+  Write mode (use a fake platform that implements AgentSession.create, escalations.raise/update,
+  escalations.assignees, AgentEscalation.list/get -- never the live one)
+  [ ] A write run files one escalation per owner, assigned to the configured name, and records ESC numbers
+  [ ] The batch captures the "after" ground truth BEFORE clean-up withdraws them; cleanup.json lists them
+  [ ] A second run doesn't file again (already_open); a tenant with no assignee, or a name that isn't
+      assignable, declines and files nothing; a refused raise closes its session and the node is FAILED
+  [ ] cleanup_escalations without a run folder withdraws only open "T21-DR " escalations; dry_run changes nothing
+  [ ] handoffs_match_platform fails a write run that declined although the person IS assignable
   End to end (captured fixtures)
   [ ] t08 passes offline: file_handoffs is HANDED_OFF, added by the planner, and no escalation tool was called
   [ ] t09 passes offline with no hand-off and three past-due milestones; file_handoffs never added

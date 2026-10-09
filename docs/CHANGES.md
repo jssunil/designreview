@@ -1,5 +1,54 @@
 # Changes
 
+## 2026-09-30 — Write mode: hand-offs filed as escalations, verified, withdrawn (Part 3)
+
+### Why
+
+Part 2 proposed hand-offs but never delivered them. Part 3 files them on the platform so a person is actually
+on the hook, proves from ground truth that exactly the right escalations exist, and then cleans up. The
+platform is shared, so a test run must not leave tickets in someone's inbox.
+
+### Decisions
+
+| Question | Choice |
+|---|---|
+| Who escalations go to | By **name** per tenant in `handoffs.toml` (Suryodaya: Meera Kulkarni, the only assignable person), resolved to a party id through `escalations.assignees` on every run; nothing hard-coded |
+| A tenant with no assignable person (Keystone) | **Decline**: prepared, not filed, with the reason; graded as correct |
+| After grading | **Auto-withdraw** the run's escalations and close their sessions, after the "after" ground truth is captured; `--keep-writes` and a manual `agentkit.harness.cleanup` for the rest |
+
+### Added / changed
+
+| What | Where |
+|---|---|
+| `TaskDef.allow_writes`; `run_one --write`; `batch --write [--keep-writes]`. A run writes only with both the flag and the task opt-in, live only (refused with `--sim`) | `agentkit/harness/tasks.py`, `run_one.py`, `batch.py` |
+| Write allowlist: `tool_calls_policy` fails a write run that calls a tool outside the pack's `extras["write_tools"]`; the `sneaky_write` mutant now applies to write runs too | `agentkit/harness/checks.py`, `grade.py`, `mutants.py` |
+| Clean-up hook: the batch calls the pack's `extras["cleanup"]` after the "after" capture → `cleanup.json`; `python -m agentkit.harness.cleanup --tenant t [--dry-run]` or `--run-dir` | `agentkit/harness/batch.py`, `agentkit/harness/cleanup.py` |
+| `raise_handoffs` files for real: AgentSession (titled with the subject) → `escalations.raise` to the resolved assignee. Skips a subject that's already open; declines with no assignee or when the name isn't assignable; on a refusal or error, closes the session and fails the node | `packs/designreview/handoffs.py`, `handoffs.toml` (`[assignees]`) |
+| `cleanup_escalations`: withdraw (with `expect_status`) and close the session; only our `T21-DR ` subjects, and only open or acknowledged ones | `packs/designreview/handoffs.py` |
+| Probes `escalations:<file_id>` (ours, any status) and `assignees` | `packs/designreview/probes.py` |
+| `handoffs_match_platform` judges filing against those probes. A dry run must leave no new escalation. A write run needs an open `needs_another_app` escalation assigned to the configured, assignable person for every owner, and nothing stray | `packs/designreview/checks.py` |
+| `answer_states_handoffs`: a write run's answer must name every filed ESC number; a filing claim with nothing new on the platform fails | `packs/designreview/checks.py` |
+| Finding (`escalations`, `already_open`, `filing_errors`, `assignee`), claim rules (ESC numbers, assignee), template and narration for write runs | `finding.py`, `claims.py`, `templates.py`, `prompts/narrate.md` |
+| Mutants `escalation_not_on_platform`, `filed_number_unstated` (write runs) | `packs/designreview/mutants.py` |
+| t08 and t09 set `allow_writes = true` (still dry runs without `--write`) | `packs/designreview/tasks/` |
+| Fixtures re-captured (the two new probes) | `packs/designreview/fixtures/` |
+| Reference tests (16 new, against an in-memory writable platform); `tests/` templates updated | `tests_local/test_write_mode.py`, `tests/test_harness.py`, `tests/test_handoffs.py` |
+
+### First live write (2026-09-30, batch `20260930T212448`, LLM answers)
+
+| | Result |
+|---|---|
+| t08 (Suryodaya) | **pass**. Filed **ESC-2026-00059** (manufacturing: bend-radius cracking, weld access) and **ESC-2026-00060** (quality: PPAP level 3), both open, `needs_another_app`, assigned to Meera Kulkarni, due in 24 h. The answer names both numbers and the assignee |
+| t09 (Keystone) | **pass**. Nothing filed (no hand-off needed) |
+| Evidence → clean-up | `ground_truth_after.json` shows both open. Then both were **withdrawn** and both sessions **closed** (re-read from the platform); `cleanup --dry-run` finds nothing of ours still open |
+| Journal | writes: 2× `AgentSession.create`, 2× `escalations.raise` (all allowlisted) |
+| Calibration (write batch) | OK: both write-run mutants caught; `tool_calls_policy` exercised in write mode |
+| `tests_local` offline | 494 passed |
+
+Writing the tests exposed one verifier gap, now fixed. When the configured person isn't assignable on the
+platform, declining is correct, but the verifier demanded an escalation anyway. It now reads who is assignable
+as its own ground truth.
+
 ## 2026-09-30 — Dry-run hand-offs and the project schedule (Part 2)
 
 ### Why

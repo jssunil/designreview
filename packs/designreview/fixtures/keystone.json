@@ -1,7 +1,7 @@
 {
   "format": "agentkit-seat-fixture-v1",
   "tenant": "keystone",
-  "captured_at": "2026-09-30T12:29:28+00:00",
+  "captured_at": "2026-09-30T15:46:03+00:00",
   "note": "3 task(s) of packs.designreview",
   "tools": [
     "AccountPlan.get",
@@ -1891,154 +1891,6 @@
     },
     {
       "channel": "mcp",
-      "op": "DesignVersion.list",
-      "args": "{\"file_id\": \"d3156003-4c06-49b4-b299-08478874cebb\", \"limit\": 50, \"sort_by\": \"version_number\", \"sort_order\": \"asc\"}",
-      "result": {
-        "data": [
-          {
-            "id": "ebc03d98-6499-481c-af19-50dc6a74ceb9",
-            "company_id": "c1e47d8d-b849-4187-9a32-4103d3dece4a",
-            "file_id": "d3156003-4c06-49b4-b299-08478874cebb",
-            "version_number": 1,
-            "original_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
-            "gltf_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": null,
-            "commit_message": "Initial housing cover geometry",
-            "uploaded_by": "1baa7378-975f-4b9e-bb54-e36137cb7449",
-            "parent_version_id": null,
-            "file_hash": "sha256:7a4c2c4a58bbfcde8af3be857fb56d0ac6f32ae24fa8a7219cdf2a82d2e64854",
-            "diff_from_parent_json": null,
-            "conversion_status": "completed",
-            "created_at": "2026-09-16T16:27:26.223448",
-            "created_by": "4c42bf26-13d1-42a3-871a-02d669b9da59",
-            "_company_id_display": "Keystone Precision Works LLC",
-            "_file_id_display": "Auger Drive \u2014 Housing Cover",
-            "_uploaded_by_display": "Buckeye AgriPower Inc",
-            "_display": "1",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          },
-          {
-            "id": "aa528c34-937b-448a-983e-a0556092e688",
-            "company_id": "c1e47d8d-b849-4187-9a32-4103d3dece4a",
-            "file_id": "d3156003-4c06-49b4-b299-08478874cebb",
-            "version_number": 2,
-            "original_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
-            "gltf_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": null,
-            "commit_message": "Added bearing pocket cavity and seal groove",
-            "uploaded_by": "1baa7378-975f-4b9e-bb54-e36137cb7449",
-            "parent_version_id": "ebc03d98-6499-481c-af19-50dc6a74ceb9",
-            "file_hash": "sha256:400d9d0620896016351b432ce2895ad486ef55dc6227673a905246876f305195",
-            "diff_from_parent_json": {
-              "parent_version_id": "ebc03d98-6499-481c-af19-50dc6a74ceb9",
-              "parent_file_hash": "sha256:7a4c2c4a58bbfcde8af3be857fb56d0ac6f32ae24fa8a7219cdf2a82d2e64854",
-              "file_hash": "sha256:400d9d0620896016351b432ce2895ad486ef55dc6227673a905246876f305195",
-              "version_number": 2
-            },
-            "conversion_status": "completed",
-            "created_at": "2026-09-16T16:27:26.227710",
-            "created_by": "4c42bf26-13d1-42a3-871a-02d669b9da59",
-            "_company_id_display": "Keystone Precision Works LLC",
-            "_file_id_display": "Auger Drive \u2014 Housing Cover",
-            "_uploaded_by_display": "Buckeye AgriPower Inc",
-            "_parent_version_id_display": 1,
-            "_display": "2",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          },
-          {
-            "id": "f4f4de18-0a37-45ab-abc8-3ff7f803240c",
-            "company_id": "c1e47d8d-b849-4187-9a32-4103d3dece4a",
-            "file_id": "d3156003-4c06-49b4-b299-08478874cebb",
-            "version_number": 3,
-            "original_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
-            "gltf_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
-            "drawing_file": null,
-            "step_file": null,
-            "brep_cache": null,
-            "thumbnail": null,
-            "metadata_json": null,
-            "assembly_tree_json": null,
-            "commit_message": "DFM fixes: increased draft angles, added rib reinforcement",
-            "uploaded_by": "1baa7378-975f-4b9e-bb54-e36137cb7449",
-            "parent_version_id": "aa528c34-937b-448a-983e-a0556092e688",
-            "file_hash": "sha256:517c5eb4a246f523e8af5bdb34ade6e7a98dcc435570117bed7867c09cc6e37f",
-            "diff_from_parent_json": {
-              "parent_version_id": "aa528c34-937b-448a-983e-a0556092e688",
-              "parent_file_hash": "sha256:400d9d0620896016351b432ce2895ad486ef55dc6227673a905246876f305195",
-              "file_hash": "sha256:517c5eb4a246f523e8af5bdb34ade6e7a98dcc435570117bed7867c09cc6e37f",
-              "version_number": 3
-            },
-            "conversion_status": "completed",
-            "created_at": "2026-09-16T16:27:26.231696",
-            "created_by": "4c42bf26-13d1-42a3-871a-02d669b9da59",
-            "_company_id_display": "Keystone Precision Works LLC",
-            "_file_id_display": "Auger Drive \u2014 Housing Cover",
-            "_uploaded_by_display": "Buckeye AgriPower Inc",
-            "_parent_version_id_display": 2,
-            "_display": "3",
-            "_permissions": {
-              "write": false,
-              "delete": false
-            },
-            "_can_create": true
-          }
-        ],
-        "total": 3,
-        "limit": 50,
-        "offset": 0
-      },
-      "error_kind": null,
-      "error": null
-    },
-    {
-      "channel": "mcp",
-      "op": "endpoint.designreview.release_readiness",
-      "args": "{\"file_id\": \"d3156003-4c06-49b4-b299-08478874cebb\"}",
-      "result": {
-        "status": "ok",
-        "result": {
-          "ok": true,
-          "available": true,
-          "ready": false,
-          "reason_codes": [
-            "no_assembly_tree",
-            "no_review_binding"
-          ],
-          "reasons": [
-            "The selected version has no recorded component assembly tree.",
-            "No review is bound to this exact file version."
-          ],
-          "file_id": "d3156003-4c06-49b4-b299-08478874cebb",
-          "version_id": "f4f4de18-0a37-45ab-abc8-3ff7f803240c",
-          "version_number": 3,
-          "critical_open": 0,
-          "blockers": [],
-          "blockers_truncated": false
-        }
-      },
-      "error_kind": null,
-      "error": null
-    },
-    {
-      "channel": "mcp",
       "op": "DesignFeedback.list",
       "args": "{\"file_id\": \"d3156003-4c06-49b4-b299-08478874cebb\", \"limit\": 50}",
       "result": {
@@ -2369,6 +2221,154 @@
           }
         ],
         "total": 4,
+        "limit": 50,
+        "offset": 0
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "endpoint.designreview.release_readiness",
+      "args": "{\"file_id\": \"d3156003-4c06-49b4-b299-08478874cebb\"}",
+      "result": {
+        "status": "ok",
+        "result": {
+          "ok": true,
+          "available": true,
+          "ready": false,
+          "reason_codes": [
+            "no_assembly_tree",
+            "no_review_binding"
+          ],
+          "reasons": [
+            "The selected version has no recorded component assembly tree.",
+            "No review is bound to this exact file version."
+          ],
+          "file_id": "d3156003-4c06-49b4-b299-08478874cebb",
+          "version_id": "f4f4de18-0a37-45ab-abc8-3ff7f803240c",
+          "version_number": 3,
+          "critical_open": 0,
+          "blockers": [],
+          "blockers_truncated": false
+        }
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "DesignVersion.list",
+      "args": "{\"file_id\": \"d3156003-4c06-49b4-b299-08478874cebb\", \"limit\": 50, \"sort_by\": \"version_number\", \"sort_order\": \"asc\"}",
+      "result": {
+        "data": [
+          {
+            "id": "ebc03d98-6499-481c-af19-50dc6a74ceb9",
+            "company_id": "c1e47d8d-b849-4187-9a32-4103d3dece4a",
+            "file_id": "d3156003-4c06-49b4-b299-08478874cebb",
+            "version_number": 1,
+            "original_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
+            "gltf_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Initial housing cover geometry",
+            "uploaded_by": "1baa7378-975f-4b9e-bb54-e36137cb7449",
+            "parent_version_id": null,
+            "file_hash": "sha256:7a4c2c4a58bbfcde8af3be857fb56d0ac6f32ae24fa8a7219cdf2a82d2e64854",
+            "diff_from_parent_json": null,
+            "conversion_status": "completed",
+            "created_at": "2026-09-16T16:27:26.223448",
+            "created_by": "4c42bf26-13d1-42a3-871a-02d669b9da59",
+            "_company_id_display": "Keystone Precision Works LLC",
+            "_file_id_display": "Auger Drive \u2014 Housing Cover",
+            "_uploaded_by_display": "Buckeye AgriPower Inc",
+            "_display": "1",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          },
+          {
+            "id": "aa528c34-937b-448a-983e-a0556092e688",
+            "company_id": "c1e47d8d-b849-4187-9a32-4103d3dece4a",
+            "file_id": "d3156003-4c06-49b4-b299-08478874cebb",
+            "version_number": 2,
+            "original_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
+            "gltf_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "Added bearing pocket cavity and seal groove",
+            "uploaded_by": "1baa7378-975f-4b9e-bb54-e36137cb7449",
+            "parent_version_id": "ebc03d98-6499-481c-af19-50dc6a74ceb9",
+            "file_hash": "sha256:400d9d0620896016351b432ce2895ad486ef55dc6227673a905246876f305195",
+            "diff_from_parent_json": {
+              "parent_version_id": "ebc03d98-6499-481c-af19-50dc6a74ceb9",
+              "parent_file_hash": "sha256:7a4c2c4a58bbfcde8af3be857fb56d0ac6f32ae24fa8a7219cdf2a82d2e64854",
+              "file_hash": "sha256:400d9d0620896016351b432ce2895ad486ef55dc6227673a905246876f305195",
+              "version_number": 2
+            },
+            "conversion_status": "completed",
+            "created_at": "2026-09-16T16:27:26.227710",
+            "created_by": "4c42bf26-13d1-42a3-871a-02d669b9da59",
+            "_company_id_display": "Keystone Precision Works LLC",
+            "_file_id_display": "Auger Drive \u2014 Housing Cover",
+            "_uploaded_by_display": "Buckeye AgriPower Inc",
+            "_parent_version_id_display": 1,
+            "_display": "2",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          },
+          {
+            "id": "f4f4de18-0a37-45ab-abc8-3ff7f803240c",
+            "company_id": "c1e47d8d-b849-4187-9a32-4103d3dece4a",
+            "file_id": "d3156003-4c06-49b4-b299-08478874cebb",
+            "version_number": 3,
+            "original_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
+            "gltf_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
+            "drawing_file": null,
+            "step_file": null,
+            "brep_cache": null,
+            "thumbnail": null,
+            "metadata_json": null,
+            "assembly_tree_json": null,
+            "commit_message": "DFM fixes: increased draft angles, added rib reinforcement",
+            "uploaded_by": "1baa7378-975f-4b9e-bb54-e36137cb7449",
+            "parent_version_id": "aa528c34-937b-448a-983e-a0556092e688",
+            "file_hash": "sha256:517c5eb4a246f523e8af5bdb34ade6e7a98dcc435570117bed7867c09cc6e37f",
+            "diff_from_parent_json": {
+              "parent_version_id": "aa528c34-937b-448a-983e-a0556092e688",
+              "parent_file_hash": "sha256:400d9d0620896016351b432ce2895ad486ef55dc6227673a905246876f305195",
+              "file_hash": "sha256:517c5eb4a246f523e8af5bdb34ade6e7a98dcc435570117bed7867c09cc6e37f",
+              "version_number": 3
+            },
+            "conversion_status": "completed",
+            "created_at": "2026-09-16T16:27:26.231696",
+            "created_by": "4c42bf26-13d1-42a3-871a-02d669b9da59",
+            "_company_id_display": "Keystone Precision Works LLC",
+            "_file_id_display": "Auger Drive \u2014 Housing Cover",
+            "_uploaded_by_display": "Buckeye AgriPower Inc",
+            "_parent_version_id_display": 2,
+            "_display": "3",
+            "_permissions": {
+              "write": false,
+              "delete": false
+            },
+            "_can_create": true
+          }
+        ],
+        "total": 3,
         "limit": 50,
         "offset": 0
       },
@@ -2999,6 +2999,76 @@
         "total": 4,
         "limit": 100,
         "offset": 0
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "rest",
+      "op": "get:DesignFile",
+      "args": "{\"id\": \"d3156003-4c06-49b4-b299-08478874cebb\"}",
+      "result": {
+        "id": "d3156003-4c06-49b4-b299-08478874cebb",
+        "number": "DF-2026-00001",
+        "company_id": "c1e47d8d-b849-4187-9a32-4103d3dece4a",
+        "name": "Auger Drive \u2014 Housing Cover",
+        "project_id": "7e04ca05-1b78-4c34-85c3-2462100d91cc",
+        "file_type": "cad_part",
+        "format": "gltf",
+        "original_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
+        "gltf_file": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/original.glb",
+        "drawing_file": null,
+        "representation": "solid",
+        "thumbnail": "uploads/designreview/seed-ac2b27fc0f8ad949f621e9feeb158590/thumb.png",
+        "metadata_json": null,
+        "assembly_tree_json": null,
+        "conversion_status": "completed",
+        "conversion_error": null,
+        "file_size_bytes": 3773916,
+        "part_count": 1,
+        "current_version": 3,
+        "has_pmi": 1,
+        "has_brep": 0,
+        "status": "ready",
+        "released_version_id": null,
+        "released_at": null,
+        "item_id": null,
+        "created_at": "2026-09-16T16:27:24.990328",
+        "updated_at": "2026-09-16T16:27:26.264675",
+        "created_by": "4c42bf26-13d1-42a3-871a-02d669b9da59",
+        "updated_by": null,
+        "_company_id_display": "Keystone Precision Works LLC",
+        "_project_id_display": "Combine Header \u2014 Auger Drive Program",
+        "_display": "Auger Drive \u2014 Housing Cover",
+        "_transitions": [],
+        "_permissions": {
+          "write": true,
+          "delete": false
+        },
+        "_can_create": true
+      },
+      "error_kind": null,
+      "error": null
+    },
+    {
+      "channel": "mcp",
+      "op": "endpoint.agent_governance.escalations.assignees",
+      "args": "{}",
+      "result": {
+        "status": "ok",
+        "result": {
+          "ok": true,
+          "options": [],
+          "window": {
+            "offset": 0,
+            "returned": 0,
+            "total": 0,
+            "has_more": false,
+            "covers_everything": true,
+            "basis_code": "window.everything"
+          },
+          "reason_code": "assignees.noLinkedSignIns"
+        }
       },
       "error_kind": null,
       "error": null

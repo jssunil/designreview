@@ -2,14 +2,15 @@
 Run ONE task into ONE run folder -- the agent side of the harness.
 
     python -m agentkit.harness.run_one --task <task.toml> --tenant <tenant> \
-        --run-dir runs/<run_id> --run-id <run_id> [--skip-llm]
+        --run-dir runs/<run_id> --run-id <run_id> [--skip-llm] [--write]
 
 Writes, in order: taskrun.json (ended="running", before any work), then
 tool_journal.jsonl and graph.json as the plan runs, then taskrun.json again
 with the finding, answer and ended=done|error, and llm_ledger.json.
 The batch runner starts this in a subprocess, so an agent crash can never
 take the harness down with it; the running-record is the evidence either way.
-Always a dry run: the pack exposes no write actions.
+A dry run unless BOTH --write is given and the task sets allow_writes = true;
+a dry run never calls a write action (the engine records its preview instead).
 """
 
 from __future__ import annotations
@@ -36,9 +37,10 @@ LEDGER_FILE = "llm_ledger.json"
 
 def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm: bool = False,
              registry: Optional[Registry] = None, client: Any = None, gateway: Any = None,
-             retry_backoff_s: float = 1.0) -> TaskRun:
+             retry_backoff_s: float = 1.0, write: bool = False) -> TaskRun:
     run_dir = Path(run_dir)
-    run = TaskRun(task_id=task.id, prompt=task.prompt, run_id=run_id, tenant=tenant, dry_run=True,
+    dry_run = not (write and task.allow_writes)
+    run = TaskRun(task_id=task.id, prompt=task.prompt, run_id=run_id, tenant=tenant, dry_run=dry_run,
                   harness_task=task.id, pack=task.pack)
     run.open_in(run_dir)  # on disk before any work
     t0 = time.time()
@@ -50,7 +52,7 @@ def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm
         journaled = JournaledSeatClient(client, run_dir / JOURNAL_FILE, extra_read_only=tuple(registry.read_only))
         if gateway is None and not skip_llm:
             gateway = LLMGateway()
-        env = RunEnv(client=journaled, run_id=run_id, params=task.plan_params(), dry_run=True, tenant=tenant,
+        env = RunEnv(client=journaled, run_id=run_id, params=task.plan_params(), dry_run=dry_run, tenant=tenant,
                      gateway=None if skip_llm else gateway)
         plan = load_plan(Path(registry.extras["plans_dir"]) / f"{task.plan}.toml")
         store = run_plan(env, registry, plan, checkpoint_path=run_dir / GRAPH_FILE, retry_backoff_s=retry_backoff_s)
@@ -77,10 +79,11 @@ def main(argv: Optional[list] = None) -> int:
     ap.add_argument("--run-dir", required=True, type=Path)
     ap.add_argument("--run-id", required=True)
     ap.add_argument("--skip-llm", action="store_true")
+    ap.add_argument("--write", action="store_true", help="let a task with allow_writes = true write to the platform")
     args = ap.parse_args(argv)
     run = run_task(load_task(args.task), args.tenant or default_tenant(), args.run_dir, args.run_id,
-                   skip_llm=args.skip_llm)
-    print(f"[{run.run_id}] ended={run.ended} source={run.answer_source} "
+                   skip_llm=args.skip_llm, write=args.write)
+    print(f"[{run.run_id}] ended={run.ended} {'dry run' if run.dry_run else 'WRITE'} source={run.answer_source} "
           f"outcome={(run.finding or {}).get('outcome')}")
     if run.error:
         print(f"ERROR: {run.error}")

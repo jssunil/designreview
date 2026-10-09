@@ -59,9 +59,10 @@ class RunBundle:
     before: Dict[str, Any]
     after: Dict[str, Any]
     read_only_tools: frozenset = frozenset()
+    write_tools: frozenset = frozenset()  # the pack's write allowlist (extras["write_tools"])
 
     @classmethod
-    def load(cls, run_dir: Path, read_only_tools=()) -> "RunBundle":
+    def load(cls, run_dir: Path, read_only_tools=(), write_tools=()) -> "RunBundle":
         run_dir = Path(run_dir)
 
         def opt(name: str) -> Any:
@@ -71,7 +72,7 @@ class RunBundle:
         return cls(run_dir=run_dir, task=opt("task.json") or {}, taskrun=opt("taskrun.json") or {},
                    graph=opt("graph.json"), journal=read_journal(run_dir / JOURNAL_FILE),
                    before=opt("ground_truth_before.json") or {}, after=opt("ground_truth_after.json") or {},
-                   read_only_tools=frozenset(read_only_tools))
+                   read_only_tools=frozenset(read_only_tools), write_tools=frozenset(write_tools))
 
     # ---- convenience -------------------------------------------------------
 
@@ -123,11 +124,16 @@ def check_run_completed(b: RunBundle, _p: Dict[str, Any]) -> List[CheckOutcome]:
 
 
 def check_tool_calls_policy(b: RunBundle, _p: Dict[str, Any]) -> List[CheckOutcome]:
-    """From the transport journal, not the agent's report: a dry run may only read."""
+    """From the transport journal, not the agent's report: a dry run may only
+    read; a write run may only write through the pack's write allowlist."""
     tools = b.tools_called()
     writes = sorted({t for t in tools if not is_read_tool(t, b.read_only_tools)})
     if b.dry_run and writes:
         return [CheckOutcome("tool_calls_policy", "tools", "fail", f"dry run called write tools: {', '.join(writes)}")]
+    outside = [t for t in writes if t not in b.write_tools]
+    if not b.dry_run and outside:
+        return [CheckOutcome("tool_calls_policy", "tools", "fail",
+                             f"write run called tools outside the pack's write allowlist: {', '.join(outside)}")]
     mode = "dry run" if b.dry_run else "write mode"
     return [CheckOutcome("tool_calls_policy", "tools", "pass",
                          f"{mode}: {len(tools)} call(s); writes: {', '.join(writes) or 'none'}")]

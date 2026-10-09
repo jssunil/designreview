@@ -175,6 +175,10 @@ python -m agentkit.sim.capture --tenant keystone
 python -m agentkit.harness.batch --sim packs/designreview/fixtures --skip-llm --grade \
        --fault "edit_text:Blank length grows 4.2 mm=>Blank length grows 5.5 mm"
 
+# LIVE WRITES: t08 files its hand-offs as escalations to the configured assignee, verifies them, then withdraws them
+python -m agentkit.harness.batch --only t08_battery_tray_handoff --write --grade
+python -m agentkit.harness.cleanup --tenant suryodaya --dry-run   # anything of ours still open?
+
 # Browse batches and runs in a browser (read-only, this machine only)
 python -m agentkit.viewer                   # http://127.0.0.1:8765/   [--runs-dir runs] [--port 8765]
 ```

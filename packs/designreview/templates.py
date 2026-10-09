@@ -71,8 +71,18 @@ def _handoffs(h: Dict[str, Any], out: List[str]) -> None:
     for p in proposed:
         items = "; ".join(f"[{c.get('priority')}] {c.get('title')}" for c in p.get("cites") or [])
         out.append(f"- {p['owner']}: {items}. Ask: {p.get('ask')}")
-    if proposed and not h.get("filed"):
-        out.append("- These hand-offs are proposed only; nothing has been filed on the platform (dry run).")
+    for e in h.get("escalations") or []:
+        out.append(f"- Filed {e.get('number')} for {e.get('owner')}, assigned to {e.get('assignee')}"
+                   + (f", due {e.get('due_at')}" if e.get("due_at") else "") + ".")
+    for e in h.get("already_open") or []:
+        out.append(f"- Already open: {e.get('number')} for {e.get('owner')} ({e.get('status')}, assigned to "
+                   f"{e.get('assignee')}), not filed again.")
+    for e in h.get("filing_errors") or []:
+        out.append(f"- Not filed for {e.get('owner')}: {e.get('refused') or e.get('error')}.")
+    if proposed and not h.get("filed") and not h.get("escalations"):
+        why = (h.get("filing") or {}).get("reason") if h.get("filing", {}).get("verdict") not in (None, "handed_off") \
+            else "dry run"
+        out.append(f"- These hand-offs are proposed only; nothing has been filed on the platform ({why}).")
     for src in h.get("sources_unavailable") or []:
         out.append(f"- Not checked for hand-offs ({src} unavailable).")
 

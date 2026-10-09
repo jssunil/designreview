@@ -5,6 +5,8 @@ plan = "release_handoff"
 prompt = "Is the auger drive housing cover on schedule, and does anything on it need another team?"
 params = { file_id = "d3156003-4c06-49b4-b299-08478874cebb" }
 tenants = ["keystone"]
+# With `batch --write`: nothing may be filed (no hand-off is needed, and Keystone has no assignable person).
+allow_writes = true
 
 [[verifiers]]
 name = "release_gate_matches_db"

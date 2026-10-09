@@ -9,7 +9,7 @@
 | Part | File | Role |
 |---|---|---|
 | Actions | `actions.py` | the allowlist: `load_design_file`, `list_revisions`, `read_release_gate`, `list_feedback`, `list_failed_checklists`, `gather_dfm_standards`, `probe_tool_offered`, `decline` — all reads |
-| Hand-off actions | `handoffs.py` | `list_milestones`, `find_cross_seat_dependencies` (reads) and `raise_handoffs` — the pack's only **write** action, preview-only: in a dry run it records the `AgentEscalation.create` call each hand-off would make; filing is not enabled in this build |
+| Hand-off actions | `handoffs.py` | `list_milestones`, `find_cross_seat_dependencies` (reads) and `raise_handoffs` — the pack's only **write** action: a dry run previews the session and `escalations.raise` each hand-off would make; a write run files them (see Hand-offs) |
 | Hand-off topics | `handoffs.toml` | which owner (manufacturing / quality / purchasing) takes which kind of problem, matched on whole words in open serious item titles; validated by pydantic |
 | Read-only endpoints | `actions.py` | `endpoint.designreview.release_readiness`, `release_impact(.get)`, `parts_search`, `supplier_response_sla` |
 | Plans | `plans/rev_diff_dfm.toml`, `plans/tool_refusal.toml`, `plans/release_handoff.toml` | evidence graph + follow-up rule; tool-check-first refusal; release gate + feedback + milestones → cross-seat match → (rule) previewed hand-offs |
@@ -17,9 +17,9 @@
 | Claim rules | `claims.py` | what the answer must say and must not contradict |
 | Template | `templates.py` | deterministic answer; passes its own audit |
 | Prompts | `prompts/system.md`, `prompts/narrate.md` | narrator instructions |
-| Probes | `probes.py` | ground truth: `versions`, `design_file`, `feedback`, `release_gate` (with blockers), `milestones`, `seat_tools`, `standards` |
+| Probes | `probes.py` | ground truth: `versions`, `design_file`, `feedback`, `release_gate` (with blockers), `milestones`, `escalations` (ours, per file), `assignees`, `seat_tools`, `standards` |
 | Verifiers | `checks.py` | see below |
-| Mutants | `mutants.py` | 26 faults, at least one per verifier |
+| Mutants | `mutants.py` | 28 faults, at least one per verifier (two only apply to write runs) |
 | Tasks | `tasks/t01…t09.toml` | the graded task set: t01–t05 and t08 on Suryodaya, t06, t07 and t09 on Keystone |
 | Fixtures | `fixtures/<tenant>.json` | captured platform per tenant, for offline runs |
 
@@ -60,20 +60,42 @@ from commit messages: "Rev B", "Revision C", "Rev 2"), or `latest = true` for th
 for files whose notes carry no rev labels. The finding follows the same rule: rev labels named in the
 question, otherwise the latest two versions.
 
-## Hand-offs (dry run)
+## Hand-offs
 
 The seat has no manufacturing, quality or purchasing tools, so a problem only those teams can close needs a
 person. `find_cross_seat_dependencies` takes the open serious items (release-gate blockers plus open
 high/critical feedback, one per id) and matches their titles against `handoffs.toml`. One hand-off per owner,
 citing every matching item. Items no topic matches (GD&T, wall thickness, drawing fixes) are design review's
 own work and get no hand-off. When something is proposed, a rule adds `raise_handoffs`; in a dry run the engine
-calls its preview instead, the node ends `handed_off`, and nothing is filed. Part 3 (write mode) will file them.
+calls its preview instead, the node ends `handed_off`, and nothing is filed.
+
+**Write mode** (`batch --write`, and the task sets `allow_writes = true`; t08 and t09 do). For each hand-off,
+`raise_handoffs`:
+1. Creates an AgentSession titled with the subject (`T21-DR <file number>: <owner> needed`). The escalation
+   takes its subject from the session.
+2. Raises `endpoint.agent_governance.escalations.raise` to the tenant's assignee from `handoffs.toml`
+   (`[assignees]`, by name). The name is looked up with `escalations.assignees` on every run.
+
+Four outcomes are handled:
+- **Duplicate.** An open escalation with the same subject is recorded as `already_open` and not filed again.
+- **No assignee configured** (Keystone): declined, nothing filed.
+- **Assignee not assignable on the platform:** declined, nothing filed.
+- **Refusal** (`ok: false`) or a transport error: recorded, that hand-off's session is closed, and the node
+  ends `failed`.
+
+The pack's write allowlist is `AgentSession.create`, `escalations.raise` and `AgentSession.close.active.closed`.
+
+**Clean-up.** The pack registers `cleanup`, which the batch runs after the "after" capture: it withdraws the
+run's escalations (outcome `withdrawn`, guarded by `expect_status`) and closes their sessions. With no run
+folder it withdraws every open escalation whose subject starts `T21-DR `, and never touches anyone else's.
+First live write, 2026-09-30: ESC-2026-00059 (manufacturing) and ESC-2026-00060 (quality) were filed to
+Meera Kulkarni, verified, then withdrawn and their sessions closed.
 
 | Check | Fails when |
 |---|---|
-| `handoffs_match_platform` | the owners or cited items differ from what the platform's open serious items and the topic table give (invented, missing or closed items), or a dry run filed / called an escalation tool (drift if an item changed during the run) |
+| `handoffs_match_platform` | the owners or cited items differ from what the platform's open serious items and the topic table give (invented, missing or closed items), drift if an item changed during the run). **Filing:** a dry run called an escalation tool or a new `T21-DR` escalation appeared on the platform. A write run is missing an open `needs_another_app` escalation assigned to the configured person for some owner, filed one it didn't record, or filed when no assignable person exists (judged against the `escalations` and `assignees` probes) |
 | `schedule_matches_db` | the milestones or their past-due set differ from the platform (drift if a milestone moved during the run), or `as_of` isn't the snapshot date |
-| `answer_states_handoffs` | the answer doesn't name each owner (or say no other team is needed), doesn't say the hand-offs are only proposed, claims it filed/escalated/notified, doesn't name each past-due milestone, or calls the project on track |
+| `answer_states_handoffs` | the answer doesn't name each owner (or say no other team is needed), doesn't say the hand-offs are only proposed (dry run or declined) or name each filed escalation number (write run), claims it filed/escalated/notified, doesn't name each past-due milestone, or calls the project on track |
 
 ## How to test
 

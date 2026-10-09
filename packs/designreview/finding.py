@@ -210,8 +210,18 @@ def _handoffs(results: Dict[str, NodeResult], dry_run: bool) -> Dict[str, Any]:
         section["would_file"] = payload.get("would_file") or []
         section["filed"] = bool(payload.get("filed")) and filing.verdict == RESOLVED and not dry_run
         section["filing"] = {"verdict": filing.verdict, "reason": filing.reason}
-    section["note"] = ("dry run: hand-offs are proposed, nothing was filed" if dry_run and proposed
-                       else "no open serious item needs another team" if not proposed else "")
+        if not dry_run:
+            section.update(escalations=payload.get("escalations") or [],
+                           already_open=payload.get("already_open") or [],
+                           filing_errors=payload.get("errors") or [], assignee=payload.get("assignee"))
+    if not proposed:
+        section["note"] = "no open serious item needs another team"
+    elif dry_run:
+        section["note"] = "dry run: hand-offs are proposed, nothing was filed"
+    elif section["filed"]:
+        section["note"] = f"filed and assigned to {section.get('assignee')}"
+    else:
+        section["note"] = f"not filed: {(section.get('filing') or {}).get('reason')}"
     return section
 
 

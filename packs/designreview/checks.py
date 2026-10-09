@@ -317,7 +317,8 @@ def check_answer_reflects_change_notes(b: RunBundle, p: Dict[str, Any]) -> List[
 HANDOFFS_TOML = Path(__file__).resolve().parent / "handoffs.toml"
 _DONE_STATUSES = {"resolved", "closed", "rejected", "wont_fix", "won't_fix", "cancelled", "duplicate"}
 _FINISHED = {"completed", "skipped"}
-_WRITE_TOOLS_FOR_HANDOFF = {"AgentEscalation.create", "endpoint.agent_governance.escalations.raise"}
+_WRITE_TOOLS_FOR_HANDOFF = {"AgentEscalation.create", "endpoint.agent_governance.escalations.raise",
+                            "AgentSession.create"}
 # "proposed" must be said about the hand-off itself -- an ask that says "propose the process
 # change" doesn't tell the reader that nothing was filed.
 _PROPOSED = re.compile(r"\b(?:hand-?offs?|escalations?)\b[^.\n]{0,60}\b(?:propos\w*|recommend\w*|suggest\w*|would\b)"
@@ -394,14 +395,57 @@ def check_handoffs_match_platform(b: RunBundle, p: Dict[str, Any]) -> List[Check
     would = h.get("would_file") or []
     bad = [w for w in would if w.get("tool") not in _WRITE_TOOLS_FOR_HANDOFF or not (w.get("args") or {}).get("reason")]
     writes = [c for c in b.tools_called() if c in _WRITE_TOOLS_FOR_HANDOFF]
+    esc_key = f"escalations:{fid}"
+    esc_before, esc_after = b.truth("before", esc_key), b.truth("after", esc_key)
+    new = [e for e in esc_after or [] if e["id"] not in {x["id"] for x in esc_before or []}]
     if b.dry_run:
-        ok = not h.get("filed") and not writes and len(would) == len(got) and not bad
-        detail = (f"dry run: {len(would)} previewed, filed={h.get('filed')}, escalation calls={writes}"
+        ok = not h.get("filed") and not writes and not new and len(would) == len(got) and not bad
+        detail = (f"dry run: {len(would)} previewed, filed={h.get('filed')}, escalation calls={writes}, "
+                  f"new escalations on the platform={[e['number'] for e in new]}"
                   + (f", malformed previews={bad}" if bad else ""))
     else:
-        ok, detail = not bad, f"write run: {len(writes)} escalation call(s)"
+        ok, detail = filing_matches_platform(b, h, got, esc_after, new)
     out.append(CheckOutcome(name, "filing", "pass" if ok else "fail", detail))
     return out
+
+
+def filing_matches_platform(b: RunBundle, h: Dict[str, Any], got: Dict[str, List[str]],
+                            esc_after: Optional[List[Dict[str, Any]]], new: List[Dict[str, Any]]) -> Tuple[bool, str]:
+    """A write run: every proposed owner has an escalation on the platform --
+    new, open, needs_another_app, assigned to the tenant's configured person --
+    or an already-open one; nothing else was filed. With no configured person,
+    nothing may be filed at all."""
+    if esc_after is None:
+        return False, "escalations unavailable in ground truth -- can't confirm what was filed"
+    tenant = b.taskrun.get("tenant") or ""
+    person = tomllib.loads(HANDOFFS_TOML.read_text(encoding="utf-8")).get("assignees", {}).get(tenant)
+    assignable = b.truth("after", "assignees")
+    if person and assignable is not None and person.lower() not in {a.lower() for a in assignable}:
+        person = None  # configured, but the platform can't assign to them: filing must be declined
+    if not got:
+        return not new, f"nothing to hand off; new escalations={[e['number'] for e in new]}"
+    if not person:
+        return (not new and not h.get("filed"),
+                f"no assignable person configured for {tenant!r}: must not file; "
+                f"new escalations={[e['number'] for e in new]}")
+    by_id = {e["id"]: e for e in esc_after}
+    recorded = {e.get("owner"): e for e in (h.get("escalations") or []) + (h.get("already_open") or [])}
+    problems = []
+    for owner in got:
+        rec = recorded.get(owner)
+        e = by_id.get((rec or {}).get("id"))
+        if e is None:
+            problems.append(f"{owner}: no escalation on the platform")
+        elif str(e.get("status")).lower() not in ("open", "acknowledged"):
+            problems.append(f"{owner}: {e.get('number')} is {e.get('status')}")
+        elif e.get("reason_code") != "needs_another_app" or (e.get("assignee_display") or "").lower() != person.lower():
+            problems.append(f"{owner}: {e.get('number')} reason={e.get('reason_code')} assignee={e.get('assignee_display')}")
+    ours = {e.get("id") for e in h.get("escalations") or []}
+    stray = [e["number"] for e in new if e["id"] not in ours]
+    if stray:
+        problems.append(f"filed but not recorded: {stray}")
+    return not problems, (f"write run: {len(ours)} filed, {len(h.get('already_open') or [])} already open, "
+                          f"assigned to {person}" if not problems else "; ".join(problems))
 
 
 def past_due_names(milestones: List[Dict[str, Any]], as_of: str) -> List[str]:
@@ -458,14 +502,24 @@ def check_answer_states_handoffs(b: RunBundle, p: Dict[str, Any]) -> List[CheckO
     ok, detail = owners_ok(want)
     then_ok = owners_ok(then)[0] if then is not None else ok
     out = [CheckOutcome(name, "owners", "pass" if ok else ("drift" if then_ok else "fail"), detail)]
-    if want and b.dry_run:
+    esc_key = f"escalations:{fid}"
+    before_ids = {e["id"] for e in b.truth("before", esc_key) or []}
+    new = [e for e in b.truth("after", esc_key) or [] if e["id"] not in before_ids]
+    if want and new:  # write run that filed: each new escalation's number must be in the answer
+        missing = [e["number"] for e in new if e.get("number") and e["number"] not in text]
+        out.append(CheckOutcome(name, "filed_stated", "fail" if missing else "pass",
+                                f"escalation numbers missing from the answer: {missing}" if missing
+                                else f"names {[e['number'] for e in new]}"))
+    elif want:
         ok = bool(_PROPOSED.search(text))
         out.append(CheckOutcome(name, "proposed_only", "pass" if ok else "fail",
                                 "says the hand-offs are proposed, not filed" if ok
                                 else "never says the hand-offs are only proposed / not filed"))
-    filed = [s for s in sentences(text) if _CLAIMS_FILED.search(s) and not _HEDGE.search(s)]
-    out.append(CheckOutcome(name, "no_filing_claim", "fail" if (filed and b.dry_run) else "pass",
-                            f"claims it filed: {filed[0][:120]!r}" if filed and b.dry_run else "no false filing claim"))
+    claims = [s for s in sentences(text) if _CLAIMS_FILED.search(s) and not _HEDGE.search(s)]
+    false_claim = bool(claims) and not new
+    out.append(CheckOutcome(name, "no_filing_claim", "fail" if false_claim else "pass",
+                            f"claims it filed, but nothing new is on the platform: {claims[0][:120]!r}" if false_claim
+                            else "no false filing claim"))
     if p.get("project_id"):
         key = f"milestones:{p['project_id']}"
         ms, ms_before = b.truth("after", key), b.truth("before", key)
@@ -501,7 +555,8 @@ def register_checks(reg: Registry) -> None:
     reg.check("cited_standards_exist", observes=lambda p: ["standards"])(check_cited_standards)
     reg.check("answer_audited")(check_answer_audited)
     reg.check("answer_reflects_change_notes", observes=f)(check_answer_reflects_change_notes)
-    gate_and_feedback = lambda p: [f"release_gate:{p['file_id']}", f"feedback:{p['file_id']}"]  # noqa: E731
+    gate_and_feedback = lambda p: [f"release_gate:{p['file_id']}", f"feedback:{p['file_id']}",  # noqa: E731
+                                   f"escalations:{p['file_id']}", "assignees"]
     reg.check("handoffs_match_platform", observes=gate_and_feedback)(check_handoffs_match_platform)
     reg.check("schedule_matches_db", observes=lambda p: [f"milestones:{p['project_id']}"])(check_schedule_matches_db)
     reg.check("answer_states_handoffs",

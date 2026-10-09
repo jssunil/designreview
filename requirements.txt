@@ -8,3 +8,5 @@ networkx>=3.6        # legacy core/dag_engine.py only; agentkit's engine doesn't
 python-dotenv>=1.0
 pydantic>=2.6        # validates config/plan/task/fixture files (TOML is read by stdlib tomllib)
 pytest>=8.0
+openai>=1.40,<2
+requests>=2.31,<3

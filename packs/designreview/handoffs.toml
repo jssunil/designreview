@@ -12,7 +12,15 @@
 
 subject_prefix = "T21-DR"
 reason_code = "needs_another_app"   # AgentEscalation.reason_code
-sla_minutes = 1440                  # used by Part 3's escalations.raise
+sla_minutes = 1440                  # escalations.raise snaps to 15/30/60/120/240/480/1440
+
+# Who escalations go to, per tenant, by display name. The name is resolved to
+# a party id through endpoint.agent_governance.escalations.assignees on every
+# write run, so nothing breaks if the platform re-seeds people. A tenant with
+# no entry here (Keystone has no assignable person) never files: the hand-off
+# is declined with the reason and stays prepared-not-filed.
+[assignees]
+suryodaya = "Meera Kulkarni"
 
 [[topics]]
 name = "manufacturing_process"
