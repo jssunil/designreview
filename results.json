@@ -1,0 +1,54 @@
+{
+  "tasks": [
+    {
+      "id": "keystone:mcp_tools_list",
+      "title": "MCP tools/list works with the seat token",
+      "passed": true,
+      "score": 1.0,
+      "evidence": "323 tools available"
+    },
+    {
+      "id": "keystone:mcp_tool_call",
+      "title": "TeamHarness.get_mine returns our saved link",
+      "passed": true,
+      "score": 1.0,
+      "evidence": "{\"result\": {\"harness\": {\"branch\": \"\", \"id\": \"deb4f926-7ab4-46cc-9e50-d47961d30c13\", \"note\": \"Our agent must handle the following high-bar engineering evaluation autonomously over Model Context Protocol (MCP) and REST APIs:\\n\\n\\\"What changed between rev B and rev C, and are there manufacturability pr"
+    },
+    {
+      "id": "keystone:agent_answers_with_tool",
+      "title": "The agent uses the tool and answers with our link",
+      "passed": true,
+      "score": 1.0,
+      "evidence": "used_tool=True answer='https://github.com/jssunil/designreview'"
+    },
+    {
+      "id": "keystone:design_file_retrieval",
+      "title": "DesignFile and DesignVersion retrieval for Hydraulic Manifold Mount",
+      "passed": true,
+      "score": 1.0,
+      "evidence": "file_retrieved=True versions_retrieved=True"
+    },
+    {
+      "id": "keystone:release_readiness_gate",
+      "title": "Release readiness verification for Hydraulic Manifold Mount",
+      "passed": true,
+      "score": 1.0,
+      "evidence": "ready=False critical_open=0 blockers=0"
+    },
+    {
+      "id": "keystone:refusal_unknown_entity",
+      "title": "Refusal and error propagation for non-existent design file",
+      "passed": true,
+      "score": 1.0,
+      "evidence": "refused_cleanly=True code=-32602"
+    },
+    {
+      "id": "keystone:agent_design_review_verdict",
+      "title": "Agent evaluates release readiness for Hydraulic Manifold Mount",
+      "passed": true,
+      "score": 1.0,
+      "evidence": "tool_invoked=True answer='The design file **5f3c30f5-0af7-4cd8-bb54-576f701e136c** is **not ready for release**. Here are the reasons and blockers identified:\\n\\n1. **Not in Canonical Ready State**: The file is not in the requir'"
+    }
+  ],
+  "summary": "keystone: 7/7 checks passed"
+}
