@@ -1,5 +1,14 @@
 # Changes
 
+## 2026-10-13 — Docs: architecture document; explainers caught up; hand-written retrieval tests
+
+| What | Before | After |
+|---|---|---|
+| `docs/ARCHITECTURE.md` (new) | genericity was spread across the explainers | one document: the two layers, the pack seam (`Registry` slots, required or not), one run end to end, the extension points and their interfaces, how genericity is enforced, honest limits; linked from `README.md` and `docs/EXPLAINERS.md` |
+| `agentkit_record.md`, `agentkit_transport.md`, `capstone_evals.md`, `EXPLAINERS.md` | did not mention the `paused` run state, the journal's `start_seq`, replay calibration or the new engine features | they do |
+| `tests/test_retrieval.py` | to-do template | three hand-written chunker tests (verbatim-suffix split, paraphrase rejected, splitter failure) |
+| `.gitignore` | `PROVENANCE.local.md` only | any `*.local.md` stays local |
+
 ## 2026-10-13 — Engine: retry policy, channels + superstep mode, checkpoint history + fork/replay, approval gate; parent-child retrieval; narrator hardening (integration Phase 6)
 
 ### Why
