@@ -1,5 +1,14 @@
 # Changes
 
+## 2026-10-21 — The agent as an MCP tool for other agents
+
+| What | Before | After | Where |
+|---|---|---|---|
+| MCP server | The agent was an MCP client only | `agentkit/service/mcp.py`: `initialize`, `ping`, `tools/list`, `tools/call`; on stdio (`python -m agentkit.service --mcp-stdio`) and on `POST /mcp` of the HTTP service | `agentkit/service/` |
+| Tools | — | One tool for each live playbook (`pb_01`, `pb_02`) and `ask`; blocked and spec-only playbooks are not tools; read-only annotations | `agentkit/service/mcp.py` |
+| Results | — | `content` = the audited answer; `structuredContent` = run id, route, outcome, answer source; `isError` only for a failed run or a busy service, never with a stack trace | `agentkit/service/mcp.py` |
+| CI | — | The service smoke check also calls `tools/list` and `tools/call` with our own MCP client | `scripts/ci_service_smoke.py` |
+
 ## 2026-10-21 — The agent as a service: HTTP API with progress events
 
 | What | Before | After | Where |

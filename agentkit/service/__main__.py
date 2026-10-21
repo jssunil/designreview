@@ -1,4 +1,4 @@
-"""python -m agentkit.service --http 127.0.0.1:8780 [--sim DIR] [--skip-llm] [--pack P] [--runs-dir D]"""
+"""python -m agentkit.service [--http 127.0.0.1:8780 | --mcp-stdio] [--sim DIR] [--skip-llm] [--pack P] [--runs-dir D]"""
 
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(description="Serve the agent: one question in, one audited answer out (dry run).")
     ap.add_argument("--http", default="127.0.0.1:8780", metavar="HOST:PORT",
                     help="default 127.0.0.1:8780; another host needs AGENTKIT_SERVICE_TOKEN")
+    ap.add_argument("--mcp-stdio", action="store_true",
+                    help="serve MCP on stdin/stdout (for an MCP client that starts this process) instead of HTTP")
     ap.add_argument("--pack", default=None, help="default: config/project.toml default_pack")
     ap.add_argument("--runs-dir", type=Path, default=None)
     ap.add_argument("--sim", type=Path, default=None, help="replay captured fixtures (a file or a folder of <tenant>.json)")
@@ -24,9 +26,15 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     from agentkit.service.http import make_server
 
-    host, _, port = args.http.rpartition(":")
     service = AgentService(args.pack, args.runs_dir, sim=args.sim, skip_llm=args.skip_llm,
                            max_in_flight=args.max_in_flight)
+    if args.mcp_stdio:
+        from agentkit.service.mcp import McpServer, serve_stdio
+
+        print(f"agentkit MCP server on stdio (pack {service.pack})", file=sys.stderr, flush=True)
+        serve_stdio(McpServer(service))
+        return 0
+    host, _, port = args.http.rpartition(":")
     try:
         server = make_server(service, host or "127.0.0.1", int(port), verbose=args.verbose)
     except ValueError as e:

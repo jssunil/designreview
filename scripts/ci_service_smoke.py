@@ -10,7 +10,9 @@ process (offline, template answers, a temporary runs folder) and checks:
   - each routed task (plan = "route") asked through POST /v1/ask gets the plan its `routed_as`
     verifier expects, or a refusal when the task expects one, and ended = "done";
   - the same question as Server-Sent Events gives run_start, node events and then the answer;
-  - /v1/runs/<run_id> gives the record of that run; other methods get 405, unknown paths 404.
+  - /v1/runs/<run_id> gives the record of that run; other methods get 405, unknown paths 404;
+  - MCP on POST /mcp, with our own MCP client (agentkit.transport.seat_rpc): initialize, tools/list
+    names the live playbooks and "ask", tools/call answers the first routed question.
 Exit 1 if any check fails (all problems are printed).
 """
 
@@ -30,6 +32,50 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+
+class LoopbackWire:
+    """A Wire for our MCP client that reaches 127.0.0.1 only. The real UrllibWire refuses every call in
+    offline mode (AGENTKIT_OFFLINE=1, as in CI), and this check must not weaken that guard."""
+
+    def send(self, method: str, url: str, headers: Dict[str, str], body: Optional[bytes], *, safe_to_repeat: bool):
+        from agentkit.transport.wire import WireReply, read_body, read_error_body
+
+        if not url.startswith("http://127.0.0.1:"):
+            raise ValueError(f"LoopbackWire: {url} is not on 127.0.0.1")
+        req = urllib.request.Request(url, data=body, method=method, headers=headers)
+        # read_body: the same framing tolerance as UrllibWire (a filter on some computers marks
+        # responses on "/mcp" paths as chunked when they are not).
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return WireReply(resp.status, read_body(resp), dict(resp.headers))
+        except urllib.error.HTTPError as e:
+            return WireReply(e.code, read_error_body(e), dict(e.headers))
+
+
+def mcp_check(base: str, task: Dict[str, Any]) -> List[str]:
+    from agentkit.config import TenantLogin
+    from agentkit.transport.seat_rpc import SeatCallFailure, SeatRpcClient, SeatSession
+
+    client = SeatRpcClient(SeatSession(TenantLogin(name="service", base_url=base, email=""), LoopbackWire(),
+                                       token="unused"))
+    try:
+        client.initialize()
+        names = sorted(client.seat_catalog())
+        args = {"question": task["prompt"], **({"tenant": task["tenant"]} if task["tenant"] else {})}
+        payload = client.invoke_tool("ask", args)
+    except SeatCallFailure as e:
+        return [f"MCP: {e}"]
+    problems = []
+    if "ask" not in names or not any(n.startswith("pb_") for n in names):
+        problems.append(f"MCP tools/list: {names}")
+    got = (payload.get("route") or {}).get("plan") if isinstance(payload, dict) else None
+    if task["plan"] and got != task["plan"]:
+        problems.append(f"MCP tools/call {task['id']}: routed to {got!r}, expected {task['plan']!r}")
+    if not problems:
+        print(f"  MCP: tools {names}; tools/call {task['id']} -> {got}")
+    return problems
 
 
 def _call(base: str, path: str, method: str = "GET", payload: Any = None,
@@ -133,6 +179,8 @@ def smoke(sim: Path, tasks_dir: Path, runs_dir: Path) -> List[str]:
                 problems.append(f"SSE: status {status}, events {names[:6]}...{names[-2:]}")
             else:
                 print(f"  SSE: {len(names)} events, {names.count('node_end')} nodes, then the answer")
+        if tasks:
+            problems += mcp_check(base, tasks[0])
         if first_run:
             status, raw = _call(base, f"/v1/runs/{first_run}")
             if status != 200 or json.loads(raw).get("run_id") != first_run:

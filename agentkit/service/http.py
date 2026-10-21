@@ -7,6 +7,7 @@ HTTP API of the agent service (standard library only).
   POST /v1/ask             with "Accept: text/event-stream": Server-Sent Events while the run works
                            (run_start, node_start/end, tool_*, llm_*, step_*), then "answer"
   GET  /v1/runs/<run_id>   the record of an earlier service run
+  POST /mcp                the MCP server (JSON-RPC; also at /api/mcp): see mcp.py
 
 Errors are JSON {"error": "..."} with 400, 401, 404, 405, 413, 429 (+ Retry-After) or 500, never a
 stack trace. A refusal (an unknown part, an ambiguous question) is a normal 200 answer.
@@ -30,6 +31,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, Iterator, Mapping, Optional, Tuple, Union
 
 from agentkit.service.core import AgentService, BadRequest, Busy
+from agentkit.service.mcp import McpServer
 
 TOKEN_ENV = "AGENTKIT_SERVICE_TOKEN"
 LOOPBACK = ("127.0.0.1", "localhost", "::1")
@@ -37,7 +39,8 @@ MAX_BODY = 64 * 1024
 PING_S = 15.0
 SECURITY_HEADERS = {"X-Content-Type-Options": "nosniff", "Cache-Control": "no-store",
                     "Referrer-Policy": "no-referrer"}
-ROUTES = {"/healthz": "GET", "/v1/playbooks": "GET", "/v1/ask": "POST"}
+MCP_PATHS = ("/mcp", "/api/mcp")
+ROUTES = {"/healthz": "GET", "/v1/playbooks": "GET", "/v1/ask": "POST", **{p: "POST" for p in MCP_PATHS}}
 
 # (status, content type, body, extra headers)
 Response = Tuple[int, str, bytes, Dict[str, str]]
@@ -67,6 +70,7 @@ class ServiceApp:
     def __init__(self, service: AgentService, token: Optional[str] = None):
         self.service = service
         self.token = token
+        self.mcp = McpServer(service)
 
     # ---- shared checks --------------------------------------------------------------
 
@@ -115,6 +119,13 @@ class ServiceApp:
         if path.startswith("/v1/runs/"):
             record = self.service.run_record(path[len("/v1/runs/"):])
             return _json(200, record) if record is not None else _error(404, "no such service run")
+        if path in MCP_PATHS:
+            if len(body) > MAX_BODY:
+                return _error(413, f"the body is larger than {MAX_BODY} bytes")
+            reply = self.mcp.handle_bytes(body)
+            if reply is None:  # a notification
+                return 202, "application/json; charset=utf-8", b"", {}
+            return 200, "application/json; charset=utf-8", reply, {}
         try:
             data = self._question(body)
             return _json(200, self.service.ask(data.get("question"), data.get("tenant")))

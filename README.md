@@ -99,7 +99,7 @@ agentkit/            domain-free framework (no design-review names; a lint test 
   sim/               platform fixtures + offline SimPlatform with injectable faults
   telemetry/         run tree for each run (task → node → tool / llm); OTLP export without an SDK
   viewer/            read-only browser page over the run folders
-  service/           the agent as a service: HTTP API (JSON and Server-Sent Events), dry run only
+  service/           the agent as a service: HTTP API (JSON and Server-Sent Events) and MCP server, dry run only
   playbooks.py       playbook files and the constants register: load, check against plans, routes and tools
 packs/designreview/  the domain pack: actions, routes, finding, claim rules, template, probes, verifiers,
                      mutants, prompts/*.md, plans/*.toml, tasks/*.toml, fixtures/*.json,
@@ -323,6 +323,9 @@ python -m agentkit.telemetry.otlp runs/batches/<batch_id> --endpoint http://127.
 # Serve the agent over HTTP: one question in, one audited answer out (dry run, this computer only)
 python -m agentkit.service [--sim packs/designreview/fixtures --skip-llm]   # http://127.0.0.1:8780/
 curl -s localhost:8780/v1/ask -H "Content-Type: application/json" -d '{"question": "Is the propeller ready for release?"}'
+
+# The agent as an MCP tool for other agents (one tool for each live playbook, plus "ask")
+claude mcp add designreview -- python -m agentkit.service --mcp-stdio     # or POST /mcp on the HTTP service
 ```
 
 Each run folder also has `llm_calls.jsonl`: the exact system prompt, prompt and reply of each LLM attempt,
@@ -553,7 +556,7 @@ gitleaks git . --config .gitleaks.toml --redact --verbose   # gitleaks 8.30.1 (S
    collector on 127.0.0.1, and every span of every run must arrive;
 10. a service smoke check, `scripts/ci_service_smoke.py`. It starts the agent service on the fixtures and
     asks the question of each routed task over HTTP, also as a stream. Each answer must have the expected
-    route or refusal;
+    route or refusal. Then our own MCP client lists the tools and calls one;
 11. the official runner, offline, for each instance. `scripts/check_results_json.py` examines each
    `results.json`. Then a planted fault must give failed entries with evidence, and the runner must exit 1;
 12. the docs style job, `scripts/ste_check.py`: this README, the architecture documents, the explainers and
