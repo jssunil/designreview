@@ -99,12 +99,12 @@ agentkit/            domain-free framework (no design-review names; a lint test 
   sim/               platform fixtures + offline SimPlatform with injectable faults
   telemetry/         run tree for each run (task → node → tool / llm); OTLP export without an SDK
   viewer/            read-only browser page over the run folders
-  service/           the agent as a service: HTTP API (JSON and Server-Sent Events) and MCP server, dry run only
+  service/           the agent as a service: HTTP API (JSON and Server-Sent Events), MCP server, signed webhooks; dry run only
   playbooks.py       playbook files and the constants register: load, check against plans, routes and tools
 packs/designreview/  the domain pack: actions, routes, finding, claim rules, template, probes, verifiers,
                      mutants, prompts/*.md, plans/*.toml, tasks/*.toml, fixtures/*.json,
                      playbooks/*.md (one per use case) + constants.toml
-config/              tenants.toml, routing.toml (LLM providers and tiers), project.toml (defaults, LLM cost limit)
+config/              tenants.toml, routing.toml (LLM providers and tiers), project.toml (defaults, LLM cost limit), hooks.toml (webhooks)
 ```
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layers and the pack seam.
@@ -326,7 +326,13 @@ curl -s localhost:8780/v1/ask -H "Content-Type: application/json" -d '{"question
 
 # The agent as an MCP tool for other agents (one tool for each live playbook, plus "ask")
 claude mcp add designreview -- python -m agentkit.service --mcp-stdio     # or POST /mcp on the HTTP service
+
+# Let another system ask: a signed webhook (config/hooks.toml; secret AGENTKIT_HOOK_<NAME>_SECRET)
+python -m agentkit.service.hooks send http://127.0.0.1:8780 new_version '{"part": "BEV-BT-2400"}'
 ```
+
+A cron line or an n8n workflow (`docs/examples/n8n_daily_release_check.json`) can also ask on a schedule.
+See [`docs/explainers/agentkit_service.md`](docs/explainers/agentkit_service.md).
 
 Each run folder also has `llm_calls.jsonl`: the exact system prompt, prompt and reply of each LLM attempt,
 with no key in it. Set `OTEL_EXPORTER_OTLP_ENDPOINT`, and each run sends its spans to that collector.

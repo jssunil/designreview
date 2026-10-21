@@ -9,12 +9,15 @@ HTTP API of the agent service (standard library only).
   GET  /v1/runs/<run_id>   the record of an earlier service run
   GET  /v1/runs/<run_id>/history   its graph checkpoints, newest first (id, time, source, step, nodes)
   POST /mcp                the MCP server (JSON-RPC; also at /api/mcp): see mcp.py
+  POST /v1/hooks/<name>    a signed webhook (HMAC, see hooks.py) -> 202 {run_id}; the run goes on
+                           in the background, its result at /v1/runs/<run_id>
 
 Errors are JSON {"error": "..."} with 400, 401, 404, 405, 413, 429 (+ Retry-After) or 500, never a
 stack trace. A refusal (an unknown part, an ambiguous question) is a normal 200 answer.
 
 Safety: binds to 127.0.0.1 by default. Another host needs AGENTKIT_SERVICE_TOKEN; when it is set,
-every route but /healthz needs "Authorization: Bearer <token>" (constant-time compare). Bodies are
+every route but /healthz and the hooks needs "Authorization: Bearer <token>" (constant-time compare); a
+hook proves itself with its own HMAC signature instead. Bodies are
 limited to 64 KB. JSON escapes <, > and & as \\u sequences.
 
 `ServiceApp.handle()` and `ServiceApp.stream()` hold the logic, so tests need no socket.
@@ -29,9 +32,10 @@ import os
 import queue
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Dict, Iterator, Mapping, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, Union
 
 from agentkit.service.core import AgentService, BadRequest, Busy
+from agentkit.service.hooks import HookGate, HookRefused, load_hooks
 from agentkit.service.mcp import McpServer
 
 TOKEN_ENV = "AGENTKIT_SERVICE_TOKEN"
@@ -68,15 +72,17 @@ def sse(event: str, data: Any) -> bytes:
 
 
 class ServiceApp:
-    def __init__(self, service: AgentService, token: Optional[str] = None):
+    def __init__(self, service: AgentService, token: Optional[str] = None, hooks: Optional[HookGate] = None):
         self.service = service
         self.token = token
         self.mcp = McpServer(service)
+        self.hooks = hooks if hooks is not None else HookGate(load_hooks())
+        self._background: List[threading.Thread] = []
 
     # ---- shared checks --------------------------------------------------------------
 
     def authorized(self, path: str, headers: Mapping[str, str]) -> bool:
-        if not self.token or path == "/healthz":
+        if not self.token or path == "/healthz" or path.startswith("/v1/hooks/"):
             return True
         given = headers.get("Authorization") or headers.get("authorization") or ""
         return hmac.compare_digest(given.encode("utf-8"), f"Bearer {self.token}".encode("utf-8"))
@@ -96,6 +102,8 @@ class ServiceApp:
     def _precheck(self, method: str, path: str, headers: Mapping[str, str]) -> Optional[Response]:
         if path.startswith("/v1/runs/"):
             allowed = "GET"
+        elif path.startswith("/v1/hooks/"):
+            allowed = "POST"
         else:
             allowed = ROUTES.get(path, "")
         if not allowed:
@@ -123,6 +131,8 @@ class ServiceApp:
                 return _error(404, "not found")
             record = self.service.run_history(run_id) if rest else self.service.run_record(run_id)
             return _json(200, record) if record is not None else _error(404, "no such service run")
+        if path.startswith("/v1/hooks/"):
+            return self._hook(path[len("/v1/hooks/"):], headers, body)
         if path in MCP_PATHS:
             if len(body) > MAX_BODY:
                 return _error(413, f"the body is larger than {MAX_BODY} bytes")
@@ -141,6 +151,41 @@ class ServiceApp:
             return _error(413, f"the body is larger than {MAX_BODY} bytes")
         except Exception:  # noqa: BLE001 -- the run folder has the detail; the caller gets no trace
             return _error(500, "internal error")
+
+    # ---- webhooks -------------------------------------------------------------------
+
+    def _hook(self, name: str, headers: Mapping[str, str], body: bytes) -> Response:
+        if len(body) > MAX_BODY:
+            return _error(413, f"the body is larger than {MAX_BODY} bytes")
+        stack = contextlib.ExitStack()
+        try:
+            hook, question = self.hooks.question(name, headers, body)
+            question, tenant = self.service.check(question, hook.tenant)
+            stack.enter_context(self.service.slot())
+        except HookRefused as e:
+            return _error(e.status, str(e))
+        except BadRequest as e:
+            return _error(400, str(e))
+        except Busy as e:
+            return _error(429, str(e), **{"Retry-After": str(e.retry_after)})
+        run_id = self.service.new_run_id()
+
+        def work() -> None:
+            with stack:
+                try:
+                    self.service.run(question, tenant, run_id=run_id)
+                except Exception:  # noqa: BLE001 -- the run folder has the detail
+                    pass
+
+        thread = threading.Thread(target=work, name=f"hook-{name}", daemon=True)
+        self._background = [t for t in self._background if t.is_alive()] + [thread]
+        thread.start()
+        return _json(202, {"status": "accepted", "hook": name, "run_id": run_id, "result": f"/v1/runs/{run_id}"})
+
+    def wait_idle(self, timeout: float = 60.0) -> None:
+        """Wait for the hook runs started so far (tests, a clean shutdown)."""
+        for thread in list(self._background):
+            thread.join(timeout)
 
     # ---- Server-Sent Events ---------------------------------------------------------
 
@@ -251,11 +296,11 @@ def make_handler(app: ServiceApp):
 
 
 def make_server(service: AgentService, host: str = "127.0.0.1", port: int = 8780, *, token: Optional[str] = None,
-                verbose: bool = False) -> ThreadingHTTPServer:
+                hooks: Optional[HookGate] = None, verbose: bool = False) -> ThreadingHTTPServer:
     token = token if token is not None else (os.environ.get(TOKEN_ENV) or None)
     if host not in LOOPBACK and not token:
         raise ValueError(f"serving on {host} needs {TOKEN_ENV}: anyone who can reach it could ask questions")
-    server = ThreadingHTTPServer((host, port), make_handler(ServiceApp(service, token)))
+    server = ThreadingHTTPServer((host, port), make_handler(ServiceApp(service, token, hooks)))
     server.daemon_threads = True
     server.verbose = verbose  # type: ignore[attr-defined]
     return server

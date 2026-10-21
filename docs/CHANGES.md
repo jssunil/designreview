@@ -1,5 +1,14 @@
 # Changes
 
+## 2026-10-21 — Triggers: signed webhooks, cron and n8n
+
+| What | Before | After | Where |
+|---|---|---|---|
+| Webhooks | The agent answered only when a person asked | `POST /v1/hooks/<name>`: HMAC-SHA256 signature over the timestamp and the body, 5-minute window, a repeated signature refused (409), plain field values only; 202 with the run id, the run continues in the background (dry run) | `agentkit/service/hooks.py`, `agentkit/service/http.py`, `config/hooks.toml` |
+| Sender | — | `python -m agentkit.service.hooks send <url> <hook> '<json>'` signs and sends one delivery | `agentkit/service/hooks.py` |
+| Recipes | — | A cron line and an n8n workflow to import (`docs/examples/n8n_daily_release_check.json`) | `docs/explainers/agentkit_service.md` |
+| Playbooks | pb-14 and pb-15: "no trigger" | The trigger is ready; the plan (pb-14) and the platform event and the write path (pb-15) are still missing, so both stay spec | `packs/designreview/playbooks/` |
+
 ## 2026-10-21 — Checkpoint history in SQLite, for many runs and processes
 
 | What | Before | After | Where |

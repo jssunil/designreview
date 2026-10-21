@@ -1,0 +1,42 @@
+{
+  "name": "Daily release check (agent service)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "30 7 * * 1-5" }
+          ]
+        }
+      },
+      "id": "9b1c2f0e-4c1a-4f55-9d55-6a0d6f2b7a01",
+      "name": "Every weekday at 07:30",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8780/v1/ask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"question\": \"Is BEV-BT-2400 ready for release, is the project on schedule, and who else needs to act?\", \"tenant\": \"suryodaya\"}",
+        "options": { "timeout": 300000 }
+      },
+      "id": "9b1c2f0e-4c1a-4f55-9d55-6a0d6f2b7a02",
+      "name": "Ask the agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [260, 0]
+    }
+  ],
+  "connections": {
+    "Every weekday at 07:30": {
+      "main": [[{ "node": "Ask the agent", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}

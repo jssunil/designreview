@@ -1,0 +1,16 @@
+# Signed webhooks of the agent service (agentkit/service/hooks.py): POST /v1/hooks/<name>.
+#
+# A hook is OFF until its secret is set in the environment: AGENTKIT_HOOK_<NAME>_SECRET (or the name in
+# `secret_env`). The sender signs "<timestamp>." + body with HMAC-SHA256 (headers X-Agentkit-Timestamp and
+# X-Agentkit-Signature: sha256=<hex>). {field}s in `question` come from the JSON body; each must be a short
+# plain value (a part number, a revision letter). The run is a dry run, like POST /v1/ask.
+#
+# The router finds a design file by its part number (e.g. BEV-BT-2400), not by its DF-... number.
+
+[[hooks]]
+name = "new_version"        # pb-15: another system tells us a new version of a part was committed
+question = "What changed in the latest revision of {part}, and are there manufacturability problems?"
+
+[[hooks]]
+name = "release_check"      # pb-02 from a schedule (cron, n8n) or an event
+question = "Is {part} ready for release, is the project on schedule, and who else needs to act?"

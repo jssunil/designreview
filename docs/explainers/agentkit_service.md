@@ -1,6 +1,6 @@
 # `agentkit/service/` — the agent as a service
 
-*Reading order: **11th**. Files: `core.py`, `http.py`, `mcp.py`, `__main__.py`. Added 2026-10-21. Written in ASD-STE100
+*Reading order: **11th**. Files: `core.py`, `http.py`, `mcp.py`, `hooks.py`, `__main__.py`. Config: `config/hooks.toml`. Added 2026-10-21. Written in ASD-STE100
 (Simplified Technical English) style.*
 
 ## Overview
@@ -42,6 +42,7 @@ run_task(TaskDef(plan = "route", prompt = question), write = False)
 | `GET /v1/runs/<run_id>` | The run record of an earlier service run. |
 | `GET /v1/runs/<run_id>/history` | The graph checkpoints of that run, newest first: id, time, source, step and the state of each node. |
 | `POST /mcp` (also `/api/mcp`) | The MCP server. See "The agent as an MCP tool". |
+| `POST /v1/hooks/<name>` | A signed webhook. The result is 202 with the run id. The run continues, and its record is at `/v1/runs/<run_id>`. See "Triggers". |
 
 A refusal is a normal answer (200), for example an unknown part or a question that can mean four parts.
 The errors are JSON `{"error": "..."}`:
@@ -91,6 +92,49 @@ To add the agent to Claude Code, run this command in the project folder:
 claude mcp add designreview -- python -m agentkit.service --mcp-stdio
 ```
 
+## Triggers: webhooks, cron and n8n
+
+The agent answers when a person asks. A trigger lets another system ask: a schedule, or an event such as a
+new version of a part.
+
+**Signed webhooks.** `config/hooks.toml` gives each hook a name and a question template:
+
+```toml
+[[hooks]]
+name = "new_version"
+question = "What changed in the latest revision of {part}, and are there manufacturability problems?"
+```
+
+| Rule | Detail |
+|---|---|
+| Secret | A hook is off until `AGENTKIT_HOOK_<NAME>_SECRET` has a value. A hook that is off gives 404, as an unknown hook does. |
+| Signature | `X-Agentkit-Signature: sha256=<hex>`: HMAC-SHA256 of `<timestamp>.` and the body, with the secret. A wrong signature gives 401. |
+| Time | `X-Agentkit-Timestamp`: Unix seconds. More than 5 minutes from the clock of the service gives 401. |
+| Replay | The same signature two times gives 409. |
+| Fields | The `{field}`s of the template come from the JSON body. Each value must be short and plain: letters, digits, spaces and `. _ : / # -`. Thus a field cannot add structure to the question. Another value gives 400. |
+| Token | A hook does not need the bearer token. Its signature proves the sender. |
+
+A refused delivery starts no run. An accepted delivery gets 202 at once, and the run continues in the
+background. It is the same dry run as `POST /v1/ask`. To send a signed delivery from a script or a cron job:
+
+```bash
+AGENTKIT_HOOK_NEW_VERSION_SECRET=... python -m agentkit.service.hooks send http://127.0.0.1:8780 new_version '{"part": "BEV-BT-2400"}'
+```
+
+**Cron.** A cron line can ask a question each weekday morning with the bearer token:
+
+```bash
+30 7 * * 1-5  curl -s -H "Authorization: Bearer $AGENTKIT_SERVICE_TOKEN" -H "Content-Type: application/json" \
+              -d '{"question": "Is BEV-BT-2400 ready for release?"}' http://127.0.0.1:8780/v1/ask >> release.log
+```
+
+**n8n.** Import `docs/examples/n8n_daily_release_check.json`: a Schedule Trigger (weekdays at 07:30) and an
+HTTP Request to `/v1/ask`. Give the HTTP Request a Header Auth credential, `Authorization: Bearer <token>`. An
+n8n workflow can also call the MCP server at `/mcp`.
+
+Playbooks pb-14 (daily digest) and pb-15 (review of each new version) stay "spec". The triggers are ready,
+but pb-14 needs its own plan, and pb-15 needs an event from the platform and a write path for the answer.
+
 ## Design decisions
 
 - **The same run as the harness.** A question becomes a routed task (`plan = "route"`). Thus the router,
@@ -136,10 +180,12 @@ claude mcp add designreview -- python -m agentkit.service --mcp-stdio
 | `make_server(service, host, port, token=)` | The HTTP server. |
 | `McpServer(service)`, `handle(message)`, `tools()`, `call_tool(name, arguments)` | The MCP server. |
 | `serve_stdio(server)` | MCP on stdin and stdout. |
+| `HookSpec`, `load_hooks()`, `HookGate.question(name, headers, body)`, `signature()`, `send()` | The webhooks. |
 
 ## How to test
 
-1. The reference tests are `tests_local/test_service_http.py` and `tests_local/test_service_mcp.py`. They
+1. The reference tests are `tests_local/test_service_http.py`, `test_service_mcp.py` and
+   `test_service_hooks.py`. They
    use the fixtures and need no network. One MCP test uses our own MCP client
    (`agentkit/transport/seat_rpc.py`) on the HTTP transport.
 2. Run `python scripts/ci_service_smoke.py`. It starts the service as its own process on the fixtures and

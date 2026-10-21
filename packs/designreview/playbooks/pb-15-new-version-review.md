@@ -21,4 +21,4 @@ An event from the platform starts the PB-01 plan for the new version and the ver
 
 ## Limits
 
-The event name is a placeholder: the seat has no event subscription tool today. Also, the agent has no write action to send the answer. That needs a reviewed write path like PB-02's.
+The event name is a placeholder: the seat has no event subscription tool today. Another system can send the event to the signed hook `new_version` of the agent service (`config/hooks.toml`), and the agent then answers as for PB-01. The agent has no write action to send the answer to the owner. That needs a reviewed write path like PB-02's.

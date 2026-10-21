@@ -114,8 +114,9 @@ jobs:
       # The agent as a service (agentkit/service, standard library HTTP): started as its own process on
       # the fixtures; each routed task's question goes to POST /v1/ask (and once as a stream) and must get
       # the route or the refusal its task expects. Then our own MCP client (agentkit/transport/seat_rpc.py)
-      # calls tools/list and tools/call on POST /mcp.
-      - name: Service smoke check (questions over HTTP, MCP)
+      # calls tools/list and tools/call on POST /mcp, a signed webhook starts a run (a wrong signature is
+      # refused), and the run's checkpoint history is read back from SQLite.
+      - name: Service smoke check (questions over HTTP, MCP, webhook)
         run: python scripts/ci_service_smoke.py
 
       # The official runner (harness/runner.py) with our real agent inside, offline: each instance's tasks

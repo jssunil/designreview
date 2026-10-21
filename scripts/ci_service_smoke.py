@@ -11,6 +11,8 @@ process (offline, template answers, a temporary runs folder) and checks:
     verifier expects, or a refusal when the task expects one, and ended = "done";
   - the same question as Server-Sent Events gives run_start, node events and then the answer;
   - /v1/runs/<run_id> gives the record of that run, and /history its checkpoints from SQLite; other methods get 405, unknown paths 404;
+  - a signed webhook (a test secret given to the service process) gets 202, and its run finishes with
+    the plan of t10; a wrong signature gets 401;
   - MCP on POST /mcp, with our own MCP client (agentkit.transport.seat_rpc): initialize, tools/list
     names the live playbooks and "ask", tools/call answers the first routed question.
 Exit 1 if any check fails (all problems are printed).
@@ -20,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import socket
 import subprocess
 import sys
@@ -90,6 +93,39 @@ def _call(base: str, path: str, method: str = "GET", payload: Any = None,
         return e.code, e.read()
 
 
+HOOK = "new_version"
+HOOK_SECRET_ENV = "AGENTKIT_HOOK_NEW_VERSION_SECRET"
+HOOK_SECRET = "ci-service-smoke-only"
+
+
+def hook_check(base: str) -> List[str]:
+    from agentkit.service.hooks import load_hooks, send
+
+    if HOOK not in load_hooks():
+        return [f"config/hooks.toml has no hook {HOOK!r}"]
+    part = "BEV-BT-2400"  # the part that t10's question names
+    status, data = send(base, HOOK, {"part": part}, HOOK_SECRET)
+    if status != 202:
+        return [f"hook {HOOK}: {status} {data}"]
+    run_id, record = data.get("run_id"), None
+    end = time.time() + 120
+    while time.time() < end:
+        code, raw = _call(base, f"/v1/runs/{run_id}")
+        record = json.loads(raw) if code == 200 else None
+        if record and record.get("ended") not in (None, "running"):
+            break
+        time.sleep(0.3)
+    got = ((record or {}).get("route") or {}).get("plan")
+    problems = []
+    if not record or record.get("ended") != "done" or got != "rev_diff_dfm":
+        problems.append(f"hook {HOOK}: run {run_id} ended={(record or {}).get('ended')} plan={got!r}")
+    if send(base, HOOK, {"part": part}, "wrong-secret")[0] != 401:
+        problems.append(f"hook {HOOK}: a wrong signature was not refused")
+    if not problems:
+        print(f"  hook {HOOK}: 202, run {run_id} -> {got}; a wrong signature -> 401")
+    return problems
+
+
 def _free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -137,8 +173,9 @@ def smoke(sim: Path, tasks_dir: Path, runs_dir: Path) -> List[str]:
     problems: List[str] = []
     port = _free_port()
     base = f"http://127.0.0.1:{port}"
+    env = {**os.environ, HOOK_SECRET_ENV: HOOK_SECRET}  # this check's own secret, for the hook only
     proc = subprocess.Popen([sys.executable, "-m", "agentkit.service", "--http", f"127.0.0.1:{port}", "--sim", str(sim),
-                             "--skip-llm", "--runs-dir", str(runs_dir)], cwd=ROOT,
+                             "--skip-llm", "--runs-dir", str(runs_dir)], cwd=ROOT, env=env,
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     try:
         if not _wait_until_up(base, proc):
@@ -181,6 +218,7 @@ def smoke(sim: Path, tasks_dir: Path, runs_dir: Path) -> List[str]:
                 print(f"  SSE: {len(names)} events, {names.count('node_end')} nodes, then the answer")
         if tasks:
             problems += mcp_check(base, tasks[0])
+            problems += hook_check(base)
         if first_run:
             status, raw = _call(base, f"/v1/runs/{first_run}")
             if status != 200 or json.loads(raw).get("run_id") != first_run:

@@ -153,10 +153,15 @@ class AgentService:
                 self.in_flight -= 1
             self._slots.release()
 
-    def run(self, question: str, tenant: str, on_event: Optional[Callable[[Event], None]] = None) -> Dict[str, Any]:
-        """One run for a checked question, inside a slot the caller holds (see ask)."""
+    @staticmethod
+    def new_run_id() -> str:
         stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S")
-        run_id = f"{RUN_PREFIX}{stamp}-{uuid.uuid4().hex[:8]}"
+        return f"{RUN_PREFIX}{stamp}-{uuid.uuid4().hex[:8]}"
+
+    def run(self, question: str, tenant: str, on_event: Optional[Callable[[Event], None]] = None, *,
+            run_id: Optional[str] = None) -> Dict[str, Any]:
+        """One run for a checked question, inside a slot the caller holds (see ask)."""
+        run_id = run_id or self.new_run_id()
         run_dir = self.runs_dir / run_id
         task = TaskDef(id="ask", pack=self.pack, plan=ROUTED, prompt=question, tenants=[tenant],
                        source="agentkit.service")

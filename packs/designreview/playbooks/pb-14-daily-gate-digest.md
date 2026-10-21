@@ -21,4 +21,4 @@ A scheduled run reads every file in a review state and its release gate. It list
 
 ## Limits
 
-The agent has no scheduler today: it answers only when asked. This needs a trigger outside the agent (a cron job or a platform job) and a store for yesterday's list.
+The trigger is ready: a cron job or an n8n schedule can ask the agent service (`POST /v1/ask` or a signed hook, see `docs/explainers/agentkit_service.md`). The plan is not ready: it needs a list of all files in a review state and a store for yesterday's list.
