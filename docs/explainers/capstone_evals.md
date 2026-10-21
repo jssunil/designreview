@@ -1,6 +1,6 @@
 # `capstone_evals.py` and `rescore.py` — run and grade the benchmark again
 
-*Reading order: **13th**. These are thin wrappers on `agentkit/harness`. Written in ASD-STE100 (Simplified
+*Reading order: **14th**. These are thin wrappers on `agentkit/harness`. Written in ASD-STE100 (Simplified
 Technical English) style, 2026-10-14.*
 
 ## Commands

@@ -111,6 +111,12 @@ jobs:
       - name: OTLP export smoke check (spans reach a collector)
         run: python scripts/ci_otlp_smoke.py runs/batches/ci
 
+      # The agent as a service (agentkit/service, standard library HTTP): started as its own process on
+      # the fixtures; each routed task's question goes to POST /v1/ask (and once as a stream) and must get
+      # the route or the refusal its task expects.
+      - name: Service smoke check (questions over HTTP)
+        run: python scripts/ci_service_smoke.py
+
       # The official runner (harness/runner.py) with our real agent inside, offline: each instance's tasks
       # run on the captured fixtures and are graded; results.json must follow the harness spec (1-200
       # entries, strict booleans, scores 0-1, evidence on every failure). A planted fault must come out as

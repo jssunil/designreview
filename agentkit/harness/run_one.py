@@ -35,7 +35,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
 
 from agentkit.agents import answer_with_pack, plan_executor, record_steps, run_plan
 from agentkit.config import default_tenant
@@ -116,7 +116,10 @@ def _conclude(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, 
 
 def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm: bool = False,
              registry: Optional[Registry] = None, client: Any = None, gateway: Any = None,
-             retry_backoff_s: float = 1.0, write: bool = False, require_approval: bool = False) -> TaskRun:
+             retry_backoff_s: float = 1.0, write: bool = False, require_approval: bool = False,
+             trace_handlers: Sequence[Any] = ()) -> TaskRun:
+    """`trace_handlers` get the start and the end of each span as it happens (Tracer handlers), e.g. to
+    stream progress to a caller."""
     run_dir = Path(run_dir)
     dry_run = not (write and task.allow_writes)
     run = TaskRun(task_id=task.id, prompt=task.prompt, run_id=run_id, tenant=tenant, dry_run=dry_run,
@@ -128,7 +131,7 @@ def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm
     # refusal) must look different from "the journal was lost".
     (run_dir / JOURNAL_FILE).touch()
     t0 = time.time()
-    tracer = Tracer(run_id)
+    tracer = Tracer(run_id, handlers=list(trace_handlers))
     try:
         with use_tracer(tracer), span("task", task.id, tenant=tenant, dry_run=dry_run, pack=task.pack,
                                       plan=task.plan) as root:

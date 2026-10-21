@@ -1,6 +1,6 @@
 # `harness/runner.py` and `harness/agent_tasks.py` — the official runner
 
-*Reading order: **14th**. Files: `harness/runner.py`, `harness/agent_tasks.py`, `scripts/check_results_json.py`.
+*Reading order: **15th**. Files: `harness/runner.py`, `harness/agent_tasks.py`, `scripts/check_results_json.py`.
 Config: `agentswitch-harness.toml`. Written in ASD-STE100 (Simplified Technical English) style, 2026-10-19.*
 
 ## Overview

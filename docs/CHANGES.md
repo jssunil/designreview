@@ -1,5 +1,15 @@
 # Changes
 
+## 2026-10-21 — The agent as a service: HTTP API with progress events
+
+| What | Before | After | Where |
+|---|---|---|---|
+| Service | The agent ran from the CLI, the batch and the official runner only | `python -m agentkit.service`: `POST /v1/ask` routes, runs and answers one question (dry run) with its own run folder `runs/svc-*`; `GET /v1/playbooks`, `GET /v1/runs/<id>`, `GET /healthz` | `agentkit/service/` |
+| Streaming | — | `Accept: text/event-stream` gives the span starts and ends of the run as Server-Sent Events, then the answer | `agentkit/service/http.py`, `agentkit/harness/run_one.py` (`trace_handlers`) |
+| Back-pressure | — | At most `max_in_flight` questions at a time; one more gets 429 with `Retry-After` | `agentkit/service/core.py` |
+| Safety | — | 127.0.0.1 by default; another host needs `AGENTKIT_SERVICE_TOKEN` (bearer, constant-time compare); 64 KB body limit; no stack traces | `agentkit/service/http.py` |
+| CI | — | `scripts/ci_service_smoke.py`: each routed task's question over HTTP, also as a stream | `.github/workflows/ci.yaml` |
+
 ## 2026-10-21 — More keys for one LLM row, and cool-downs for each row
 
 | What | Before | After | Where |
