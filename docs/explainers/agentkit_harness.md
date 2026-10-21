@@ -257,6 +257,31 @@ Each task runs in a child process. The child knows which environment values came
 - A decline runs the `route_declined` plan of the pack. Thus it ends as an ordinary refusal.
 - The design-review check `routed_as` grades the decision.
 
+### The LLM planner (experimental, since 2026-10-21)
+
+The rule router declines a question that matches no route. The LLM planner (`agentkit/agents/llm_planner.py`)
+can give a plan for that question. It is off by default. Set `AGENTKIT_PLANNER=llm` to turn it on. It needs an
+LLM, so `--skip-llm` turns it off.
+
+- **When.** Only after the decline "no route matched". An unknown record or an ambiguous record is a correct
+  refusal, and the planner does not change it.
+- **The catalogue.** The planner offers the nodes of the plan files of the pack. It offers only nodes with a
+  read-only action, and only nodes whose arguments the resolver of the router can find in a question. The planner
+  offers a node only when it also offers each node that the node waits for. The LLM cannot write an action, an
+  argument or a dependency.
+- **The call.** One JSON-mode call to the fast tier. The question is inside an `<untrusted_question>` fence.
+  The reply is `{"nodes": [...]}` or `{"decline": "..."}`.
+- **The checks.** Each id must be in the catalogue. The planner adds the dependencies of each chosen node,
+  and the total must be 10 nodes or fewer. Then the plan validator and the engine check the plan. Bad JSON,
+  an unknown id, too many nodes or a failed call keeps the decline.
+- **The record.** The route keeps the nodes and the rules: `{plan: "llm_plan", params, why, planner: "llm",
+  nodes, rules, plan_params}`. Thus a resume or a replay builds the same plan with no LLM call.
+- **The same grading.** The finding, the claim audit and the checks are the same as for a routed plan.
+
+The plan says: adopt the planner only if it is on the cost-accuracy frontier
+(`agentkit/harness/pareto.py`) and no task fails. That comparison needs live LLM calls, and it has not
+occurred. Thus the planner stays off.
+
 ## Task files
 
 Task files are TOML. The `TaskDef` pydantic model validates them. The fields are `id`, `pack`, `plan`,

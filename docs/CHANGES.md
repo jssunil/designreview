@@ -1,5 +1,13 @@
 # Changes
 
+## 2026-10-21 — An LLM planner for questions that no route matches (experimental, off by default)
+
+| What | Before | After | Where |
+|---|---|---|---|
+| Unrouted questions | The router declined each question that matched no route | With `AGENTKIT_PLANNER=llm`, one JSON-mode call chooses node ids from a catalogue: the read-only nodes of the plan files of the pack, with their dependencies. Bad replies keep the decline. Unknown and ambiguous records stay refusals. | `agentkit/agents/llm_planner.py`, `agentkit/harness/run_one.py` |
+| Record | `taskrun.route` = `{plan, params, why}` | An LLM plan also keeps its nodes and rules, so resume and replay build the same plan with no LLM call | `agentkit/harness/run_one.py`, `agentkit/harness/replay.py` |
+| Adoption | — | Not adopted: it stays off until a live cost-accuracy comparison shows that it is on the frontier with no failed task | `docs/explainers/agentkit_harness.md` |
+
 ## 2026-10-21 — Triggers: signed webhooks, cron and n8n
 
 | What | Before | After | Where |

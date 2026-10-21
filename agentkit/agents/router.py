@@ -29,6 +29,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Pattern, Sequence
 
 DECLINE_PLAN = "route_declined"
+NO_ROUTE = "no route matched"  # the why of a decline that no route matched (the LLM planner may try it)
 
 
 class Declined(Exception):
@@ -91,4 +92,4 @@ class RuleRouter:
                     return RouteDecision(DECLINE_PLAN, {"reason": str(e)}, f"{r.plan}: {e}")
             return RouteDecision(r.plan, params, f"matched {hit!r}")
         return RouteDecision(DECLINE_PLAN, {"reason": "the question doesn't match anything this agent can do"},
-                             "no route matched")
+                             NO_ROUTE)
