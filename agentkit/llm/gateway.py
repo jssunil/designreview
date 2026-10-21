@@ -21,6 +21,12 @@ What a caller can rely on:
   A 429 whose body says "budget_exhausted" is a spent token budget, not a rate
   limit (the platform's LLM endpoint answers it so): not retried, and the
   provider stays down for the rest of the run, so the answer falls back at once.
+- A row can have more keys (`key_envs`). Each key has its own rate window and
+  cool-down; calls start at the next key in turn (round-robin). A rate limit,
+  a bad key or a spent budget cools that key only and moves to the next key;
+  the row is skipped only when all its keys are cooling. A row can also set
+  its own cool-downs (`cooldown_s`, `auth_cooldown_s`). Records name the key
+  index, never the key.
 - API keys go in headers only -- never in URLs -- and every error message is
   scrubbed of key values, so a key can't leak into logs or run records.
 - Model-visible means logged: each attempt (answered, cache hit or failed)
@@ -85,8 +91,13 @@ class ProviderSpec(BaseModel):
     model: str = ""
     model_env: Optional[str] = None
     key_env: Optional[str] = None
+    # More keys for this row, used in turn after key_env; each has its own rate window and cool-down.
+    key_envs: List[str] = Field(default_factory=list)
     keyless: bool = False
-    rpm: int = Field(60, gt=0)
+    rpm: int = Field(60, gt=0)  # for each key
+    # This row's cool-downs in seconds (unset: FAILURE_COOLDOWN_S, AUTH_COOLDOWN_S).
+    cooldown_s: Optional[float] = Field(None, gt=0)
+    auth_cooldown_s: Optional[float] = Field(None, gt=0)
     timeout: float = Field(60.0, gt=0)
     # Any OpenAI-compatible endpoint: `url` (base, e.g. https://host/v1, or the full .../chat/completions);
     # `url_env` (if set in the environment) overrides it. Built-in providers ignore both.
@@ -160,6 +171,7 @@ class LLMReply:
     latency_s: float = 0.0
     cached: bool = False
     reasoning_chars: int = 0  # reasoning removed from the text (strip_reasoning)
+    key_index: int = 0  # which of the row's keys answered (0 = key_env)
 
     @property
     def complete(self) -> bool:
@@ -168,7 +180,7 @@ class LLMReply:
 
 @dataclass
 class RateState:
-    """Recent calls + cooldown for one provider. Thread-safe."""
+    """Recent calls + cooldown for one key of one provider. Thread-safe."""
 
     rpm_limit: int = 60
 
@@ -271,7 +283,13 @@ class LLMGateway:
         self._env = env if env is not None else os.environ
         self._config = load_routing(Path(routing_config_path) if routing_config_path else ROUTING_PATH)
         self._providers: Dict[str, ProviderSpec] = {p.name: p for p in self._config.providers}
-        self._rate: Dict[str, RateState] = {n: RateState(rpm_limit=p.rpm) for n, p in self._providers.items()}
+        self._rate: Dict[Tuple[str, int], RateState] = {}  # (provider, key index) -> state
+        self._next_key: Dict[str, int] = {}  # round-robin position of each provider
+        self._lock = threading.Lock()
+        for p in self._config.providers:
+            unset = [n for n in p.key_envs if not self._env.get(n)]
+            if unset:  # names only, never values
+                logger.warning("provider %s: key_envs not set, ignored: %s", p.name, ", ".join(unset))
         # Verify TLS against the OS trust store, not httpx's bundled certifi list:
         # on machines behind a TLS-inspecting proxy only the OS store has the
         # issuing CA (seen on this workstation, 2026-09-28).
@@ -310,17 +328,46 @@ class LLMGateway:
             self._adapters["openai"] = self._openai_compat(url, "openai")
             self._providers["openai"] = ProviderSpec(name="openai", model=self._env.get("OPENAI_MODEL", ""),
                                                      model_env="OPENAI_MODEL", key_env="OPENAI_API_KEY", rpm=60, timeout=120)
-            self._rate["openai"] = RateState(rpm_limit=60)
 
     # ---- config helpers ---------------------------------------------------
 
-    def _key(self, provider: str) -> Optional[str]:
-        """The API key, "" for a keyless (local) provider, None when unset."""
+    def _keys(self, provider: str) -> List[str]:
+        """The row's API keys in order (key_env, then key_envs that are set); [""] for a keyless row."""
         spec = self._providers.get(provider)
         if spec is not None and spec.is_keyless:
-            return ""
-        env_name = (spec.key_env if spec else None) or f"{provider.upper()}_API_KEY"
-        return self._env.get(env_name) or None
+            return [""]
+        names = [(spec.key_env if spec else None) or f"{provider.upper()}_API_KEY"] + (spec.key_envs if spec else [])
+        keys: List[str] = []
+        for name in names:
+            value = self._env.get(name)
+            if value and value not in keys:
+                keys.append(value)
+        return keys
+
+    def _key(self, provider: str) -> Optional[str]:
+        """The first API key, "" for a keyless (local) provider, None when unset."""
+        keys = self._keys(provider)
+        return keys[0] if keys else None
+
+    def _state(self, provider: str, index: int = 0) -> RateState:
+        with self._lock:
+            state = self._rate.get((provider, index))
+            if state is None:
+                spec = self._providers.get(provider)
+                state = self._rate[(provider, index)] = RateState(rpm_limit=spec.rpm if spec else 60)
+            return state
+
+    def _key_order(self, provider: str, n: int) -> List[int]:
+        """Round-robin: each call starts at the next key, so the load spreads over all keys."""
+        with self._lock:
+            start = self._next_key.get(provider, 0) % n
+            self._next_key[provider] = start + 1
+        return [(start + i) % n for i in range(n)]
+
+    def _cooldown(self, provider: str, *, auth: bool = False) -> float:
+        spec = self._providers.get(provider)
+        own = (spec.auth_cooldown_s if auth else spec.cooldown_s) if spec else None
+        return own or (AUTH_COOLDOWN_S if auth else FAILURE_COOLDOWN_S)
 
     def base_url(self, provider: str) -> str:
         """The configured OpenAI-compatible base URL of a routing.toml row ("" when it has none)."""
@@ -351,9 +398,9 @@ class LLMGateway:
 
     def _scrub(self, text: str) -> str:
         for name in self._providers:
-            k = self._key(name)
-            if k:
-                text = text.replace(k, "***")
+            for k in self._keys(name):
+                if k:
+                    text = text.replace(k, "***")
         return text
 
     def _log_call(self, tier: str, provider: str, model: str, system_prompt: Optional[str], prompt: str,
@@ -380,7 +427,8 @@ class LLMGateway:
             reply = self._call_detailed(prompt, system_prompt, temperature, max_tokens, json_mode, tier)
             s.set(provider=reply.provider, model=reply.model, input_tokens=reply.input_tokens,
                   output_tokens=reply.output_tokens, stop_reason=reply.stop_reason, cached=reply.cached,
-                  latency_s=reply.latency_s, reasoning_chars=reply.reasoning_chars, ok=reply.complete)
+                  latency_s=reply.latency_s, reasoning_chars=reply.reasoning_chars, ok=reply.complete,
+                  key_index=reply.key_index)
             return reply
 
     def _call_detailed(self, prompt: str, system_prompt: Optional[str], temperature: float, max_tokens: int,
@@ -399,54 +447,82 @@ class LLMGateway:
         errors: List[str] = []
         for provider in self.candidate_order(tier):
             adapter = self._adapters.get(provider)
-            key = self._key(provider)
-            if adapter is None or key is None:
-                continue
-            state = self._rate.setdefault(provider, RateState())
-            if not state.available():
-                errors.append(f"{provider}: skipped (cooling down / rate-limited)")
+            keys = self._keys(provider)
+            if adapter is None or not keys:
                 continue
             model = self.model_for(provider)
-            for attempt in range(self.max_attempts):
-                state.record_call()
-                t0 = time.time()
-                try:
-                    fixed = self._providers[provider].temperature if provider in self._providers else None
-                    reply = adapter(key, model, prompt, system_prompt,
-                                    temperature if fixed is None else fixed, max_tokens, json_mode)
-                except ProviderFault as fault:
-                    msg = self._scrub(str(fault))
-                    self._log_call(tier, provider, model, system_prompt, prompt, error=msg,
-                                   latency_sec=round(time.time() - t0, 3))
-                    if fault.retryable and attempt < self.max_attempts - 1:
-                        add_event("retry", provider=provider, attempt=attempt + 1, status=fault.status)
-                        self._sleep(min(0.5 * 2 ** attempt, MAX_BACKOFF_S))
-                        continue
-                    errors.append(msg)
-                    if fault.budget_exhausted:
-                        add_event("budget_exhausted", provider=provider)
-                        state.cool_down(BUDGET_COOLDOWN_S)
-                    elif fault.status in AUTH_STATUS:
-                        state.cool_down(AUTH_COOLDOWN_S)
-                    elif fault.retryable:
-                        state.cool_down(FAILURE_COOLDOWN_S)
-                    break
-                reply.latency_s = round(time.time() - t0, 3)
-                reply.text, reply.reasoning_chars = strip_reasoning(reply.text)
-                entry = self.ledger.record(provider, model, prompt, reply.text, reply.latency_s,
-                                           input_tokens=reply.input_tokens, output_tokens=reply.output_tokens,
-                                           stop_reason=reply.stop_reason)
-                self._log_call(tier, provider, model, system_prompt, prompt, reply=reply.text,
-                               stop_reason=reply.stop_reason, input_tokens=entry.input_tokens,
-                               output_tokens=entry.output_tokens, cost_usd=entry.cost_usd,
-                               latency_sec=reply.latency_s)
-                if reply.stop_reason == "refusal" or not reply.text.strip():
-                    errors.append(f"{provider}: {reply.stop_reason} with {len(reply.text)} chars")
-                    break  # try the next provider
-                if reply.complete:
-                    self.cache.put(ckey, reply)
-                return reply
+            for index in self._key_order(provider, len(keys)):
+                if not self._state(provider, index).available():
+                    label = provider if len(keys) == 1 else f"{provider} key {index + 1}"
+                    errors.append(f"{label}: skipped (cooling down / rate-limited)")
+                    continue
+                reply, next_key = self._try_key(adapter, provider, keys, index, model, prompt, system_prompt,
+                                                temperature, max_tokens, json_mode, tier, ckey, errors)
+                if reply is not None:
+                    return reply
+                if not next_key:
+                    break  # a fault of the provider or of the request: the next provider
         raise RuntimeError(f"All LLM providers failed: {'; '.join(errors) or 'no provider has a key configured'}")
+
+    def _try_key(self, adapter: Callable[..., LLMReply], provider: str, keys: List[str], index: int, model: str,
+                 prompt: str, system_prompt: Optional[str], temperature: float, max_tokens: int, json_mode: bool,
+                 tier: str, ckey: str, errors: List[str]) -> Tuple[Optional[LLMReply], bool]:
+        """Up to max_attempts calls with one key. (reply, _) on an answer; (None, True) when the fault
+        belongs to this key (rate limit, bad key, spent budget), so the next key can still work;
+        (None, False) when the next provider must be tried."""
+        state = self._state(provider, index)
+        spec = self._providers.get(provider)
+        fixed = spec.temperature if spec else None
+        for attempt in range(self.max_attempts):
+            state.record_call()
+            t0 = time.time()
+            try:
+                reply = adapter(keys[index], model, prompt, system_prompt,
+                                temperature if fixed is None else fixed, max_tokens, json_mode)
+            except ProviderFault as fault:
+                msg = self._scrub(str(fault))
+                self._log_call(tier, provider, model, system_prompt, prompt, error=msg,
+                               latency_sec=round(time.time() - t0, 3), key_index=index)
+                # A rate limit on one of several keys: use the next key now, not after a backoff.
+                rotate = len(keys) > 1 and fault.status == 429
+                if fault.retryable and not rotate and attempt < self.max_attempts - 1:
+                    add_event("retry", provider=provider, attempt=attempt + 1, status=fault.status)
+                    self._sleep(min(0.5 * 2 ** attempt, MAX_BACKOFF_S))
+                    continue
+                errors.append(msg)
+                if fault.budget_exhausted:
+                    add_event("budget_exhausted", provider=provider, key_index=index)
+                    state.cool_down(BUDGET_COOLDOWN_S)
+                    return None, True
+                if fault.status in AUTH_STATUS:
+                    state.cool_down(self._cooldown(provider, auth=True))
+                    return None, True
+                if fault.status == 429:
+                    if len(keys) > 1:
+                        add_event("next_key", provider=provider, key_index=index)
+                    state.cool_down(self._cooldown(provider))
+                    return None, True
+                if fault.retryable:  # the server is down, not the key: cool every key of the row
+                    for i in range(len(keys)):
+                        self._state(provider, i).cool_down(self._cooldown(provider))
+                return None, False
+            reply.latency_s = round(time.time() - t0, 3)
+            reply.text, reply.reasoning_chars = strip_reasoning(reply.text)
+            reply.key_index = index
+            entry = self.ledger.record(provider, model, prompt, reply.text, reply.latency_s,
+                                       input_tokens=reply.input_tokens, output_tokens=reply.output_tokens,
+                                       stop_reason=reply.stop_reason, key_index=index)
+            self._log_call(tier, provider, model, system_prompt, prompt, reply=reply.text,
+                           stop_reason=reply.stop_reason, input_tokens=entry.input_tokens,
+                           output_tokens=entry.output_tokens, cost_usd=entry.cost_usd,
+                           latency_sec=reply.latency_s, key_index=index)
+            if reply.stop_reason == "refusal" or not reply.text.strip():
+                errors.append(f"{provider}: {reply.stop_reason} with {len(reply.text)} chars")
+                return None, False  # try the next provider
+            if reply.complete:
+                self.cache.put(ckey, reply)
+            return reply, False
+        return None, False
 
     # ---- HTTP -----------------------------------------------------------------
 

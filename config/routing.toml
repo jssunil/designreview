@@ -14,6 +14,14 @@
 # needed. DeepSeek, Moonshot (Kimi) and LM Studio are such rows; their model ids were read from
 # each one's /models list on 2026-10-14 (deepseek: deepseek-v4-pro, deepseek-flash; moonshot:
 # kimi-k2.6, kimi-k3; LM Studio: whatever is loaded locally).
+#
+# More keys for one row (each with its own rate window and cool-down, used in turn; a rate limit,
+# a bad key or a spent budget cools only that key), and this row's own cool-downs in seconds:
+#
+#   key_env = "GROQ_API_KEY"
+#   key_envs = ["GROQ_API_KEY_2", "GROQ_API_KEY_3"]   # an unset name is ignored with a warning
+#   cooldown_s = 10          # after a rate limit or a busy server (default 20)
+#   auth_cooldown_s = 600    # after 401/402/403 (default 300)
 
 [[providers]]
 name = "deepseek"

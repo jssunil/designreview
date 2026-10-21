@@ -48,6 +48,8 @@ Each row can change its model through its `model_env` variable in `.env`. For ex
 |---|---|
 | `model`, `model_env` | The model. The `.env` variable in `model_env` overrides `model`. |
 | `key_env`, `keyless` | The key variable. A `keyless` row (a local server) sends no Authorization header. |
+| `key_envs` | More key variables for the row. The gateway uses the keys in turn. See "More keys for one row". |
+| `cooldown_s`, `auth_cooldown_s` | The cool-downs of the row in seconds, after a rate limit or a busy server (default 20), and after 401, 402 or 403 (default 300). |
 | `url`, `url_env` | Any OpenAI-compatible endpoint. Give the base URL or the full `.../chat/completions` URL. `url_env` overrides `url`. |
 | `api` | `"anthropic"` or `"gemini"`. A second row on that native API, under its own name. |
 | `temperature` | A fixed temperature. Use it for a model that accepts one value only (kimi-k2.6: 1). |
@@ -88,16 +90,31 @@ shows the lines under "Prompts and replies" in the Cost tab, as text only.
 Thus a person can see what the model saw for each answer, and why the claim audit passed or failed it. The
 log is evidence only, like telemetry: the grader never reads it. Set `AGENTKIT_LOG_PROMPTS=0` to stop it.
 
+## More keys for one row (since 2026-10-21)
+
+A row can have more than one key: `key_env`, then each name in `key_envs` that has a value. Each key has its
+own request window (`rpm`) and its own cool-down.
+
+- **In turn.** Each call starts at the next key. Thus the load goes to all the keys.
+- **A fault of a key.** A rate limit (429), a bad key or no credit (401, 402, 403), or a spent budget cools that
+  key only. The gateway then uses the next key at once, with no wait. When all the keys of the row cool down,
+  the gateway goes to the next row of the tier.
+- **A fault of the server.** A busy or failed server (5xx, network error) cools all the keys of the row. Then
+  the gateway goes to the next row.
+- **One key.** A row with one key works as before: three attempts with waits, then the next row.
+- **No key text in records.** The ledger, `llm_calls.jsonl` and telemetry have `key_index` (0 is `key_env`).
+  They never have the key. The gateway removes each key of each row from error messages.
+
 ## Design decisions
 
 - **Tiers are configuration.** A pydantic model validates `routing.toml`. These errors stop the gateway
   before it starts: an unknown provider in a tier, `rpm = 0`, a duplicate row, a misspelt setting.
 - **Retries by error class.** The gateway retries 429, 408, 409, 5xx, 529, network errors, timeouts and
   empty replies. The wait between attempts is 0.5, 1, 2, 4 and 4 seconds. Then the provider cools down, and
-  the gateway tries the next provider.
+  the gateway tries the next provider. A row with more keys uses its next key after a 429, with no wait.
 - **No retry for a bad request.** For 400, 404 and 422, the gateway goes to the next provider immediately.
-- **Long cool-down for account errors.** For 401, 402 and 403 (bad key, no credit), the provider cools down
-  for 5 minutes. These errors do not stop during a run.
+- **Long cool-down for account errors.** For 401, 402 and 403 (bad key, no credit), the key cools down
+  for 5 minutes (`auth_cooldown_s`). These errors do not stop during a run.
 - **A spent budget is not a rate limit (since 2026-10-19).** The LLM endpoint of the platform answers 429 with
   `budget_exhausted` when the token budget of the team is spent. The gateway does not retry this 429. The
   provider stays down for the rest of the run, and the answer falls back to the template at once. A test run
@@ -169,7 +186,7 @@ used the `.env` copy of `OPENAI_API_KEY` as a runner key and put `openai` first 
    A configured model that the list does not have shows as `RETIRED`.
 2. Run `python -m agentkit.llm.gateway [tier]`. It shows the providers that have keys and makes one small call.
 3. Run `python -m pytest tests_local/test_url_providers.py tests_local/test_llm_gateway.py
-   tests_local/test_llm_call_log.py -q`. These tests are offline. They use `httpx.MockTransport`.
+   tests_local/test_llm_call_log.py tests_local/test_key_rotation.py -q`. These tests are offline. They use `httpx.MockTransport`.
 4. Run `python -m pytest tests_local -m gateway_live -q` for one real call to each provider.
 
 The hand-written template for this module is `tests/test_llm_gateway.py`.

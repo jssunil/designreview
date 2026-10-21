@@ -1,5 +1,13 @@
 # Changes
 
+## 2026-10-21 — More keys for one LLM row, and cool-downs for each row
+
+| What | Before | After | Where |
+|---|---|---|---|
+| Keys | One key for each row | `key_envs` gives more keys. The gateway uses them in turn. Each key has its own request window and cool-down. A rate limit, a bad key or a spent budget cools that key, and the next key answers at once. The row is skipped only when all its keys cool down. | `agentkit/llm/gateway.py` |
+| Cool-downs | Fixed values for all rows (20 s and 300 s) | `cooldown_s` and `auth_cooldown_s` for each row; the defaults do not change | `agentkit/llm/gateway.py`, `config/routing.toml` |
+| Records | — | `key_index` in the ledger, `llm_calls.jsonl` and the `llm` span; never the key | `agentkit/llm/economics.py` |
+
 ## 2026-10-20 — Each LLM prompt is logged, and spans go to any OpenTelemetry collector
 
 Two ideas from the framework comparison of 2026-10-20, built in our own code with no new dependency.

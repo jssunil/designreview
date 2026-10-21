@@ -67,6 +67,7 @@ class LedgerEntry:
     latency_sec: float
     usage_estimated: bool = False
     stop_reason: Optional[str] = None
+    key_index: int = 0  # which of the row's keys (0 = key_env); never the key
     ts: float = field(default_factory=time.time)
 
     @property
@@ -94,6 +95,7 @@ class LLMCall:
     latency_sec: Optional[float] = None
     cached: bool = False
     error: Optional[str] = None
+    key_index: Optional[int] = None  # which of the row's keys; never the key
     ts: float = field(default_factory=time.time)
 
 
@@ -112,13 +114,15 @@ class CostLedger:
 
     def record(self, provider: str, model: str, prompt: str = "", response: str = "",
                latency_sec: float = 0.0, *, input_tokens: Optional[int] = None,
-               output_tokens: Optional[int] = None, stop_reason: Optional[str] = None) -> LedgerEntry:
+               output_tokens: Optional[int] = None, stop_reason: Optional[str] = None,
+               key_index: int = 0) -> LedgerEntry:
         estimated = input_tokens is None or output_tokens is None
         tin = input_tokens if input_tokens is not None else estimate_tokens(prompt)
         tout = output_tokens if output_tokens is not None else estimate_tokens(response)
         pin, pout = price_for(provider, model)
         cost = round(tin / 1e6 * pin + tout / 1e6 * pout, 6)
-        entry = LedgerEntry(provider, model, tin, tout, cost, round(latency_sec, 3), estimated, stop_reason)
+        entry = LedgerEntry(provider, model, tin, tout, cost, round(latency_sec, 3), estimated, stop_reason,
+                            key_index)
         with self._lock:
             self.entries.append(entry)
         logger.info("llm_call provider=%s model=%s in=%d out=%d%s cost=$%.6f latency=%.2fs stop=%s",
