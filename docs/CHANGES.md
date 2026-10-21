@@ -1,5 +1,13 @@
 # Changes
 
+## 2026-10-21 — Checkpoint history in SQLite, for many runs and processes
+
+| What | Before | After | Where |
+|---|---|---|---|
+| History store | `MemorySaver` (one process) and `JsonlSaver` (one file for each run) | `SqliteSaver`: the checkpoints of many runs in one file, one thread for each run; WAL mode, so other processes can read and write it; `threads()` lists the runs | `agentkit/graph/sqlite_saver.py` |
+| Runs | `run_task` used no saver | `run_task(saver=)` and `resume_task(saver=)`; when `graph.json` is missing, `resume_task` continues from the newest checkpoint | `agentkit/harness/run_one.py` |
+| Service | — | Each service run keeps its history in `runs/service.sqlite`; `GET /v1/runs/<id>/history` | `agentkit/service/` |
+
 ## 2026-10-21 — The agent as an MCP tool for other agents
 
 | What | Before | After | Where |

@@ -7,6 +7,7 @@ HTTP API of the agent service (standard library only).
   POST /v1/ask             with "Accept: text/event-stream": Server-Sent Events while the run works
                            (run_start, node_start/end, tool_*, llm_*, step_*), then "answer"
   GET  /v1/runs/<run_id>   the record of an earlier service run
+  GET  /v1/runs/<run_id>/history   its graph checkpoints, newest first (id, time, source, step, nodes)
   POST /mcp                the MCP server (JSON-RPC; also at /api/mcp): see mcp.py
 
 Errors are JSON {"error": "..."} with 400, 401, 404, 405, 413, 429 (+ Retry-After) or 500, never a
@@ -117,7 +118,10 @@ class ServiceApp:
         if path == "/v1/playbooks":
             return _json(200, {"playbooks": self.service.playbooks()})
         if path.startswith("/v1/runs/"):
-            record = self.service.run_record(path[len("/v1/runs/"):])
+            run_id, _, rest = path[len("/v1/runs/"):].partition("/")
+            if rest not in ("", "history"):
+                return _error(404, "not found")
+            record = self.service.run_history(run_id) if rest else self.service.run_record(run_id)
             return _json(200, record) if record is not None else _error(404, "no such service run")
         if path in MCP_PATHS:
             if len(body) > MAX_BODY:

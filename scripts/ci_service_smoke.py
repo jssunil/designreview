@@ -10,7 +10,7 @@ process (offline, template answers, a temporary runs folder) and checks:
   - each routed task (plan = "route") asked through POST /v1/ask gets the plan its `routed_as`
     verifier expects, or a refusal when the task expects one, and ended = "done";
   - the same question as Server-Sent Events gives run_start, node events and then the answer;
-  - /v1/runs/<run_id> gives the record of that run; other methods get 405, unknown paths 404;
+  - /v1/runs/<run_id> gives the record of that run, and /history its checkpoints from SQLite; other methods get 405, unknown paths 404;
   - MCP on POST /mcp, with our own MCP client (agentkit.transport.seat_rpc): initialize, tools/list
     names the live playbooks and "ask", tools/call answers the first routed question.
 Exit 1 if any check fails (all problems are printed).
@@ -185,6 +185,12 @@ def smoke(sim: Path, tasks_dir: Path, runs_dir: Path) -> List[str]:
             status, raw = _call(base, f"/v1/runs/{first_run}")
             if status != 200 or json.loads(raw).get("run_id") != first_run:
                 problems.append(f"/v1/runs/{first_run}: {status}")
+            status, raw = _call(base, f"/v1/runs/{first_run}/history")
+            history = json.loads(raw) if status == 200 else []
+            if not history or history[-1].get("source") != "input":
+                problems.append(f"/v1/runs/{first_run}/history: {status}, {len(history)} checkpoint(s)")
+            else:
+                print(f"  history: {len(history)} checkpoints in service.sqlite")
         for method, path, code in (("GET", "/v1/ask", 405), ("POST", "/healthz", 405), ("GET", "/nope", 404),
                                    ("GET", "/v1/runs/..%2f..%2fx", 404)):
             status, _ = _call(base, path, method, {} if method == "POST" else None)

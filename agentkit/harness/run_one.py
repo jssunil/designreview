@@ -40,6 +40,7 @@ from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
 from agentkit.agents import answer_with_pack, plan_executor, record_steps, run_plan
 from agentkit.config import default_tenant
 from agentkit.graph import GraphStore, RunEnv, load_plan
+from agentkit.graph.checkpoint import CheckpointSaver
 from agentkit.harness.tasks import ROUTED, TaskDef, load_task
 from agentkit.llm import LLMGateway
 from agentkit.record import TaskRun, dump_record, load_record
@@ -117,9 +118,10 @@ def _conclude(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, 
 def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm: bool = False,
              registry: Optional[Registry] = None, client: Any = None, gateway: Any = None,
              retry_backoff_s: float = 1.0, write: bool = False, require_approval: bool = False,
-             trace_handlers: Sequence[Any] = ()) -> TaskRun:
+             trace_handlers: Sequence[Any] = (), saver: Optional[CheckpointSaver] = None) -> TaskRun:
     """`trace_handlers` get the start and the end of each span as it happens (Tracer handlers), e.g. to
-    stream progress to a caller."""
+    stream progress to a caller. `saver` also keeps the checkpoint history of the graph (e.g. a
+    SqliteSaver that other processes can read); graph.json is written either way."""
     run_dir = Path(run_dir)
     dry_run = not (write and task.allow_writes)
     run = TaskRun(task_id=task.id, prompt=task.prompt, run_id=run_id, tenant=tenant, dry_run=dry_run,
@@ -150,7 +152,7 @@ def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm
                              tenant=tenant, gateway=None if skip_llm else gateway)
                 plan = load_plan(Path(registry.extras["plans_dir"]) / f"{plan_name}.toml")
                 store = run_plan(env, registry, plan, checkpoint_path=run_dir / GRAPH_FILE,
-                                 retry_backoff_s=retry_backoff_s, approve_writes=require_approval)
+                                 retry_backoff_s=retry_backoff_s, approve_writes=require_approval, saver=saver)
                 _conclude(run, store, env, registry, task, run_dir, skip_llm)
             except Exception as e:  # recorded, never swallowed silently
                 run.finish(run_dir, error=f"{type(e).__name__}: {e}")
@@ -179,15 +181,17 @@ def write_telemetry(tracer: Tracer, run_dir: Path, run: TaskRun) -> None:
 
 def resume_task(run_dir: Path, *, approve: Iterable[str] = (), reject: Iterable[str] = (), skip_llm: bool = False,
                 registry: Optional[Registry] = None, client: Any = None, gateway: Any = None,
-                retry_backoff_s: float = 1.0) -> TaskRun:
-    """Answer a paused run's waiting nodes and finish it in the same folder."""
+                retry_backoff_s: float = 1.0, saver: Optional[CheckpointSaver] = None) -> TaskRun:
+    """Answer a paused run's waiting nodes and finish it in the same folder. With a `saver`, the
+    history goes on in it; when graph.json is missing, the run continues from the saver's newest
+    checkpoint."""
     run_dir = Path(run_dir)
     task = TaskDef.from_dict(load_record(run_dir / "task.json"))
     before = load_record(run_dir / "taskrun.json")
     if before.get("ended") != "paused":
         raise ValueError(f"{run_dir} is not paused (ended={before.get('ended')!r})")
     registry = registry or load_pack(task.pack)
-    store = GraphStore.load(run_dir / GRAPH_FILE, registry)
+    store = _load_graph(run_dir, registry, saver)
     waiting = {s.id for s in store.paused()}
     answers = {**{n: {"approved": True} for n in approve}, **{n: {"approved": False, "note": "rejected"} for n in reject}}
     unknown = sorted(set(answers) - waiting)
@@ -230,6 +234,17 @@ def resume_task(run_dir: Path, *, approve: Iterable[str] = (), reject: Iterable[
         write_telemetry(tracer, run_dir, run)
     run.seconds = round(time.time() - t0, 2)
     return run
+
+
+def _load_graph(run_dir: Path, registry: Registry, saver: Optional[CheckpointSaver]) -> GraphStore:
+    if (run_dir / GRAPH_FILE).exists() or saver is None:
+        return GraphStore.load(run_dir / GRAPH_FILE, registry, saver=saver)
+    latest = saver.get()
+    if latest is None:
+        raise FileNotFoundError(f"no {GRAPH_FILE} in {run_dir} and no checkpoint in the saver")
+    store = GraphStore.from_dict(latest.graph, registry, checkpoint_path=run_dir / GRAPH_FILE, saver=saver)
+    store.last_checkpoint_id = latest.id
+    return store
 
 
 def main(argv: Optional[list] = None) -> int:

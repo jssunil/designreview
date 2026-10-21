@@ -12,6 +12,8 @@ Rules:
   Retry-After), so a burst waits at the caller instead of piling up here.
 - Progress: `on_event(dict)` gets each span start and end (route, node, tool, llm, step) as it
   happens, with names, statuses, times and counts -- never a prompt or a key.
+- History: the graph checkpoints of every run go to one SQLite file (`runs/service.sqlite`), so
+  another process can list, inspect or fork any run (agentkit.graph.SqliteSaver).
 - Offline: `sim=` replays captured fixtures (one file, or a folder of <tenant>.json) with the clock
   frozen at the capture time, as the batch does.
 """
@@ -30,6 +32,7 @@ from typing import Any, Callable, ContextManager, Dict, Iterator, List, Optional
 
 from agentkit.clock import frozen_now
 from agentkit.config import default_pack, default_tenant, load_tenants
+from agentkit.graph.sqlite_saver import SqliteSaver
 from agentkit.harness.run_one import run_task
 from agentkit.harness.tasks import ROUTED, TaskDef
 from agentkit.playbooks import load_playbooks
@@ -39,6 +42,7 @@ logger = logging.getLogger("agentkit.service")
 
 MAX_QUESTION_CHARS = 2000
 RUN_PREFIX = "svc-"
+HISTORY_FILE = "service.sqlite"
 TENANT_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 EVENT_KINDS = ("node", "tool", "llm", "step")
 Event = Dict[str, Any]
@@ -86,7 +90,7 @@ class _SpanEvents:
 class AgentService:
     def __init__(self, pack: Optional[str] = None, runs_dir: Optional[Path] = None, *, sim: Optional[Path] = None,
                  skip_llm: bool = False, max_in_flight: int = 4, retry_after_s: int = 5,
-                 registry: Optional[Registry] = None, tenants: Optional[List[str]] = None):
+                 registry: Optional[Registry] = None, tenants: Optional[List[str]] = None, history: bool = True):
         from agentkit.harness.batch import RUNS_DIR
 
         self.pack = pack or default_pack()
@@ -98,6 +102,7 @@ class AgentService:
         self.retry_after_s = retry_after_s
         self.tenants = list(tenants) if tenants is not None else sorted(load_tenants().tenants)
         self.default_tenant = default_tenant() if tenants is None else self.tenants[0]
+        self.history = SqliteSaver(self.runs_dir / HISTORY_FILE) if history else None
         self._slots = threading.BoundedSemaphore(self.max_in_flight)
         self._lock = threading.Lock()
         self.in_flight = 0
@@ -162,7 +167,8 @@ class AgentService:
             emit({"event": "run_start", "run_id": run_id, "tenant": tenant})
         with clock:
             run = run_task(task, tenant, run_dir, run_id, skip_llm=self.skip_llm, registry=self.registry,
-                           client=client, retry_backoff_s=0 if self.sim else 1.0, trace_handlers=handlers)
+                           client=client, retry_backoff_s=0 if self.sim else 1.0, trace_handlers=handlers,
+                           saver=self.history.for_thread(run_id) if self.history else None)
         finding = run.finding or {}
         return {"run_id": run_id, "tenant": tenant, "question": question, "ended": run.ended,
                 "answer": run.claimed_answer, "answer_source": run.answer_source, "route": run.route,
@@ -184,14 +190,25 @@ class AgentService:
 
     # ---- earlier answers ----------------------------------------------------------
 
-    def run_record(self, run_id: str) -> Optional[Dict[str, Any]]:
-        """The record of one of this service's runs, or None (unknown id, or not a service run)."""
+    def _run_dir(self, run_id: str) -> Optional[Path]:
+        """The folder of one of this service's runs, or None (unknown id, or not a service run)."""
         if not re.match(r"^svc-[A-Za-z0-9._-]{1,120}$", run_id) or ".." in run_id:
             return None
         run_dir = (self.runs_dir / run_id).resolve()
         if run_dir.parent != self.runs_dir.resolve() or not (run_dir / "taskrun.json").is_file():
             return None
-        return json.loads((run_dir / "taskrun.json").read_text(encoding="utf-8"))
+        return run_dir
+
+    def run_record(self, run_id: str) -> Optional[Dict[str, Any]]:
+        run_dir = self._run_dir(run_id)
+        return json.loads((run_dir / "taskrun.json").read_text(encoding="utf-8")) if run_dir else None
+
+    def run_history(self, run_id: str) -> Optional[List[Dict[str, Any]]]:
+        """The checkpoints of one run, newest first, without the graphs; None for an unknown run."""
+        if self._run_dir(run_id) is None or self.history is None:
+            return None
+        return [{"id": cp.id, "parent_id": cp.parent_id, "ts": cp.ts, "source": cp.source, "step": cp.step,
+                 "nodes": cp.metadata.get("nodes")} for cp in self.history.for_thread(run_id).list()]
 
 
 def _quiet(on_event: Callable[[Event], None]) -> Callable[[Event], None]:

@@ -40,6 +40,7 @@ run_task(TaskDef(plan = "route", prompt = question), write = False)
 | `POST /v1/ask` | Body `{"question": "...", "tenant": "..."}`. The tenant is optional. The result is the answer, the route, the outcome, the finding and the run id. |
 | `POST /v1/ask` with `Accept: text/event-stream` | Server-Sent Events while the run works: `run_start`, `node_start`, `node_end`, `tool_*`, `llm_*`, `step_*`. The last event is `answer`, with the same result as above. |
 | `GET /v1/runs/<run_id>` | The run record of an earlier service run. |
+| `GET /v1/runs/<run_id>/history` | The graph checkpoints of that run, newest first: id, time, source, step and the state of each node. |
 | `POST /mcp` (also `/api/mcp`) | The MCP server. See "The agent as an MCP tool". |
 
 A refusal is a normal answer (200), for example an unknown part or a question that can mean four parts.
@@ -103,6 +104,9 @@ claude mcp add designreview -- python -m agentkit.service --mcp-stdio
 - **Progress from the spans.** The service adds a handler to the run's tracer. Each span start and end
   becomes an event. An event has names, statuses, times and counts. It never has a prompt or a key. A
   listener that fails (for example, the caller closed the connection) does not stop the run.
+- **History for other processes.** The graph checkpoints of each run go to one SQLite file,
+  `runs/service.sqlite` (`agentkit.graph.SqliteSaver`). Another process can open it, and list, examine or fork
+  any run. `history=False` turns it off.
 - **Standard library only.** `http.server` and `queue`. No web framework and no new dependency.
 - **Offline mode.** `--sim` replays the captured fixtures, with the clock at the capture time, as the batch
   does. CI uses it.
