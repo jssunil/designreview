@@ -14,6 +14,8 @@ Rules:
   happens, with names, statuses, times and counts -- never a prompt or a key.
 - History: the graph checkpoints of every run go to one SQLite file (`runs/service.sqlite`), so
   another process can list, inspect or fork any run (agentkit.graph.SqliteSaver).
+- Memory (experimental, off by default; `memory=True`): an audited answer keeps the pack's facts in
+  `runs/memory.sqlite`, and the next answer about the same record says what changed since then.
 - Offline: `sim=` replays captured fixtures (one file, or a folder of <tenant>.json) with the clock
   frozen at the capture time, as the batch does.
 """
@@ -33,6 +35,7 @@ from typing import Any, Callable, ContextManager, Dict, Iterator, List, Optional
 from agentkit.clock import frozen_now
 from agentkit.config import default_pack, default_tenant, load_tenants
 from agentkit.graph.sqlite_saver import SqliteSaver
+from agentkit.memory import FindingMemory
 from agentkit.harness.run_one import run_task
 from agentkit.harness.tasks import ROUTED, TaskDef
 from agentkit.playbooks import load_playbooks
@@ -43,6 +46,7 @@ logger = logging.getLogger("agentkit.service")
 MAX_QUESTION_CHARS = 2000
 RUN_PREFIX = "svc-"
 HISTORY_FILE = "service.sqlite"
+MEMORY_FILE = "memory.sqlite"
 TENANT_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 EVENT_KINDS = ("node", "tool", "llm", "step")
 Event = Dict[str, Any]
@@ -90,7 +94,8 @@ class _SpanEvents:
 class AgentService:
     def __init__(self, pack: Optional[str] = None, runs_dir: Optional[Path] = None, *, sim: Optional[Path] = None,
                  skip_llm: bool = False, max_in_flight: int = 4, retry_after_s: int = 5,
-                 registry: Optional[Registry] = None, tenants: Optional[List[str]] = None, history: bool = True):
+                 registry: Optional[Registry] = None, tenants: Optional[List[str]] = None, history: bool = True,
+                 memory: bool = False):
         from agentkit.harness.batch import RUNS_DIR
 
         self.pack = pack or default_pack()
@@ -103,6 +108,7 @@ class AgentService:
         self.tenants = list(tenants) if tenants is not None else sorted(load_tenants().tenants)
         self.default_tenant = default_tenant() if tenants is None else self.tenants[0]
         self.history = SqliteSaver(self.runs_dir / HISTORY_FILE) if history else None
+        self.memory = FindingMemory(self.runs_dir / MEMORY_FILE) if memory else None
         self._slots = threading.BoundedSemaphore(self.max_in_flight)
         self._lock = threading.Lock()
         self.in_flight = 0
@@ -118,6 +124,7 @@ class AgentService:
 
     def health(self) -> Dict[str, Any]:
         return {"ok": True, "pack": self.pack, "mode": "sim" if self.sim else "live", "llm": not self.skip_llm,
+                "memory": self.memory is not None,
                 "in_flight": self.in_flight, "max_in_flight": self.max_in_flight, "tenants": self.tenants}
 
     # ---- one question -----------------------------------------------------------
@@ -173,7 +180,7 @@ class AgentService:
         with clock:
             run = run_task(task, tenant, run_dir, run_id, skip_llm=self.skip_llm, registry=self.registry,
                            client=client, retry_backoff_s=0 if self.sim else 1.0, trace_handlers=handlers,
-                           saver=self.history.for_thread(run_id) if self.history else None)
+                           saver=self.history.for_thread(run_id) if self.history else None, memory=self.memory)
         finding = run.finding or {}
         return {"run_id": run_id, "tenant": tenant, "question": question, "ended": run.ended,
                 "answer": run.claimed_answer, "answer_source": run.answer_source, "route": run.route,

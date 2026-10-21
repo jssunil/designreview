@@ -151,6 +151,9 @@ but pb-14 needs its own plan, and pb-15 needs an event from the platform and a w
 - **History for other processes.** The graph checkpoints of each run go to one SQLite file,
   `runs/service.sqlite` (`agentkit.graph.SqliteSaver`). Another process can open it, and list, examine or fork
   any run. `history=False` turns it off.
+- **Memory (experimental).** `--memory` (or `memory=True`) keeps the facts of each audited answer in
+  `runs/memory.sqlite`. The next answer about the same record then says what changed since that review.
+  See `agentkit_harness.md`, "Memory of earlier answers".
 - **Standard library only.** `http.server` and `queue`. No web framework and no new dependency.
 - **Offline mode.** `--sim` replays the captured fixtures, with the clock at the capture time, as the batch
   does. CI uses it.

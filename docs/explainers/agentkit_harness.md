@@ -282,6 +282,27 @@ The plan says: adopt the planner only if it is on the cost-accuracy frontier
 (`agentkit/harness/pareto.py`) and no task fails. That comparison needs live LLM calls, and it has not
 occurred. Thus the planner stays off.
 
+### Memory of earlier answers (experimental, since 2026-10-21)
+
+`agentkit/memory/` lets an answer say what changed since the last review of the same record. It is off by
+default. `run_task(..., memory=FindingMemory(path))` or `python -m agentkit.service --memory` turns it on.
+
+- **What the agent keeps.** After a run whose finding is "answered" and whose answer passed the claim audit,
+  the pack's `facts(finding)` gives a key, a kind and the facts. `FindingMemory` (one SQLite file) keeps
+  them for each tenant. For each design file, the design-review pack keeps four facts. They are the current
+  version, the gate verdict, the open blockers (id and cleaned title) and the time of the snapshot.
+- **How the agent uses it.** The plan runs first, so the agent always reads the platform again. Then the
+  pack's `compare(previous, facts)` gives the section `previous_review` of the finding. It has the version
+  and the gate verdict then and now, the new blockers and the cleared blockers. The template adds "Since
+  the last review". It says "pass" and "fail" for the gate, so no sentence can read as a claim about the
+  gate now.
+- **The audit.** The section is part of the finding. Thus the claim audit examines what the answer says
+  about it, as for each other section.
+- **Isolation.** The key includes the tenant. A run for one tenant never sees the memory of another.
+
+The adoption rule is the same as for the planner: a live comparison comes first. A test also shows that
+memory never replaces a platform read (`tests_local/test_review_memory.py`).
+
 ## Task files
 
 Task files are TOML. The `TaskDef` pydantic model validates them. The fields are `id`, `pack`, `plan`,

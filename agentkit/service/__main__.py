@@ -21,13 +21,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--sim", type=Path, default=None, help="replay captured fixtures (a file or a folder of <tenant>.json)")
     ap.add_argument("--skip-llm", action="store_true", help="template answers only")
     ap.add_argument("--max-in-flight", type=int, default=4)
+    ap.add_argument("--memory", action="store_true",
+                    help="experimental: compare each answer with the last audited one about the same record")
     ap.add_argument("--verbose", action="store_true", help="log every request")
     args = ap.parse_args(argv)
 
     from agentkit.service.http import make_server
 
     service = AgentService(args.pack, args.runs_dir, sim=args.sim, skip_llm=args.skip_llm,
-                           max_in_flight=args.max_in_flight)
+                           max_in_flight=args.max_in_flight, memory=args.memory)
     if args.mcp_stdio:
         from agentkit.service.mcp import McpServer, serve_stdio
 

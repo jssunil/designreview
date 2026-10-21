@@ -1,5 +1,13 @@
 # Changes
 
+## 2026-10-21 — Memory of earlier answers (experimental, off by default)
+
+| What | Before | After | Where |
+|---|---|---|---|
+| Memory | Each run started with no knowledge of earlier runs | An audited, answered run keeps the pack's facts of its finding in one SQLite file, for each tenant. The next run about the same record gets a `previous_review` section: version, gate verdict, new and cleared blockers. The platform is always read again. | `agentkit/memory/`, `agentkit/agents/planned.py`, `packs/designreview/memory.py` |
+| Answer | — | The template adds "Since the last review". The gate words are "pass" and "fail", so the section never contradicts the gate now. The claim audit examines the section as part of the finding. | `packs/designreview/templates.py` |
+| Use | — | `run_task(memory=)`; `python -m agentkit.service --memory`. Off in the harness and CI. Not adopted until a live comparison says so. | `agentkit/harness/run_one.py`, `agentkit/service/` |
+
 ## 2026-10-21 — An LLM planner for questions that no route matches (experimental, off by default)
 
 | What | Before | After | Where |

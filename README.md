@@ -90,6 +90,7 @@ The code has three layers. A lower layer never imports a higher layer.
 agentkit/            domain-free framework (no design-review names; a lint test enforces it)
   agents/            run a plan, record its steps, word the answer; router: question → plan + params;
                      LLM planner for questions that no route matches (experimental, off: AGENTKIT_PLANNER=llm)
+  memory/            what changed since the last audited answer about a record (experimental, off)
   transport/         MCP client (typed errors, re-login, read-only retries, argument check), REST reader, tool-call journal
   llm/               multi-provider LLM gateway (tiers, classified retries, real token usage, cost ledger, call log, model check)
   graph/             live task graph: verdicts, allowlisted actions, rule planner, timeouts, checkpoints

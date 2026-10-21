@@ -44,6 +44,7 @@ from agentkit.config import default_tenant
 from agentkit.graph import GraphStore, RunEnv
 from agentkit.graph.checkpoint import CheckpointSaver
 from agentkit.harness.tasks import ROUTED, TaskDef, load_task
+from agentkit.memory import FindingMemory
 from agentkit.llm import LLMGateway
 from agentkit.record import TaskRun, dump_record, load_record
 from agentkit.record.durable_io import durable_write_text, read_jsonl
@@ -106,7 +107,7 @@ def plan_and_params(task: TaskDef, registry: Registry, client: Any,
 
 
 def _conclude(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, task: TaskDef, run_dir: Path,
-              skip_llm: bool) -> None:
+              skip_llm: bool, memory: Optional[FindingMemory] = None) -> None:
     """Copy the graph onto the run; answer it, or stop as "paused" when a
     node is waiting for a person."""
     record_steps(run, store)
@@ -117,7 +118,7 @@ def _conclude(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, 
                             + " (python -m agentkit.harness.run_one --resume <run_dir> --approve/--reject <node>)")
         run.finish(run_dir)
         return
-    answer_with_pack(run, store, env, registry, task.prompt)
+    answer_with_pack(run, store, env, registry, task.prompt, memory=memory)
     if skip_llm:
         run.warnings.append("LLM skipped (--skip-llm): template answer")
     run.finish(run_dir)
@@ -126,10 +127,12 @@ def _conclude(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, 
 def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm: bool = False,
              registry: Optional[Registry] = None, client: Any = None, gateway: Any = None,
              retry_backoff_s: float = 1.0, write: bool = False, require_approval: bool = False,
-             trace_handlers: Sequence[Any] = (), saver: Optional[CheckpointSaver] = None) -> TaskRun:
+             trace_handlers: Sequence[Any] = (), saver: Optional[CheckpointSaver] = None,
+             memory: Optional[FindingMemory] = None) -> TaskRun:
     """`trace_handlers` get the start and the end of each span as it happens (Tracer handlers), e.g. to
     stream progress to a caller. `saver` also keeps the checkpoint history of the graph (e.g. a
-    SqliteSaver that other processes can read); graph.json is written either way."""
+    SqliteSaver that other processes can read); graph.json is written either way. `memory`
+    (experimental) compares the finding with the last audited one of the same record."""
     run_dir = Path(run_dir)
     dry_run = not (write and task.allow_writes)
     run = TaskRun(task_id=task.id, prompt=task.prompt, run_id=run_id, tenant=tenant, dry_run=dry_run,
@@ -162,7 +165,7 @@ def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm
                 plan = plan_for_route(registry, plan_name, run.route)
                 store = run_plan(env, registry, plan, checkpoint_path=run_dir / GRAPH_FILE,
                                  retry_backoff_s=retry_backoff_s, approve_writes=require_approval, saver=saver)
-                _conclude(run, store, env, registry, task, run_dir, skip_llm)
+                _conclude(run, store, env, registry, task, run_dir, skip_llm, memory)
             except Exception as e:  # recorded, never swallowed silently
                 run.finish(run_dir, error=f"{type(e).__name__}: {e}")
             root.set(ended=run.ended, ok=run.ended == "done", outcome=(run.finding or {}).get("outcome"),
