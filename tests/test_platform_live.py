@@ -17,26 +17,26 @@ Use cases to cover:
   [x] diff_from_parent_json.parent_file_hash equals the parent version's file_hash
   [x] DesignFile.current_version equals the highest version_number (every multi-version file)
  Release readiness / impact
-  [ ] Battery Tray readiness: ready is False, critical_open >= 1, blocker mentions bend radius
-  [ ] DF-2026-00100 readiness reports no_version
-  [ ] release_impact.get: every listed item's design_bom belongs to the same file   (candidate bug C-1)
-  [ ] release_impact.get: counts.design_boms is consistent with the listed DesignBOM ids
-  [ ] released_version_id always belongs to the same file                             (candidate bug C-2)
+  [ ] TODO: Battery Tray readiness: ready is False, critical_open >= 1, blocker mentions bend radius
+  [ ] TODO: DF-2026-00100 readiness reports no_version
+  [ ] TODO: release_impact.get: every listed item's design_bom belongs to the same file   (candidate bug C-1)
+  [ ] TODO: release_impact.get: counts.design_boms is consistent with the listed DesignBOM ids
+  [ ] TODO: released_version_id always belongs to the same file                             (candidate bug C-2)
  Permissions / MCP contract
-  [ ] A tool not in tools/list returns a JSON-RPC error (code -32602) with HTTP 200
-  [ ] An argument that is not in the tool schema is rejected, not ignored
-  [ ] The design_admin-only release path is refused for team21
-  [ ] A design tool not given to this seat (e.g. endpoint.designreview.ai_review) is refused
+  [ ] TODO: A tool not in tools/list returns a JSON-RPC error (code -32602) with HTTP 200
+  [ ] TODO: An argument that is not in the tool schema is rejected, not ignored
+  [ ] TODO: The design_admin-only release path is refused for team21
+  [ ] TODO: A design tool not given to this seat (e.g. endpoint.designreview.ai_review) is refused
  Known stubs (regression)
-  [ ] POST /api/designreview/analysis/thickness -> 501
-  [ ] POST /api/designreview/analysis/interference -> 501
-  [ ] GET /api/designreview/files/{id}/gltf -> 404 (flip the expectation once fixed)
+  [ ] TODO: POST /api/designreview/analysis/thickness -> 501
+  [ ] TODO: POST /api/designreview/analysis/interference -> 501
+  [ ] TODO: GET /api/designreview/files/{id}/gltf -> 404 (flip the expectation once fixed)
  Keystone
-  [ ] The same contract checks pass on Keystone
+  [ ] TODO: The same contract checks pass on Keystone
 More use cases (added 2026-10-16, to write by hand):
-  [ ] tools/list pages: following nextCursor gives each tool name once, and the total is stable across two reads
-  [ ] DesignFile.get on a random UUID returns a not-found error (MISSING), not an empty record
-  [ ] release_readiness on Battery Tray twice in a row gives the same ready / critical_open (no flapping)
+  [ ] TODO: tools/list pages: following nextCursor gives each tool name once, and the total is stable across two reads
+  [ ] TODO: DesignFile.get on a random UUID returns a not-found error (MISSING), not an empty record
+  [ ] TODO: release_readiness on Battery Tray twice in a row gives the same ready / critical_open (no flapping)
 """
 
 import pytest

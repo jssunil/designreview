@@ -31,19 +31,19 @@ Use cases to cover:
       during the run is "drift"
       -> test_answer_reflects_change_notes()
 Added since 2026-10-14 (not covered above yet):
-  [ ] lookup_before_refusal: a refusal whose journal has DesignFile.get ending "missing" passes; a refusal
+  [ ] TODO: lookup_before_refusal: a refusal whose journal has DesignFile.get ending "missing" passes; a refusal
       with an empty journal fails; a flaky try then a "missing" retry passes
-  [ ] routed_as: a routed run whose taskrun.route has the expected plan and file passes; another file fails;
+  [ ] TODO: routed_as: a routed run whose taskrun.route has the expected plan and file passes; another file fails;
       a decline that the task expects passes
-  [ ] no_geometry_claim: "Nothing in this answer comes from a geometry diff, 3D comparison or CAD analysis."
+  [ ] TODO: no_geometry_claim: "Nothing in this answer comes from a geometry diff, 3D comparison or CAD analysis."
       passes (a disclaimer); "The geometry comparison shows nonetheless a thicker wall." fails
-  [ ] cited_standards_exist: a recalled standard id that is not on the platform fails
-  [ ] answer_states_handoffs: "No hand-offs have been filed." is not a filing claim
+  [ ] TODO: cited_standards_exist: a recalled standard id that is not on the platform fails
+  [ ] TODO: answer_states_handoffs: "No hand-offs have been filed." is not a filing claim
 More use cases (added 2026-10-16, to write by hand):
-  [ ] release_gate_matches_db: finding critical_open 1, platform 2 -> the "critical_open" outcome fails and
+  [ ] TODO: release_gate_matches_db: finding critical_open 1, platform 2 -> the "critical_open" outcome fails and
       its detail says "agent 1, platform 2"; the "ready" outcome is judged on its own
-  [ ] answer_states_change with the right numbers in another unit ("2 mm" vs "2.0 mm") -> decide and pin it
-  [ ] release_gate_matches_db on an answer with no verdict at all -> fail (silence is not a verdict)
+  [ ] TODO: answer_states_change with the right numbers in another unit ("2 mm" vs "2.0 mm") -> decide and pin it
+  [ ] TODO: release_gate_matches_db on an answer with no verdict at all -> fail (silence is not a verdict)
 Hint: build a RunBundle by hand (agentkit.harness.checks.RunBundle) with `after` / `before` as
 {"observations": {"versions:<file_id>": {"value": [...]}}} -- no network, no files needed.
 """
