@@ -394,7 +394,7 @@ def run_checks() -> None:
                 stated == ("ready" if gate_ready else "not ready")
             record("agent_design_review_verdict", f"Agent evaluates release readiness for {part_name}",
                    verdict_ok, f"tool_invoked={tool_invoked} gate_ready={GATE.get('ready')} answer_says={stated} "
-                   f"answer={eval_answer[:160]!r}")
+                   f"answer={eval_answer[:600]!r}")
         except Exception as exc:
             record("agent_design_review_verdict", f"Agent evaluates release readiness for {part_name}", False, repr(exc))
     else:
