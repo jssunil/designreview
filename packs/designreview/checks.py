@@ -34,6 +34,12 @@ _NOT_READY = re.compile(r"(?:\bnot|n't)\s+(?:yet\s+)?(?:ready|releasable|cleared
                         r"|\brelease\s+(?:is\s+|remains\s+)?(?:blocked|on\s+hold|held)\b", re.I)
 _READY = re.compile(r"\b(?:ready\s+(?:for|to)\s+release|cleared\s+for\s+release|approved\s+for\s+release"
                     r"|can\s+be\s+released|is\s+releasable|is\s+ready)\b", re.I)
+# A conditional or future "ready" is not a claim: "Once these blockers are resolved, it will be ready for
+# release" (a live Keystone answer, 2026-10-22, read as "both" and failed the verdict check).
+_COND_READY = re.compile(r"\b(?:once|after|until|before|when|if|unless|to\s+(?:make|get)|in\s+order\s+to)\b[^.]*?(?:"
+                         + _READY.pattern + r")"
+                         r"|\b(?:will|would|could|might)\s+(?:then\s+|only\s+)?be\s+(?:ready|released|releasable|cleared"
+                         r"|approved)\b", re.I)
 _GEOMETRY = re.compile(r"\b(?:geometr\w*|3d|cad)\s+(?:diff\w*|comparison|compare|overlay|analysis)\b"
                        r"|\b(?:compared|diffed|overlaid)\s+the\s+(?:3d\s+)?geometr\w*", re.I)
 _REFUSAL = re.compile(r"\b(?:cannot|can'?t|unable|not\s+(?:available|found|permitted|possible|visible)|no\s+such"
@@ -60,6 +66,7 @@ def says_not_ready(text: str) -> bool:
 
 def says_ready(text: str) -> bool:
     return any(_READY.search(s) and not _NOT_READY.search(s) and not re.search(_NEG + r"[^.]{0,25}\bready", s, re.I)
+               and not _COND_READY.search(s)
                for s in sentences(text))
 
 
