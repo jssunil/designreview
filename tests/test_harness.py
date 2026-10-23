@@ -49,7 +49,7 @@ import json
 
 import pytest
 
-from agentkit.clock import FROZEN_ENV, frozen_now, now_utc
+from agentkit.clock import FROZEN_ENV, frozen_now, now_utc, parse_instant
 from agentkit.harness.checks import CheckOutcome
 from agentkit.harness.grade import grade_run, overall_status
 from core.harness import Step, TaskRun
@@ -152,3 +152,17 @@ def test_frozen_now_nested_restores_outer(monkeypatch):
             assert now_utc() == dt.datetime(2026, 10, 16, 8, 30, tzinfo=dt.timezone.utc)
         # After the inner frozen_now block, the outer frozen_now should be restored
         assert now_utc() == dt.datetime(2026, 10, 16, 6, 30, tzinfo=dt.timezone.utc)
+
+def test_parse_instant_without_timezone_raises():
+    with pytest.raises(ValueError, match="timezone"):
+        parse_instant("2026-10-16T10:00:00")  # no timezone
+
+def test_parse_instant_converts_to_utc():
+    # should parse with UTC offset correctly
+    instant = parse_instant("2026-10-16T10:00:00+05:30")
+    assert instant.utcoffset() == dt.timedelta(0)
+    assert instant == dt.datetime(2026, 10, 16, 10, 0, tzinfo=dt.timezone(dt.timedelta(hours=5, minutes=30)))
+
+def test_parse_instant_not_datetime_string():
+    with pytest.raises(ValueError, match="ISO-8601"):
+        parse_instant("not-a-datetime")
