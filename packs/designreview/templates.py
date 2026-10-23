@@ -23,6 +23,8 @@ def plain_rendering(finding: Dict[str, Any]) -> str:
     out.append(f"Design file {f.get('number') or f.get('id')} -- {f.get('name')} (status {f.get('status')}, "
                f"current version {f.get('current_version')}).")
 
+    if finding.get("previous_review") is not None:
+        _since_last_review(finding["previous_review"], out)
     delta = finding.get("revision_delta")
     if delta is not None:
         _what_changed(delta, out)
@@ -39,6 +41,26 @@ def plain_rendering(finding: Dict[str, Any]) -> str:
         out.append(f"- Withheld: {len(held)} sentence(s) in the platform's text read as instructions to the "
                    f"reader rather than facts, and were left out ({'; '.join(places)}).")
     return "\n".join(out)
+
+
+def _since_last_review(prev: Dict[str, Any], out: List[str]) -> None:
+    """The comparison with the last audited answer about this file (agentkit.memory; experimental).
+    It says "pass" and "fail" for the gate, so no sentence can read as a claim about the gate now."""
+    out.append("")
+    out.append(f"Since the last review ({str(prev.get('reviewed_at') or '')[:10]}, run {prev.get('run_id')})")
+    if prev.get("version_then") != prev.get("version_now"):
+        out.append(f"- The current version went from {prev.get('version_then')} to {prev.get('version_now')}.")
+    else:
+        out.append(f"- The current version is the same: {prev.get('version_now')}.")
+    word = {True: "pass", False: "fail"}
+    out.append(f"- Release gate verdict then: {word.get(prev.get('gate_passed_then'), 'unknown')}; "
+               f"now: {word.get(prev.get('gate_passed_now'), 'unknown')}.")
+    for b in prev.get("new_blockers") or []:
+        out.append(f"  - New blocker: {b.get('title')}")
+    for b in prev.get("cleared_blockers") or []:
+        out.append(f"  - Cleared: {b.get('title')}")
+    if not prev.get("new_blockers") and not prev.get("cleared_blockers"):
+        out.append("- No blocker was added or cleared.")
 
 
 def _schedule(sched: Dict[str, Any], out: List[str]) -> None:

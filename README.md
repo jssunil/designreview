@@ -88,7 +88,9 @@ The code has three layers. A lower layer never imports a higher layer.
 
 ```
 agentkit/            domain-free framework (no design-review names; a lint test enforces it)
-  agents/            run a plan, record its steps, word the answer; router: question → plan + params
+  agents/            run a plan, record its steps, word the answer; router: question → plan + params;
+                     LLM planner for questions that no route matches (experimental, off: AGENTKIT_PLANNER=llm)
+  memory/            what changed since the last audited answer about a record (experimental, off)
   transport/         MCP client (typed errors, re-login, read-only retries, argument check), REST reader, tool-call journal
   llm/               multi-provider LLM gateway (tiers, classified retries, real token usage, cost ledger, call log, model check)
   graph/             live task graph: verdicts, allowlisted actions, rule planner, timeouts, checkpoints
@@ -99,11 +101,12 @@ agentkit/            domain-free framework (no design-review names; a lint test 
   sim/               platform fixtures + offline SimPlatform with injectable faults
   telemetry/         run tree for each run (task → node → tool / llm); OTLP export without an SDK
   viewer/            read-only browser page over the run folders
+  service/           the agent as a service: HTTP API (JSON and Server-Sent Events), MCP server, signed webhooks; dry run only
   playbooks.py       playbook files and the constants register: load, check against plans, routes and tools
 packs/designreview/  the domain pack: actions, routes, finding, claim rules, template, probes, verifiers,
                      mutants, prompts/*.md, plans/*.toml, tasks/*.toml, fixtures/*.json,
                      playbooks/*.md (one per use case) + constants.toml
-config/              tenants.toml, routing.toml (LLM providers and tiers), project.toml (defaults, LLM cost limit)
+config/              tenants.toml, routing.toml (LLM providers and tiers), project.toml (defaults, LLM cost limit), hooks.toml (webhooks)
 ```
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the layers and the pack seam.
@@ -226,8 +229,9 @@ agent cannot make its own check pass.
 | [`packs/designreview/playbooks/`](packs/designreview/playbooks/README.md) | One file for each use case (live, blocked, spec only) and the constants register |
 | [`harness/`](harness/) | The official platform runner (`python -m harness.runner`): smoke checks and our agent's tasks in `results.json` |
 | [`agentkit/viewer/`](agentkit/viewer/) | Read-only run viewer: `python -m agentkit.viewer` |
+| [`agentkit/service/`](agentkit/service/) | The agent as a service: `python -m agentkit.service` (HTTP, dry run only) |
 | [`core/`](core/) | Legacy import paths (`core.harness`, `core.llm_gateway`, `core.economics` give the `agentkit` names); legacy `dag_engine`, `eval_framework`, `judge` |
-| [`scripts/`](scripts/) | CI scripts: fault matrix, retrieval evaluation, playbook check, viewer smoke check, `results.json` check, secret scan, STE check |
+| [`scripts/`](scripts/) | CI scripts: fault matrix, retrieval evaluation, playbook check, viewer smoke check, service smoke check, `results.json` check, secret scan, STE check |
 | [`tests/`](tests/) | Graded, **hand-written** test suite. See [`tests/README.md`](tests/README.md). |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | How generic the agent is: layers, the pack seam, extension points, limits |
 | [`docs/EXPLAINERS.md`](docs/EXPLAINERS.md) | Explainers for each module |
@@ -317,7 +321,20 @@ python -m agentkit.viewer                   # http://127.0.0.1:8765/   [--runs-d
 
 # Send the spans of a run or a batch to an OpenTelemetry collector (OTLP/HTTP, no SDK)
 python -m agentkit.telemetry.otlp runs/batches/<batch_id> --endpoint http://127.0.0.1:4318
+
+# Serve the agent over HTTP: one question in, one audited answer out (dry run, this computer only)
+python -m agentkit.service [--sim packs/designreview/fixtures --skip-llm]   # http://127.0.0.1:8780/
+curl -s localhost:8780/v1/ask -H "Content-Type: application/json" -d '{"question": "Is the propeller ready for release?"}'
+
+# The agent as an MCP tool for other agents (one tool for each live playbook, plus "ask")
+claude mcp add designreview -- python -m agentkit.service --mcp-stdio     # or POST /mcp on the HTTP service
+
+# Let another system ask: a signed webhook (config/hooks.toml; secret AGENTKIT_HOOK_<NAME>_SECRET)
+python -m agentkit.service.hooks send http://127.0.0.1:8780 new_version '{"part": "BEV-BT-2400"}'
 ```
+
+A cron line or an n8n workflow (`docs/examples/n8n_daily_release_check.json`) can also ask on a schedule.
+See [`docs/explainers/agentkit_service.md`](docs/explainers/agentkit_service.md).
 
 Each run folder also has `llm_calls.jsonl`: the exact system prompt, prompt and reply of each LLM attempt,
 with no key in it. Set `OTEL_EXPORTER_OTLP_ENDPOINT`, and each run sends its spans to that collector.
@@ -545,11 +562,14 @@ gitleaks git . --config .gitleaks.toml --redact --verbose   # gitleaks 8.30.1 (S
    run, the report, the calibration and each telemetry tree. The viewer must stay read-only and confined;
 9. an OTLP export smoke check, `scripts/ci_otlp_smoke.py`. It sends the spans of the CI batch to a stub
    collector on 127.0.0.1, and every span of every run must arrive;
-10. the official runner, offline, for each instance. `scripts/check_results_json.py` examines each
+10. a service smoke check, `scripts/ci_service_smoke.py`. It starts the agent service on the fixtures and
+    asks the question of each routed task over HTTP, also as a stream. Each answer must have the expected
+    route or refusal. Then our own MCP client lists the tools and calls one;
+11. the official runner, offline, for each instance. `scripts/check_results_json.py` examines each
    `results.json`. Then a planted fault must give failed entries with evidence, and the runner must exit 1;
-11. the docs style job, `scripts/ste_check.py`: this README, the architecture documents, the explainers and
+12. the docs style job, `scripts/ste_check.py`: this README, the architecture documents, the explainers and
     the playbooks must follow the measurable ASD-STE100 rules;
-12. the two secret scans above. The workflow pins each action to its commit SHA.
+13. the two secret scans above. The workflow pins each action to its commit SHA.
 
 ---
 

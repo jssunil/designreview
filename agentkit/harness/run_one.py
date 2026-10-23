@@ -35,12 +35,16 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
 
 from agentkit.agents import answer_with_pack, plan_executor, record_steps, run_plan
+from agentkit.agents.llm_planner import LLMPlanner, plan_for_route, planner_from_env
+from agentkit.agents.router import NO_ROUTE
 from agentkit.config import default_tenant
-from agentkit.graph import GraphStore, RunEnv, load_plan
+from agentkit.graph import GraphStore, RunEnv
+from agentkit.graph.checkpoint import CheckpointSaver
 from agentkit.harness.tasks import ROUTED, TaskDef, load_task
+from agentkit.memory import FindingMemory
 from agentkit.llm import LLMGateway
 from agentkit.record import TaskRun, dump_record, load_record
 from agentkit.record.durable_io import durable_write_text, read_jsonl
@@ -83,21 +87,27 @@ def describe_catalog(client: Any, registry: Registry) -> Optional[dict]:
 
 
 def plan_and_params(task: TaskDef, registry: Registry, client: Any,
-                    route: Optional[Dict[str, Any]] = None) -> Tuple[str, Dict[str, Any], Optional[Dict[str, Any]]]:
+                    route: Optional[Dict[str, Any]] = None,
+                    planner: Optional[LLMPlanner] = None) -> Tuple[str, Dict[str, Any], Optional[Dict[str, Any]]]:
     """(plan name, plan params, routing decision). A task with a plan runs it as written;
     a task without one is routed by the pack's router from its prompt -- or, when
-    resuming or replaying, by the decision the original run recorded."""
+    resuming or replaying, by the decision the original run recorded. When no route
+    matches and an LLM planner is on (AGENTKIT_PLANNER=llm), it may give a plan."""
     if task.plan != ROUTED:
         return task.plan, task.plan_params(), None
     if route is None:
         with span("step", "route") as s:  # the router's reads are tool spans under this step
             route = registry.extras["router"].route(task.prompt, client).to_dict()
             s.set(plan=route["plan"])
+        if planner is not None and route["why"] == NO_ROUTE:
+            with span("step", "llm_planner") as s:
+                route = planner.plan(task.prompt, client) or route
+                s.set(plan=route["plan"], nodes=len(route.get("nodes") or []))
     return route["plan"], {**task.params, **route["params"], "prompt": task.prompt}, route
 
 
 def _conclude(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, task: TaskDef, run_dir: Path,
-              skip_llm: bool) -> None:
+              skip_llm: bool, memory: Optional[FindingMemory] = None) -> None:
     """Copy the graph onto the run; answer it, or stop as "paused" when a
     node is waiting for a person."""
     record_steps(run, store)
@@ -108,7 +118,7 @@ def _conclude(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, 
                             + " (python -m agentkit.harness.run_one --resume <run_dir> --approve/--reject <node>)")
         run.finish(run_dir)
         return
-    answer_with_pack(run, store, env, registry, task.prompt)
+    answer_with_pack(run, store, env, registry, task.prompt, memory=memory)
     if skip_llm:
         run.warnings.append("LLM skipped (--skip-llm): template answer")
     run.finish(run_dir)
@@ -116,7 +126,13 @@ def _conclude(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, 
 
 def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm: bool = False,
              registry: Optional[Registry] = None, client: Any = None, gateway: Any = None,
-             retry_backoff_s: float = 1.0, write: bool = False, require_approval: bool = False) -> TaskRun:
+             retry_backoff_s: float = 1.0, write: bool = False, require_approval: bool = False,
+             trace_handlers: Sequence[Any] = (), saver: Optional[CheckpointSaver] = None,
+             memory: Optional[FindingMemory] = None) -> TaskRun:
+    """`trace_handlers` get the start and the end of each span as it happens (Tracer handlers), e.g. to
+    stream progress to a caller. `saver` also keeps the checkpoint history of the graph (e.g. a
+    SqliteSaver that other processes can read); graph.json is written either way. `memory`
+    (experimental) compares the finding with the last audited one of the same record."""
     run_dir = Path(run_dir)
     dry_run = not (write and task.allow_writes)
     run = TaskRun(task_id=task.id, prompt=task.prompt, run_id=run_id, tenant=tenant, dry_run=dry_run,
@@ -128,7 +144,7 @@ def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm
     # refusal) must look different from "the journal was lost".
     (run_dir / JOURNAL_FILE).touch()
     t0 = time.time()
-    tracer = Tracer(run_id)
+    tracer = Tracer(run_id, handlers=list(trace_handlers))
     try:
         with use_tracer(tracer), span("task", task.id, tenant=tenant, dry_run=dry_run, pack=task.pack,
                                       plan=task.plan) as root:
@@ -142,13 +158,14 @@ def run_task(task: TaskDef, tenant: str, run_dir: Path, run_id: str, *, skip_llm
                                                 extra_read_only=tuple(registry.read_only))
                 if gateway is None and not skip_llm:
                     gateway = LLMGateway()
-                plan_name, params, run.route = plan_and_params(task, registry, journaled)
+                planner = None if skip_llm else planner_from_env(registry, gateway)
+                plan_name, params, run.route = plan_and_params(task, registry, journaled, planner=planner)
                 env = RunEnv(client=journaled, run_id=run_id, params=params, dry_run=dry_run,
                              tenant=tenant, gateway=None if skip_llm else gateway)
-                plan = load_plan(Path(registry.extras["plans_dir"]) / f"{plan_name}.toml")
+                plan = plan_for_route(registry, plan_name, run.route)
                 store = run_plan(env, registry, plan, checkpoint_path=run_dir / GRAPH_FILE,
-                                 retry_backoff_s=retry_backoff_s, approve_writes=require_approval)
-                _conclude(run, store, env, registry, task, run_dir, skip_llm)
+                                 retry_backoff_s=retry_backoff_s, approve_writes=require_approval, saver=saver)
+                _conclude(run, store, env, registry, task, run_dir, skip_llm, memory)
             except Exception as e:  # recorded, never swallowed silently
                 run.finish(run_dir, error=f"{type(e).__name__}: {e}")
             root.set(ended=run.ended, ok=run.ended == "done", outcome=(run.finding or {}).get("outcome"),
@@ -176,15 +193,17 @@ def write_telemetry(tracer: Tracer, run_dir: Path, run: TaskRun) -> None:
 
 def resume_task(run_dir: Path, *, approve: Iterable[str] = (), reject: Iterable[str] = (), skip_llm: bool = False,
                 registry: Optional[Registry] = None, client: Any = None, gateway: Any = None,
-                retry_backoff_s: float = 1.0) -> TaskRun:
-    """Answer a paused run's waiting nodes and finish it in the same folder."""
+                retry_backoff_s: float = 1.0, saver: Optional[CheckpointSaver] = None) -> TaskRun:
+    """Answer a paused run's waiting nodes and finish it in the same folder. With a `saver`, the
+    history goes on in it; when graph.json is missing, the run continues from the saver's newest
+    checkpoint."""
     run_dir = Path(run_dir)
     task = TaskDef.from_dict(load_record(run_dir / "task.json"))
     before = load_record(run_dir / "taskrun.json")
     if before.get("ended") != "paused":
         raise ValueError(f"{run_dir} is not paused (ended={before.get('ended')!r})")
     registry = registry or load_pack(task.pack)
-    store = GraphStore.load(run_dir / GRAPH_FILE, registry)
+    store = _load_graph(run_dir, registry, saver)
     waiting = {s.id for s in store.paused()}
     answers = {**{n: {"approved": True} for n in approve}, **{n: {"approved": False, "note": "rejected"} for n in reject}}
     unknown = sorted(set(answers) - waiting)
@@ -213,7 +232,7 @@ def resume_task(run_dir: Path, *, approve: Iterable[str] = (), reject: Iterable[
                 plan_name, params, run.route = plan_and_params(task, registry, journaled, before.get("route"))
                 env = RunEnv(client=journaled, run_id=run_id, params=params, dry_run=run.dry_run,
                              tenant=tenant, gateway=None if skip_llm else gateway)
-                plan = load_plan(Path(registry.extras["plans_dir"]) / f"{plan_name}.toml")
+                plan = plan_for_route(registry, plan_name, run.route)
                 plan_executor(env, registry, plan, checkpoint_path=run_dir / GRAPH_FILE,
                               retry_backoff_s=retry_backoff_s, approve_writes=True).continue_from(store)
                 run.warnings.append("resumed after a person answered: " + ", ".join(
@@ -227,6 +246,17 @@ def resume_task(run_dir: Path, *, approve: Iterable[str] = (), reject: Iterable[
         write_telemetry(tracer, run_dir, run)
     run.seconds = round(time.time() - t0, 2)
     return run
+
+
+def _load_graph(run_dir: Path, registry: Registry, saver: Optional[CheckpointSaver]) -> GraphStore:
+    if (run_dir / GRAPH_FILE).exists() or saver is None:
+        return GraphStore.load(run_dir / GRAPH_FILE, registry, saver=saver)
+    latest = saver.get()
+    if latest is None:
+        raise FileNotFoundError(f"no {GRAPH_FILE} in {run_dir} and no checkpoint in the saver")
+    store = GraphStore.from_dict(latest.graph, registry, checkpoint_path=run_dir / GRAPH_FILE, saver=saver)
+    store.last_checkpoint_id = latest.id
+    return store
 
 
 def main(argv: Optional[list] = None) -> int:

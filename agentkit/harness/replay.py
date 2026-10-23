@@ -45,8 +45,9 @@ from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
 
 from agentkit.agents import answer_with_pack, plan_executor, record_steps
+from agentkit.agents.llm_planner import plan_for_route
 from agentkit.clock import frozen_now
-from agentkit.graph import GraphStore, NodeResult, RunEnv, load_plan
+from agentkit.graph import GraphStore, NodeResult, RunEnv
 from agentkit.harness.checks import specs_for
 from agentkit.harness.grade import grade_run
 from agentkit.harness.run_one import GRAPH_FILE, plan_and_params
@@ -112,7 +113,7 @@ def replay_run(run_dir: Path, update: Dict[str, NodeResult], out_dir: Path, *, c
                                       replay_of=original.get("run_id"), replaced=sorted(update)) as root:
             try:
                 plan_name, params, run.route = plan_and_params(task, registry, client, original.get("route"))
-                plan = load_plan(Path(registry.extras["plans_dir"]) / f"{plan_name}.toml")
+                plan = plan_for_route(registry, plan_name, run.route)
                 fork = GraphStore.load(run_dir / GRAPH_FILE, registry).fork(
                     update, checkpoint_path=out_dir / GRAPH_FILE, run_id=run_id)
                 journaled = JournaledSeatClient(client, out_dir / JOURNAL_FILE,

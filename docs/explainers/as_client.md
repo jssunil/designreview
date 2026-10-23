@@ -1,6 +1,6 @@
 # `as_client.py` — the compatibility client
 
-*Reading order: **15th**. Read it only if you use this client directly. New code uses `agentkit/transport`.
+*Reading order: **16th**. Read it only if you use this client directly. New code uses `agentkit/transport`.
 Written in ASD-STE100 (Simplified Technical English) style, 2026-10-14.*
 
 ## Overview

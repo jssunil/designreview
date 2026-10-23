@@ -1,6 +1,6 @@
 # `capstone_agent.py` — the Design Review agent
 
-*Reading order: **12th**. This file connects `agentkit` and the design-review pack. It always does a dry run.
+*Reading order: **13th**. This file connects `agentkit` and the design-review pack. It always does a dry run.
 Written in ASD-STE100 (Simplified Technical English) style, 2026-10-14.*
 
 ## Overview

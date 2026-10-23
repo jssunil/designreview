@@ -1,6 +1,6 @@
 # `packs/designreview/` — the design-review domain
 
-*Reading order: **11th**. All code that knows what a DesignFile is, is here. `agentkit/` knows none of it.
+*Reading order: **12th**. All code that knows what a DesignFile is, is here. `agentkit/` knows none of it.
 Written in ASD-STE100 (Simplified Technical English) style, 2026-10-14. Updated 2026-10-19.*
 
 ## Overview

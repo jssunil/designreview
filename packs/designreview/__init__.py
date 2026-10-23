@@ -16,6 +16,7 @@ from pathlib import Path
 
 from agentkit.registry import Registry
 from packs.designreview.actions import READ_ONLY_ENDPOINTS, register_actions, register_retrieval
+from packs.designreview.memory import MEMORY
 from packs.designreview.router import make_router
 from packs.designreview.checks import register_checks
 from packs.designreview.claims import CLAIM_RULES
@@ -64,6 +65,9 @@ def register(reg: Registry) -> None:
         narration_tiers=("fast", "quality"),
         # Tasks with plan = "" are routed from the question (agentkit.agents.router).
         router=make_router(),
+        # Experimental, used only when a FindingMemory is given (agentkit.memory): what an audited
+        # answer keeps, and how the next answer about the same file compares with it.
+        memory=MEMORY,
     )
 
 

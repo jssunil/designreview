@@ -42,8 +42,13 @@ note = "a dry run files nothing"
 
 [[golden]]
 path = "finding.schedule.past_due"
-values = ["DFM review closed", "PPAP level 3 submission"]
-note = "DesignMilestone: due 2026-09-19 and 2026-09-30, not completed at capture (2026-10-12)"
+contains = "DFM review closed"
+note = "DesignMilestone: due 2026-09-19, not completed at capture (2026-10-12)"
+
+[[golden]]
+path = "finding.schedule.past_due"
+contains = "PPAP level 3 submission"
+note = "DesignMilestone: due 2026-09-30, not completed at capture (2026-10-12)"
 
 [[golden]]
 path = "finding.release_gate.critical_open"

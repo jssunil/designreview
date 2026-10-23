@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional, Tuple
 
 from agentkit.answer import compose_answer
 from agentkit.config import llm_budget_usd
@@ -19,6 +19,7 @@ from agentkit.graph.engine import GraphStore, LiveGraphExecutor, RunEnv
 from agentkit.graph.node_result import HANDED_OFF, RESOLVED
 from agentkit.graph.plan_loader import Plan
 from agentkit.graph.rule_planner import RulePlanner
+from agentkit.memory import SECTION, FindingMemory, MemorySpec
 from agentkit.record.run_record import TaskRun
 from agentkit.registry import Registry
 from agentkit.telemetry import span
@@ -62,15 +63,19 @@ def record_steps(run: TaskRun, store: GraphStore) -> None:
                      added_by=spec.added_by, seconds=spec.seconds)
 
 
-def answer_with_pack(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, query: str) -> None:
+def answer_with_pack(run: TaskRun, store: GraphStore, env: RunEnv, registry: Registry, query: str,
+                     memory: Optional[FindingMemory] = None) -> None:
     """Build the pack's finding from the graph, word it (checked), and put
     both on the run. The pack supplies, via registry.extras:
-    finding_builder, claim_rules, template, system_prompt, narration_instructions."""
+    finding_builder, claim_rules, template, system_prompt, narration_instructions,
+    and (optional) memory: with a FindingMemory, the finding also gets a comparison with
+    the last kept facts of the same record, and an audited answer keeps its facts."""
     x = registry.extras
     t0 = time.time()
     with span("step", "build_finding") as s:
         finding = x["finding_builder"](store.results(), env.params, run_id=env.run_id, dry_run=env.dry_run)
         s.set(outcome=finding.get("outcome"))
+    kept = _recall(finding, env, x.get("memory"), memory)
     run.finding = finding
     run.add_step(kind="build_finding", target="finding", ok=True, status=RESOLVED,
                  reason=f"outcome={finding.get('outcome')}", seconds=round(time.time() - t0, 3))
@@ -87,6 +92,9 @@ def answer_with_pack(run: TaskRun, store: GraphStore, env: RunEnv, registry: Reg
               attempts=len(answer["attempts"]))
     run.claimed_answer = answer["text"]
     run.answer_source = answer["source"]
+    if kept is not None and answer["audit"]["ok"] and finding.get("outcome") == "answered":
+        key, kind, facts = kept
+        memory.remember(env.tenant or "", key, kind, env.run_id or "", facts)  # type: ignore[union-attr]
     if answer.get("fallback_reason"):
         run.warnings.append(f"answer fell back to template: {answer['fallback_reason']}")
     run.add_step(kind="narrate", target="answer", ok=answer["audit"]["ok"], status=RESOLVED,
@@ -98,3 +106,22 @@ def answer_with_pack(run: TaskRun, store: GraphStore, env: RunEnv, registry: Reg
                          "fallback_reason": answer.get("fallback_reason")},
                  reason=answer.get("fallback_reason"), attempts=max(1, len(answer["attempts"])),
                  seconds=round(time.time() - t0, 3))
+
+
+def _recall(finding: Dict[str, Any], env: RunEnv, spec: Optional[MemorySpec],
+            memory: Optional[FindingMemory]) -> Optional[Tuple[str, str, Dict[str, Any]]]:
+    """(key, kind, facts) to keep after an audited answer, or None. Adds the comparison with the
+    last kept facts of the same record to the finding (under SECTION). Memory never replaces a
+    platform read: the plan has already run when this is called."""
+    if memory is None or spec is None:
+        return None
+    with span("step", "memory") as s:
+        kept = spec.facts(finding)
+        if kept is None:
+            return None
+        key, kind, facts = kept
+        previous = memory.last(env.tenant or "", key, kind, exclude_run=env.run_id)
+        if previous is not None:
+            finding[SECTION] = spec.compare(previous, facts)
+        s.set(previous=previous["run_id"] if previous else None)
+    return key, kind, facts

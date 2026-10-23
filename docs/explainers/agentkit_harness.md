@@ -257,6 +257,52 @@ Each task runs in a child process. The child knows which environment values came
 - A decline runs the `route_declined` plan of the pack. Thus it ends as an ordinary refusal.
 - The design-review check `routed_as` grades the decision.
 
+### The LLM planner (experimental, since 2026-10-21)
+
+The rule router declines a question that matches no route. The LLM planner (`agentkit/agents/llm_planner.py`)
+can give a plan for that question. It is off by default. Set `AGENTKIT_PLANNER=llm` to turn it on. It needs an
+LLM, so `--skip-llm` turns it off.
+
+- **When.** Only after the decline "no route matched". An unknown record or an ambiguous record is a correct
+  refusal, and the planner does not change it.
+- **The catalogue.** The planner offers the nodes of the plan files of the pack. It offers only nodes with a
+  read-only action, and only nodes whose arguments the resolver of the router can find in a question. The planner
+  offers a node only when it also offers each node that the node waits for. The LLM cannot write an action, an
+  argument or a dependency.
+- **The call.** One JSON-mode call to the fast tier. The question is inside an `<untrusted_question>` fence.
+  The reply is `{"nodes": [...]}` or `{"decline": "..."}`.
+- **The checks.** Each id must be in the catalogue. The planner adds the dependencies of each chosen node,
+  and the total must be 10 nodes or fewer. Then the plan validator and the engine check the plan. Bad JSON,
+  an unknown id, too many nodes or a failed call keeps the decline.
+- **The record.** The route keeps the nodes and the rules: `{plan: "llm_plan", params, why, planner: "llm",
+  nodes, rules, plan_params}`. Thus a resume or a replay builds the same plan with no LLM call.
+- **The same grading.** The finding, the claim audit and the checks are the same as for a routed plan.
+
+The plan says: adopt the planner only if it is on the cost-accuracy frontier
+(`agentkit/harness/pareto.py`) and no task fails. That comparison needs live LLM calls, and it has not
+occurred. Thus the planner stays off.
+
+### Memory of earlier answers (experimental, since 2026-10-21)
+
+`agentkit/memory/` lets an answer say what changed since the last review of the same record. It is off by
+default. `run_task(..., memory=FindingMemory(path))` or `python -m agentkit.service --memory` turns it on.
+
+- **What the agent keeps.** After a run whose finding is "answered" and whose answer passed the claim audit,
+  the pack's `facts(finding)` gives a key, a kind and the facts. `FindingMemory` (one SQLite file) keeps
+  them for each tenant. For each design file, the design-review pack keeps four facts. They are the current
+  version, the gate verdict, the open blockers (id and cleaned title) and the time of the snapshot.
+- **How the agent uses it.** The plan runs first, so the agent always reads the platform again. Then the
+  pack's `compare(previous, facts)` gives the section `previous_review` of the finding. It has the version
+  and the gate verdict then and now, the new blockers and the cleared blockers. The template adds "Since
+  the last review". It says "pass" and "fail" for the gate, so no sentence can read as a claim about the
+  gate now.
+- **The audit.** The section is part of the finding. Thus the claim audit examines what the answer says
+  about it, as for each other section.
+- **Isolation.** The key includes the tenant. A run for one tenant never sees the memory of another.
+
+The adoption rule is the same as for the planner: a live comparison comes first. A test also shows that
+memory never replaces a platform read (`tests_local/test_review_memory.py`).
+
 ## Task files
 
 Task files are TOML. The `TaskDef` pydantic model validates them. The fields are `id`, `pack`, `plan`,

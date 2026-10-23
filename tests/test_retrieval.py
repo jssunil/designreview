@@ -7,17 +7,17 @@ Author(s): Sunil Jakkaraju, Bharath KR    Written by hand: [x] yes
 Use cases to cover:
   [x] Text under min_words becomes one passage without asking the splitter
   [x] A splitter answer that is a verbatim suffix splits the block; the suffix starts the next block
-  [ ] A splitter answer that is NOT a suffix (a paraphrase) is rejected and the block kept whole
-  [ ] A splitter that raises is recorded ("splitter_failed_kept_block"), not treated as "one topic"
+  [x] A splitter answer that is NOT a suffix (a paraphrase) is rejected and the block kept whole
+  [x] A splitter that raises is recorded ("splitter_failed_kept_block"), not treated as "one topic"
   [x] Every passage's start_char/end_char slice the source back to exactly its text
-  [ ] A word-budget cut never lands inside a Markdown table or an open code fence
-  [ ] BM25: "bend radius ... bend" ranks "Sheet metal bend rules" above "Hole and thread callouts"
-  [ ] distinct_by="name" keeps one hit per name, preferring the active record on ties
-  [ ] plain_text() turns platform HTML descriptions into clean lines
+  [ ] TODO: A word-budget cut never lands inside a Markdown table or an open code fence
+  [ ] TODO: BM25: "bend radius ... bend" ranks "Sheet metal bend rules" above "Hole and thread callouts"
+  [ ] TODO: distinct_by="name" keeps one hit per name, preferring the active record on ties
+  [ ] TODO: plain_text() turns platform HTML descriptions into clean lines
 More use cases (added 2026-10-16, to write by hand):
-  [ ] fixed_span_passages(text, words=3) on 7 words gives 3 passages of 3, 3 and 1 words, numbered 0, 1, 2
-  [ ] HeadingSplitter cuts at a Markdown heading inside a block
-  [ ] an empty query or an empty index returns no hits (no exception)
+  [ ] TODO: fixed_span_passages(text, words=3) on 7 words gives 3 passages of 3, 3 and 1 words, numbered 0, 1, 2
+  [ ] TODO: HeadingSplitter cuts at a Markdown heading inside a block
+  [ ] TODO: an empty query or an empty index returns no hits (no exception)
 Hint: a scripted splitter is any object with trailing_topic(block) -> str.
 """
 

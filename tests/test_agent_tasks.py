@@ -9,23 +9,23 @@ agentkit.harness.run_one.run_task(task, "suryodaya", tmp_path, "id") and assert 
 returned TaskRun (finding + claimed_answer) and the saved run folder.
 
 Tasks to cover:
-  [ ] t01 Battery Tray rev B -> rev C: finding maps B=v2, C=v3; answer cites 2.0 -> 3.0 mm and 4.2 mm;
+  [x] t01 Battery Tray rev B -> rev C: finding maps B=v2, C=v3; answer cites 2.0 -> 3.0 mm and 4.2 mm;
       release gate NOT ready with 1 critical open; answer_source is "llm" and its audit is clean
-  [ ] t02 unknown file: finding outcome "declined"; tool_journal.jsonl shows only DesignFile.get
-  [ ] t03 AI review requested: declined because endpoint.designreview.ai_review is not in the seat;
+  [x] t02 unknown file: finding outcome "declined"; tool_journal.jsonl shows only DesignFile.get
+  [x] t03 AI review requested: declined because endpoint.designreview.ai_review is not in the seat;
       that tool never appears in tool_journal.jsonl
-  [ ] t04 Bench Vice rev 2 -> rev 3: numeric revs mapped; answer mentions the 180 g saving;
+  [x] t04 Bench Vice rev 2 -> rev 3: numeric revs mapped; answer mentions the 180 g saving;
       no sentence claims a geometry comparison
-  [ ] t05 Propeller: rev B = v1 and rev C = v2 (mapped by commit note, not by position)
-  [ ] Every run: taskrun.json existed with ended="running" before the plan ran (read it from a
+  [x] t05 Propeller: rev B = v1 and rev C = v2 (mapped by commit note, not by position)
+  [ ] TODO: Every run: taskrun.json existed with ended="running" before the plan ran (read it from a
       patched plan step, or check graph.json + taskrun.json timestamps)
-  [ ] Keystone: the same question on a Keystone file answers from Keystone data (mark keystone)
+  [ ] TODO: Keystone: the same question on a Keystone file answers from Keystone data (mark keystone)
 More use cases (added 2026-10-16, to write by hand):
-  [ ] t08 Battery Tray hand-off (dry run): file_handoffs ends HANDED_OFF with filed False, and
+  [ ] TODO: t08 Battery Tray hand-off (dry run): file_handoffs ends HANDED_OFF with filed False, and
       tool_journal.jsonl has no AgentEscalation.create and no escalations.raise
-  [ ] t11 "Is the propeller ready for release?": route.plan is "route_declined", route.params.reason names
+  [ ] TODO: t11 "Is the propeller ready for release?": route.plan is "route_declined", route.params.reason names
       "4 design files", and the journal has no release-readiness call (no guess was made)
-  [ ] t12 (keystone) auger drive housing cover: route.plan is "release_handoff" and finding.schedule.past_due
+  [ ] TODO: t12 (keystone) auger drive housing cover: route.plan is "release_handoff" and finding.schedule.past_due
       is exactly "DFM Review Complete", "Tooling Kickoff", "First Article Inspection"
 Hint: the offline twin of every task is `python -m agentkit.harness.batch --sim
 packs/designreview/fixtures/suryodaya.json --skip-llm --grade` -- use it to check your
@@ -37,6 +37,7 @@ import pytest
 from agentkit.harness.run_one import run_task
 from agentkit.harness.tasks import load_task
 from agentkit.record.durable_io import read_jsonl
+from packs.designreview.checks import geometry_claims
 
 pytestmark = [pytest.mark.agent, pytest.mark.live]
 
@@ -85,16 +86,56 @@ def test_t02_unknown_file(tmp_path):
 ''' [ ] t03 AI review requested: declined because endpoint.designreview.ai_review is not in the seat;
       that tool never appears in tool_journal.jsonl
 '''
+def test_t03_ai_review_refusal(tmp_path):
+    task = load_task("packs/designreview/tasks/t03_ai_review_refusal.toml")
+    run = run_task(task, "suryodaya", tmp_path, "t03")
+
+    # finding outcome "declined"
+    assert run.finding["outcome"] == "declined"
+
+    # tool_journal contains no call to ai_review
+    journal = read_jsonl(tmp_path / "tool_journal.jsonl")
+    tool_names = {e.get("tool") for e in journal}
+    assert "endpoint.designreview.ai_review" not in tool_names
 
 
 ''' [ ] t04 Bench Vice rev 2 -> rev 3: numeric revs mapped; answer mentions the 180 g saving;
       no sentence claims a geometry comparison
 '''
+def test_t04_bench_vice(tmp_path):
+    task = load_task("packs/designreview/tasks/t04_bench_vice_no_geometry.toml")
+    run = run_task(task, "suryodaya", tmp_path, "t04")
 
+    # numeric revs mapped: Rev 2 = v2, Rev 3 = v3
+    delta = run.finding["revision_delta"]
+    assert delta["from_version"] == 2
+    assert delta["to_version"] == 3
+
+    # rev-3 notes carry the 180 g saving, and the answer mentions it
+    v3 = next(v for v in delta["versions"] if str(v.get("rev")) == "3")
+    assert "180 g" in [q["text"] for q in v3["quantities"]]
+    assert "180" in run.claimed_answer
+
+    # platform diff is hash-only: no geometry compared, and no sentence claims one
+    # (a disclaimer like "no geometry comparison was run" is fine)
+    assert delta["geometry_compared"] is False
+    assert geometry_claims(run.claimed_answer) == []
 
 ''' [ ] t05 Propeller: rev B = v1 and rev C = v2 (mapped by commit note, not by position)
 '''
+def test_t05_propeller_rev_mapping(tmp_path):
+    task = load_task("packs/designreview/tasks/t05_propeller_rev_mapping.toml")
+    run = run_task(task, "suryodaya", tmp_path, "t05")
 
+    # Propeller rev B = v1, rev C = v2. "rev" is the letter read from each version's
+    # commit note, so B landing on v1 (not v2) proves mapping by note, not by position.
+    delta = run.finding["revision_delta"]
+    assert delta["basis"] == "commit_message"
+    by_rev = {v["rev"]: v["version_number"] for v in delta["versions"] if v["rev"]}
+    assert by_rev["B"] == 1
+    assert by_rev["C"] == 2
+    assert delta["from_version"] == 1
+    assert delta["to_version"] == 2
 
 ''' [ ] Every run: taskrun.json existed with ended="running" before the plan ran (read it from a
       patched plan step, or check graph.json + taskrun.json timestamps)

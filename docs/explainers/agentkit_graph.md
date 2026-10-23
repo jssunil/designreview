@@ -103,7 +103,7 @@ Written in ASD-STE100 (Simplified Technical English) style, 2026-10-14.*
 | Scheduling | Eager only. A node starts when it can. The planner sees the outcomes in the sequence in which nodes stop. | Eager is still the default. With **`mode = "superstep"`** (in the plan file, or `run_plan(mode=)`), all ready nodes run in parallel on the same snapshot. When all stop, the engine records the outcomes, applies the channel writes and asks the planner, **in node-id sequence**. Thus thread timing cannot change the state, the patches or the checkpoints. `max_steps` (50) gives `StepLimitExceeded`. |
 | Shared state | None. Each node writes only its own `NodeResult`. | Optional **channels**, declared in the plan (`[channels]`): `last_value`, `topic` (append), `reducer` (`sum`, `max`, `min`, `extend`, `merge`, `union`, with `Overwrite`), `ephemeral`, `barrier` (join). A node writes `NodeResult(writes={...})`. An action reads `read_channels()`. Two writers of one `last_value` in one superstep give `ChannelConflict`. Thus a race becomes an error. |
 | A pause for a person | Not possible. | An action calls `interrupt(payload)`. The node is **paused**, with no verdict, and its dependants wait. `store.resume(node, answer)` and `continue_from()` run it again, and `interrupt()` gives the answer. `approve_writes=True` does this before each real write. Only `True` or `{"approved": true}` lets the write run. Each other answer gives `declined`. |
-| History | `graph.json` has only the latest state. | With a `CheckpointSaver` (`MemorySaver`, or `JsonlSaver` to `checkpoints.jsonl`), each step is also a checkpoint: `{id, ts, parent_id, metadata{source: input/loop/fork, step, nodes, ran}, graph}`. The ids sort by time. `store.history(before=, limit=, filter=)` gives the newest first. This is off when no saver is given. |
+| History | `graph.json` has only the latest state. | With a `CheckpointSaver` (`MemorySaver`, `JsonlSaver` to `checkpoints.jsonl`, or `SqliteSaver`), each step is also a checkpoint: `{id, ts, parent_id, metadata{source: input/loop/fork, step, nodes, ran}, graph}`. The ids sort by time. `store.history(before=, limit=, filter=)` gives the newest first. This is off when no saver is given. |
 | Fork | — | `store.fork({node: NodeResult}, from_checkpoint=None)` gives a new store with those results replaced. Everything after them is undone: plan nodes go back to `pending`, and nodes from the planner go, so the rules decide again. The channels are made again. The source store does not change. `agentkit.harness.replay` uses this. |
 | Rules | A rule could fire two times and collide after a new run. | A rule never adds a node id that exists. It never links into a node that started. |
 
@@ -140,6 +140,22 @@ args = { file_id = "{file_id}" }
 after = ["release_gate"]
 ```
 
+## History in SQLite (since 2026-10-21)
+
+`SqliteSaver` (`sqlite_saver.py`) keeps the checkpoints of many runs in one SQLite file. It has the same
+`put`, `get` and `list(before, limit, filter)` as `MemorySaver`. Each checkpoint has a thread id: the run
+that it is part of.
+
+- `SqliteSaver(path).for_thread(run_id)` gives the saver of one run. Its `get` and `list` see only that run.
+- `SqliteSaver(path)` without a thread sees all the runs. `threads()` gives each run with its number of
+  checkpoints. `put` uses the `run_id` in the checkpoint metadata.
+- The file uses WAL mode and a busy timeout. Thus readers do not stop the writer, and two processes can
+  write the same file.
+- `run_task(..., saver=)` and `resume_task(..., saver=)` take a saver. When `graph.json` is missing,
+  `resume_task` continues from the newest checkpoint in the saver.
+
+The agent service puts the history of each run in `runs/service.sqlite`.
+
 ## Key types
 
 | Name | Purpose |
@@ -153,6 +169,7 @@ after = ["release_gate"]
 | `RetryPolicy` | When to try an action again, and how long to wait. |
 | `Channel` types, `ChannelState` | Shared state with declared merge rules. |
 | `Checkpoint`, `MemorySaver`, `JsonlSaver` | The history. |
+| `SqliteSaver(path)`, `.for_thread(run_id)`, `.threads()` | The history of many runs in one SQLite file. Other processes can read and write the same file. |
 | `interrupt()`, `approved()` | A pause of a node for a person. |
 | `Registry`, `ActionSpec` | The actions of a pack (with `retries` or `retry`, `writes`, `timeout_s` and `preview` for a write action), the probes, checks, mutants, replay faults and extras. |
 
@@ -162,6 +179,7 @@ after = ["release_gate"]
    fake client. You do not need MCP.
 2. For superstep: put a `random.uniform` sleep in an action. This changes the sequence in which nodes stop.
    The superstep results must not change.
-3. For the history: use `MemorySaver` and `fork` on a graph of three nodes.
+3. For the history: use `MemorySaver` and `fork` on a graph of three nodes. The reference tests for
+   `SqliteSaver` are in `tests_local/test_sqlite_saver.py`.
 4. For a pause: use an action that calls `interrupt()`.
 5. For a timeout: use an action that sleeps longer than its `timeout_s`.

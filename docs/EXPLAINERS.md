@@ -49,6 +49,7 @@ Other documents:
             │  sim/      captured platform, offline, with faults  │
             │  telemetry/ run tree per run (never graded)          │
             │  viewer/   read-only browser page over run folders  │
+            │  service/  HTTP API: question in, audited answer out │
             └─────────────────────────────────────────────────────┘
    packs/designreview/: actions · plans · router · finding · claims · template · prompts · probes · checks · mutants · tasks · fixtures
 ```
@@ -75,12 +76,13 @@ All explainers use ASD-STE100 (Simplified Technical English).
 8. [`agentkit_sim.md`](explainers/agentkit_sim.md): fixtures, the offline platform, faults, the CI fault matrix.
 9. [`agentkit_telemetry.md`](explainers/agentkit_telemetry.md): the run tree: spans, timings, tokens, retries.
 10. [`agentkit_viewer.md`](explainers/agentkit_viewer.md): the read-only browser page for batches and runs.
-11. [`packs_designreview.md`](explainers/packs_designreview.md): the domain: the finding, the verifiers, the router, the hand-offs, the tasks, the playbooks and the constants register.
-12. [`capstone_agent.md`](explainers/capstone_agent.md): the agent entry point.
-13. [`capstone_evals.md`](explainers/capstone_evals.md): run the benchmark and grade it again.
-14. [`harness_runner.md`](explainers/harness_runner.md): the official runner: the smoke checks, our agent's tasks and checks in `results.json`, the format check.
-15. [`as_client.md`](explainers/as_client.md): the compatibility client.
-16. [`core_legacy.md`](explainers/core_legacy.md): the old modules in `core/`, and why they stay.
+11. [`agentkit_service.md`](explainers/agentkit_service.md): the agent as a service: one question in, one audited answer out, over HTTP, with progress events.
+12. [`packs_designreview.md`](explainers/packs_designreview.md): the domain: the finding, the verifiers, the router, the hand-offs, the tasks, the playbooks and the constants register.
+13. [`capstone_agent.md`](explainers/capstone_agent.md): the agent entry point.
+14. [`capstone_evals.md`](explainers/capstone_evals.md): run the benchmark and grade it again.
+15. [`harness_runner.md`](explainers/harness_runner.md): the official runner: the smoke checks, our agent's tasks and checks in `results.json`, the format check.
+16. [`as_client.md`](explainers/as_client.md): the compatibility client.
+17. [`core_legacy.md`](explainers/core_legacy.md): the old modules in `core/`, and why they stay.
 
 ## Decisions for the full system
 

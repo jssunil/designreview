@@ -1,5 +1,57 @@
 # Changes
 
+## 2026-10-21 — Memory of earlier answers (experimental, off by default)
+
+| What | Before | After | Where |
+|---|---|---|---|
+| Memory | Each run started with no knowledge of earlier runs | An audited, answered run keeps the pack's facts of its finding in one SQLite file, for each tenant. The next run about the same record gets a `previous_review` section: version, gate verdict, new and cleared blockers. The platform is always read again. | `agentkit/memory/`, `agentkit/agents/planned.py`, `packs/designreview/memory.py` |
+| Answer | — | The template adds "Since the last review". The gate words are "pass" and "fail", so the section never contradicts the gate now. The claim audit examines the section as part of the finding. | `packs/designreview/templates.py` |
+| Use | — | `run_task(memory=)`; `python -m agentkit.service --memory`. Off in the harness and CI. Not adopted until a live comparison says so. | `agentkit/harness/run_one.py`, `agentkit/service/` |
+
+## 2026-10-21 — An LLM planner for questions that no route matches (experimental, off by default)
+
+| What | Before | After | Where |
+|---|---|---|---|
+| Unrouted questions | The router declined each question that matched no route | With `AGENTKIT_PLANNER=llm`, one JSON-mode call chooses node ids from a catalogue: the read-only nodes of the plan files of the pack, with their dependencies. Bad replies keep the decline. Unknown and ambiguous records stay refusals. | `agentkit/agents/llm_planner.py`, `agentkit/harness/run_one.py` |
+| Record | `taskrun.route` = `{plan, params, why}` | An LLM plan also keeps its nodes and rules, so resume and replay build the same plan with no LLM call | `agentkit/harness/run_one.py`, `agentkit/harness/replay.py` |
+| Adoption | — | Not adopted: it stays off until a live cost-accuracy comparison shows that it is on the frontier with no failed task | `docs/explainers/agentkit_harness.md` |
+
+## 2026-10-21 — Triggers: signed webhooks, cron and n8n
+
+| What | Before | After | Where |
+|---|---|---|---|
+| Webhooks | The agent answered only when a person asked | `POST /v1/hooks/<name>`: HMAC-SHA256 signature over the timestamp and the body, 5-minute window, a repeated signature refused (409), plain field values only; 202 with the run id, the run continues in the background (dry run) | `agentkit/service/hooks.py`, `agentkit/service/http.py`, `config/hooks.toml` |
+| Sender | — | `python -m agentkit.service.hooks send <url> <hook> '<json>'` signs and sends one delivery | `agentkit/service/hooks.py` |
+| Recipes | — | A cron line and an n8n workflow to import (`docs/examples/n8n_daily_release_check.json`) | `docs/explainers/agentkit_service.md` |
+| Playbooks | pb-14 and pb-15: "no trigger" | The trigger is ready; the plan (pb-14) and the platform event and the write path (pb-15) are still missing, so both stay spec | `packs/designreview/playbooks/` |
+
+## 2026-10-21 — Checkpoint history in SQLite, for many runs and processes
+
+| What | Before | After | Where |
+|---|---|---|---|
+| History store | `MemorySaver` (one process) and `JsonlSaver` (one file for each run) | `SqliteSaver`: the checkpoints of many runs in one file, one thread for each run; WAL mode, so other processes can read and write it; `threads()` lists the runs | `agentkit/graph/sqlite_saver.py` |
+| Runs | `run_task` used no saver | `run_task(saver=)` and `resume_task(saver=)`; when `graph.json` is missing, `resume_task` continues from the newest checkpoint | `agentkit/harness/run_one.py` |
+| Service | — | Each service run keeps its history in `runs/service.sqlite`; `GET /v1/runs/<id>/history` | `agentkit/service/` |
+
+## 2026-10-21 — The agent as an MCP tool for other agents
+
+| What | Before | After | Where |
+|---|---|---|---|
+| MCP server | The agent was an MCP client only | `agentkit/service/mcp.py`: `initialize`, `ping`, `tools/list`, `tools/call`; on stdio (`python -m agentkit.service --mcp-stdio`) and on `POST /mcp` of the HTTP service | `agentkit/service/` |
+| Tools | — | One tool for each live playbook (`pb_01`, `pb_02`) and `ask`; blocked and spec-only playbooks are not tools; read-only annotations | `agentkit/service/mcp.py` |
+| Results | — | `content` = the audited answer; `structuredContent` = run id, route, outcome, answer source; `isError` only for a failed run or a busy service, never with a stack trace | `agentkit/service/mcp.py` |
+| CI | — | The service smoke check also calls `tools/list` and `tools/call` with our own MCP client | `scripts/ci_service_smoke.py` |
+
+## 2026-10-21 — The agent as a service: HTTP API with progress events
+
+| What | Before | After | Where |
+|---|---|---|---|
+| Service | The agent ran from the CLI, the batch and the official runner only | `python -m agentkit.service`: `POST /v1/ask` routes, runs and answers one question (dry run) with its own run folder `runs/svc-*`; `GET /v1/playbooks`, `GET /v1/runs/<id>`, `GET /healthz` | `agentkit/service/` |
+| Streaming | — | `Accept: text/event-stream` gives the span starts and ends of the run as Server-Sent Events, then the answer | `agentkit/service/http.py`, `agentkit/harness/run_one.py` (`trace_handlers`) |
+| Back-pressure | — | At most `max_in_flight` questions at a time; one more gets 429 with `Retry-After` | `agentkit/service/core.py` |
+| Safety | — | 127.0.0.1 by default; another host needs `AGENTKIT_SERVICE_TOKEN` (bearer, constant-time compare); 64 KB body limit; no stack traces | `agentkit/service/http.py` |
+| CI | — | `scripts/ci_service_smoke.py`: each routed task's question over HTTP, also as a stream | `.github/workflows/ci.yaml` |
+
 ## 2026-10-21 — More keys for one LLM row, and cool-downs for each row
 
 | What | Before | After | Where |
